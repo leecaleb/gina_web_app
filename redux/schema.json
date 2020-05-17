@@ -1,0 +1,52 @@
+{
+    "attendance": {
+        "date": {
+            "{:student_id_A}": {
+                "in_time": "07:34:23",
+                "out_time": "17:59:34",
+                "excuse_type": ""
+            },
+            "{:student_id_B}": {
+                "in_time": "",
+                "out_time": "",
+                "excuse_type": "fever"
+            }
+        }
+    },
+    "medicationRequests": {
+        "date": {
+            "{:student_id}": [
+                {
+                    "request_id": "4a",
+                    "when_to_take": "12:30:00",
+                    "medication_type" : "pills",
+                    "notes": "",
+                    "administered" : true
+                },
+                {
+                    "request_id": "6d",
+                    "when_to_take": "15:00:00",
+                    "medication_type": "syrup",
+                    "notes": "",
+                    "administered": false
+                }
+            ]
+        }
+    },
+    "mealsAndAppetite": {
+        "date":{
+            "breakfast": "",
+            "lunch": "",
+            "snack": "",
+            "student_ratings": {
+                "{:student_id}": {
+                    "b_rating": 3,
+                    "l_rating": 1,
+                    "s_rating": 2,
+                    "teacher_id": "3j"
+                }
+            }
+
+        }
+    }
+}
