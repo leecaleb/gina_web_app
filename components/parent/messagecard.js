@@ -16,7 +16,8 @@ export default class MessageCard extends React.Component {
       text: '',
       teacher_id: '',
       message_id: null,
-      message_for_teacher: ''
+      message_for_teacher: '',
+      isConnected: true
     }
     this.fetchData = this.fetchData.bind(this)
   }
@@ -32,6 +33,10 @@ export default class MessageCard extends React.Component {
     } else if (this.props.child_id !== prevProps.child_id) {
       this.setState({ isLoading: true })
       this.fetchData(this.props.child_id, new Date());
+    } else if (this.props.isConnected != prevProps.isConnected) {
+      this.setState({
+        isConnected: this.props.isConnected
+      })
     }
   }
 
@@ -98,7 +103,12 @@ export default class MessageCard extends React.Component {
 
   async sendMessage() {
     const { class_id } = this.props
-    const { message_for_teacher, message_id } = this.state
+    const { message_for_teacher, message_id, isConnected } = this.state
+    if (!isConnected) {
+      alert('網路連不到! 請稍後再試試看')
+      return
+    }
+
     const now = new Date()
     const body = {
       student_id: this.props.child_id,
@@ -109,24 +119,16 @@ export default class MessageCard extends React.Component {
     const response = await post(`/message/class/${class_id}`, body)
     const { success, statusCode, message, data } = response
     if (!success) {
-      Alert.alert(
-        `Sorry 傳送訊息時電腦出狀況了！`,
-        '請截圖和與工程師聯繫\n\n' + message,
-        [{ text: 'Ok' }]
-      )
+      alert(`Sorry 傳送訊息時電腦出狀況了！請截圖和與工程師聯繫\n\n` + message)
       return 
     }
-    Alert.alert(
-      `訊息傳達成功！`,
-      '',
-      [{ text: 'Ok' }]
-    )
+    alert(`訊息傳達成功！`)
   }
 
   editable() {
     const { date } = this.props
     const threshold = new Date()
-    threshold.setHours(17)
+    threshold.setHours(17, 0, 0)
     return date.getTime() >= threshold.getTime()
   }
 

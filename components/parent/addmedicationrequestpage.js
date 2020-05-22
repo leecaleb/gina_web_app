@@ -3,10 +3,12 @@ import { View, Text, TouchableHighlight, TextInput, ScrollView, Image, KeyboardA
 import { formatDate, beautifyTime, beautifyMonthDate, post, formatTime } from '../util';
 import TimeModal from './timemodal'
 import Reloading from '../reloading'
+import ENV from '../../variables'
+import { connect } from 'react-redux'
 
 const { width } = Dimensions.get('window')
 
-export default class AddMedicationRequestPage extends React.Component {
+class AddMedicationRequestPage extends React.Component {
   constructor(props) {
     super(props)
     this.state={
@@ -191,27 +193,24 @@ export default class AddMedicationRequestPage extends React.Component {
   timeIsEmpty() {
     const { time_array } = this.state
     if (time_array.length === 0) {
-      alert(
-        '至少要選擇一個時間！')
-      //   '',
-      //   [{ text: 'Ok' }]
-      // )
+      alert('至少要選擇一個時間！')
       return true
     }
     return false
   }
 
   async sendRequest() {
+    const { isConnected } = this.props
+    if (!isConnected) {
+      alert('網路連不到! 請稍後再試試看')
+      return
+    }
     const { student_id, onGoBack } = this.props.route.params
     const body = this.normalizedData()
     const response = await post(`/medicationrequest/student/${student_id}`, body)
     const { success, statusCode, message, data } = response
     if (!success) {
-      Alert.alert(
-          'Sorry 送出托藥單時電腦出狀況了！',
-          '請截圖和與工程師聯繫\n\n' + message,
-          [{ text: 'Ok' }]
-      )
+      alert('Sorry 送出托藥單時電腦出狀況了！請截圖和與工程師聯繫\n\n' + message)
       return 
     }
     this.setState({
@@ -273,19 +272,20 @@ export default class AddMedicationRequestPage extends React.Component {
 
   deleteRequestConfirm() {
     const { request_id } = this.state
-    Alert.alert(
-      '確定要刪除？',
-      '',
-      [
-        { text: '確定', onPress: () => this.deleteRequest(request_id)},
-        { text: 'Cancel', style: 'cancel' }
-      ]
-    )
+    const confirmed = confirm('確定要刪除？')
+    if (confirmed) {
+      this.deleteRequest(request_id)
+    }
   }
 
   deleteRequest(request_id) {
+    const { isConnected } = this.props
+    if (!isConnected) {
+      alert('網路連不到! 請稍後再試試看')
+      return
+    }
     const { class_id, onGoBack } = this.props.route.params
-    fetch('https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev/medicationrequest/' + request_id, {
+    fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/medicationrequest/${request_id}`, {
       method: 'DELETE',
       headers: {
         Accept: 'application/json',
@@ -299,22 +299,14 @@ export default class AddMedicationRequestPage extends React.Component {
       .then((resJson) => {
         const { statusCode, message, data } = resJson
         if (statusCode > 200 || message === 'Internal Server Error') {
-          Alert.alert(
-              'Sorry 電腦出狀況了！',
-              '請截圖和與工程師聯繫' + message,
-              [{ text: 'Ok' }]
-          )
+          alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫' + message)
           return
         }
         onGoBack()
         this.props.navigation.goBack()
       })
       .catch(err => {
-        Alert.alert(
-            'Sorry 電腦出狀況了！',
-            '請截圖和與工程師聯繫: error occurred when deleting medication request',
-            [{ text: 'Ok' }]
-        )
+        alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫: error occurred when deleting medication request')
       })
   }
 
@@ -349,7 +341,7 @@ export default class AddMedicationRequestPage extends React.Component {
     return (
       <KeyboardAvoidingView
           style={{ flex: 1, width: '100%', alignItems: 'center' }}
-          behavior={this.isIOS() && 'padding'}
+          behavior={'padding'}
           // keyboardVerticalOffset={90}
           enabled
       >
@@ -651,7 +643,7 @@ export default class AddMedicationRequestPage extends React.Component {
                       <TextInput
                         editable={access_mode !== 'read'}
                         style={{ width: 62, fontSize: 25 }}
-                        keyboardType="decimal-pad"
+                        keyboardType="number-pad"
                         autoFocus={true}
                         placeholder={'____'}
                         value={entry.amount}
@@ -857,7 +849,7 @@ export default class AddMedicationRequestPage extends React.Component {
                   <TextInput
                     editable={access_mode !== 'read'}
                     style={{ width: 55, fontSize: 25 }}
-                    keyboardType='decimal-pad'
+                    keyboardType='number-pad'
                     value={fever_entry.temperature}
                     onChangeText={(temperature) => this.setState({
                       fever_entry: {
@@ -993,7 +985,7 @@ export default class AddMedicationRequestPage extends React.Component {
                       <TextInput
                         editable={access_mode !== 'read'}
                         style={{ width: 62, fontSize: 25 }}
-                        keyboardType="decimal-pad"
+                        keyboardType="number-pad"
                         autoFocus={true}
                         placeholder={'____'}
                         value={entry.amount}
@@ -1172,3 +1164,11 @@ export default class AddMedicationRequestPage extends React.Component {
     );
   }
 }
+
+const mapStateToProps = (state) => {
+  return {
+      isConnected: state.parent.isConnected
+  }
+}
+
+export default connect(mapStateToProps) (AddMedicationRequestPage)

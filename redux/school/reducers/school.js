@@ -1,5 +1,5 @@
 const initial_state = {
-  isConnected: false,
+  isConnected: true,
   classes: {
     /*
     [id]: {

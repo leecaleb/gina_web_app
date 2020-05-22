@@ -2,10 +2,12 @@
 import React from 'react'
 import { View, Text, TouchableHighlight, TextInput, KeyboardAvoidingView, ScrollView, Alert, Dimensions } from 'react-native'
 import { formatDate, formatTime } from '../util'
+import ENV from '../../variables'
+import { connect } from 'react-redux'
 
 const { width, height } = Dimensions.get('window')
 
-export default class PickupRequest extends React.Component {
+class PickupRequest extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
@@ -28,8 +30,13 @@ export default class PickupRequest extends React.Component {
     }
 
     sendRequest() {
+        const { isConnected } = this.props
+        if (!isConnected) {
+            alert('網路連不到! 請稍後再試試看')
+            return
+        }
         const { child_id, school_id } = this.props.route.params
-        const query = 'https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev/attendance/pickup-request'
+        const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/attendance/pickup-request`
         const student_id = child_id
         const arrival_time = new Date()
         arrival_time.setMinutes(arrival_time.getMinutes() + parseInt(this.state.time))
@@ -50,28 +57,18 @@ export default class PickupRequest extends React.Component {
             .then(resJson => {
                 const { statusCode, message } = resJson
                 if (statusCode > 200 || message === 'Internal server error') {
-                    Alert.alert(
-                        'Sorry 電腦出狀況了！',
-                        '請截圖和與工程師聯繫 ' + message,
-                        [{ text: 'Ok' }]
-                    )
+                    alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫 ' + message)
                     return
                 }
                 this.props.navigation.goBack()
             })
             .catch(err => {
-                Alert.alert(
-                    'Sorry 電腦出狀況了！',
-                    '請截圖和與工程師聯繫: error occurred when sending pickup request',
-                    [{ text: 'Ok' }]
-                )
+                alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫: error occurred when sending pickup request')
             })
     }
 
     render() {
         const { time, provided_times, colors, hightlighted_colors, choose_other_option, total_height, total_width } = this.state
-        // console.log(height, height/4)
-        const aspectRatio = (total_width*0.5)/(total_height*0.28)
         return (
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
@@ -95,7 +92,8 @@ export default class PickupRequest extends React.Component {
                                     key={index}
                                     style={{
                                         width: '50%',
-                                        aspectRatio,
+                                        height: total_height*0.28,
+                                        // aspectRatio,
                                         backgroundColor: time == minute ? hightlighted_colors[index] : colors[index],
                                         alignItems: 'center',
                                         justifyContent: 'center'
@@ -125,7 +123,7 @@ export default class PickupRequest extends React.Component {
                         <View
                             style={{
                                 width: '50%',
-                                aspectRatio,
+                                height: total_height*0.28,
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 backgroundColor: choose_other_option ? 'black' : 'white'
@@ -149,7 +147,8 @@ export default class PickupRequest extends React.Component {
                                         style={{
                                             flexDirection: 'row',
                                             justifyContent: 'center', 
-                                            alignItems: 'center'
+                                            alignItems: 'center',
+                                            width: '100%'
                                         }}
                                     >
                                         <TextInput
@@ -160,7 +159,8 @@ export default class PickupRequest extends React.Component {
                                             value={time + ''}
                                             style={{
                                                 fontSize: total_width*0.2,
-                                                color: 'white'
+                                                color: 'white',
+                                                width: '100%'
                                             }}
                                             onChangeText={(time) => {
                                                 this.setState({ time })
@@ -191,3 +191,11 @@ export default class PickupRequest extends React.Component {
         )
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        isConnected: state.parent.isConnected
+    }
+}
+
+export default connect(mapStateToProps) (PickupRequest)

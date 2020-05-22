@@ -5,19 +5,24 @@ export default class ProfileSelector extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
+      showSelector: false,
       SlideInRight: new Animated.Value(0)
     }
   }
 
   slideIn() {
-    Animated.timing(
-      this.state.SlideInRight,
-      {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true
-      }
-    ).start()
+    this.setState({
+      showSelector: true
+    } , () => {
+      Animated.timing(
+        this.state.SlideInRight,
+        {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true
+        }
+      ).start()
+    })
   }
 
   onSelectStudent(student_id) {
@@ -30,12 +35,18 @@ export default class ProfileSelector extends React.Component {
           useNativeDriver: true
       }
     ).start()
+    this.setState({
+      showSelector: false
+    })
   }
 
   render() {
     const windowWidth = Dimensions.get('window').width
-    const { SlideInRight } = this.state
+    const { showSelector, SlideInRight } = this.state
     const { student_of_id } = this.props
+    if (!showSelector) {
+      return null
+    }
     return (
       <Animated.View
         style={{
@@ -53,13 +64,14 @@ export default class ProfileSelector extends React.Component {
             }
           ],
           alignItems: 'center',
-          justifyContent: 'space-evenly'
+          // justifyContent: 'space-evenly'
         }}
       >
         {Object.keys(student_of_id).map((student_id) => {
           return (
             <TouchableHighlight 
               key={student_id}
+              style={{ marginTop: windowWidth/4 }}
               onPress={() => this.onSelectStudent(student_id)}
               underlayColor='transparent'
             >

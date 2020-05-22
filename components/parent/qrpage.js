@@ -1,10 +1,13 @@
 import React from 'react'
-import { View, Text, TouchableHighlight, Alert } from 'react-native'
+import { View, Text, TouchableHighlight, Alert, Dimensions } from 'react-native'
 import QRCode from 'react-native-qrcode-svg'
 import Reloading from '../reloading'
 import { get } from '../util'
+import { connect } from 'react-redux'
 
-export default class QRPage extends React.Component {
+const { width, height } = Dimensions.get('window')
+
+class QRPage extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
@@ -14,15 +17,17 @@ export default class QRPage extends React.Component {
     }
 
     async componentDidMount() {
-        const { parent_id } = this.props
+        const { parent_id, isConnected } = this.props
         const response = await get(`/user/${parent_id}/qrcode`)
         const { success, statusCode, message, data } = response
+
+        if (!isConnected) {
+            alert('網路連不到! 請稍後再試試看')
+            return
+        }
+
         if (!success) {
-            Alert.alert(
-            `Sorry 取得家長QR Code時電腦出狀況了！`,
-            '請截圖和與工程師聯繫\n\n' + message,
-            [{ text: 'Ok' }]
-            )
+            alert(`Sorry 取得家長QR Code時電腦出狀況了！請截圖和與工程師聯繫\n\n` + message)
             return 
         }
 
@@ -30,50 +35,16 @@ export default class QRPage extends React.Component {
             isLoading: false,
             data
         })
-        
-        // const { student_id } = this.props
-        // fetch("https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev/student/qr", {
-        //     method: 'POST',
-        //     headers: {
-        //         Accept: 'application/json',
-        //         'Content-Type': 'application/json'
-        //     },
-        //     body: JSON.stringify({
-        //         student_id
-        //     })
-        // })
-        //     .then((res) => res.json())
-        //     .then((resJson) => {
-        //         const { statusCode, message, data } = resJson
-        //         if (statusCode > 200 || message === 'Internal server error') {
-        //             Alert.alert(
-        //                 'Error',
-        //                 message,
-        //                 [{ text: 'Ok' }]
-        //             )
-        //             return
-        //         }
-        //         this.setState({
-        //             isLoading: false,
-        //             data
-        //         })
-        //     })
-        //     .catch((err) => {
-        //         Alert.alert(
-        //             'Error',
-        //             'Something went wrong when fetching a QR code for student',
-        //             [{ text: 'Ok' }]
-        //         )
-        //     })
     }
     
     render() {
         return (
             <View
                 style={{
+                    height,
                     zIndex: 2,
                     width: '100%',
-                    height: '100%',
+                    // height: '100%',
                     position: 'absolute',
                     backgroundColor: 'white',
                     justifyContent: 'space-evenly',
@@ -103,3 +74,11 @@ export default class QRPage extends React.Component {
         )
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        isConnected: state.parent.isConnected
+    }
+}
+
+export default connect(mapStateToProps) (QRPage)

@@ -11,7 +11,8 @@ export default class MorningReminderCard extends React.Component {
         isLoading: true,
         present: false,
         morning_reminder_id: null,
-        text: ''
+        text: '',
+        isConnected: true
     }
     this.fetchData = this.fetchData.bind(this)
   }
@@ -29,6 +30,10 @@ export default class MorningReminderCard extends React.Component {
       this.fetchData(this.props.child_id, new Date());
     } else if (this.props.present !== prevProps.present) {
         this.setState({ present: this.props.present })
+    } else if (this.props.isConnected != prevProps.isConnected) {
+      this.setState({
+        isConnected: this.props.isConnected
+      })
     }
   }
 
@@ -55,7 +60,11 @@ export default class MorningReminderCard extends React.Component {
 
   async sendMessage() {
     const { class_id, date } = this.props
-    const { text, present, morning_reminder_id } = this.state
+    const { text, present, morning_reminder_id, isConnected } = this.state
+    if (!isConnected) {
+      alert('網路連不到! 請稍後再試試看')
+      return
+    }
 
     const body = {
         morning_reminder_id,
@@ -66,18 +75,10 @@ export default class MorningReminderCard extends React.Component {
     const response = await post(`/morningreminder/class/${class_id}`, body)
     const { success, statusCode, message, data } = response
     if (!success) {
-      Alert.alert(
-        `Sorry 傳送訊息時電腦出狀況了！`,
-        '請截圖和與工程師聯繫\n\n' + message,
-        [{ text: 'Ok' }]
-      )
+      alert(`Sorry 傳送訊息時電腦出狀況了！請截圖和與工程師聯繫\n\n` + message)
       return 
     }
-    Alert.alert(
-      `訊息傳達成功！`,
-      '',
-      [{ text: 'Ok' }]
-    )
+    alert(`訊息傳達成功！`)
     this.fetchData(this.props.child_id, new Date())
   }
 
@@ -85,7 +86,7 @@ export default class MorningReminderCard extends React.Component {
     const { date } = this.props
     const { present } = this.state
     const threshold = new Date()
-    threshold.setHours(10)
+    threshold.setHours(10, 0, 0)
     return (date.toDateString() === (new Date).toDateString() && new Date() < threshold) || date > (new Date())
   }
 

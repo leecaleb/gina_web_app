@@ -2,6 +2,7 @@ export default function parent(state = {
     // first_name: '',
     // last_name: '',
     // id: '',
+    isConnected: true,
     child_of_id: {
         /*
         {child_A_id}: {
@@ -25,6 +26,13 @@ export default function parent(state = {
     // }
 }, action) {
     switch (action.type) {
+        case 'SET_CONNECT_STATE': {
+            const { isConnected } = action
+            return {
+                ...state,
+                isConnected
+            }
+        }
         case 'INITIALIZE_CHILDREN':
             const { data } = action
             data.forEach((child) => {
@@ -56,6 +64,7 @@ export default function parent(state = {
     
         case 'CLEAR_STATE': {
             return {
+                isConnected: true,
                 child_of_id: {},
                 med_requests: []
             }

@@ -5,6 +5,7 @@ import { formatDate, formatTime, beautifyDate, beautifyTime }  from '../util'
 import MedicinePowderForm from './medicinepowderform'
 import MedicineSyrupForm from './medicinesyrupform'
 import MedicineCreamForm from './medicinecreamform'
+import ENV from '../../variables'
 
 export default class MedicationRequestMain extends React.Component{
   constructor(props) {
@@ -177,7 +178,7 @@ export default class MedicationRequestMain extends React.Component{
       note
     }
 
-    fetch('https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev/medicationrequest/student/' + student_id, {
+    fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/medicationrequest/student/${student_id}`, {
         method: 'POST',
         headers: {
             Accept: 'application/json',
@@ -189,38 +190,26 @@ export default class MedicationRequestMain extends React.Component{
       .then((resJson) => {
         const { statusCode, message, data } = resJson
         if (statusCode > 200 || message === 'Internal server error') {
-          Alert.alert(
-              'Sorry 電腦出狀況了！',
-              '請截圖和與工程師聯繫' + message,
-              [{ text: 'Ok' }]
-          )
+          alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫' + message)
           return
         }
         this.props.onCreateRequestSuccess(data.id)
       })
       .catch(err => {
-        Alert.alert(
-          'Sorry 電腦出狀況了！',
-          '請截圖和與工程師聯繫: error occurred when sending medication request',
-          [{ text: 'Ok' }]
-        )
+        alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫: error occurred when sending medication request')
       })
   }
 
   deleteRequestConfirm() {
-    Alert.alert(
-      '確定要刪除？',
-      '',
-      [
-        { text: '確定', onPress: () => this.deleteRequest() },
-        { text: 'Cancel', style: 'cancel' }
-      ]
-    )
+    const confirmed = confirm('確定要刪除？')
+    if (confirmed) {
+      this.deleteRequest()
+    }
   }
 
   deleteRequest() {
     const { request, class_id } = this.props
-    fetch('https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev/medicationrequest/' + request.id, {
+    fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/medicationrequest/${request.id}`, {
       method: 'DELETE',
       headers: {
         Accept: 'application/json',
@@ -234,21 +223,13 @@ export default class MedicationRequestMain extends React.Component{
       .then((resJson) => {
         const { statusCode, message, data } = resJson
         if (statusCode > 200 || message === 'Internal Server Error') {
-          Alert.alert(
-              'Sorry 電腦出狀況了！',
-              '請截圖和與工程師聯繫' + message,
-              [{ text: 'Ok' }]
-          )
+          alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫' + message)
           return
         }
         this.props.onDeleteRequestSuccess(data.id)
       })
       .catch(err => {
-        Alert.alert(
-            'Sorry 電腦出狀況了！',
-            '請截圖和與工程師聯繫: error occurred when deleting medication request',
-            [{ text: 'Ok' }]
-        )
+        alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫: error occurred when deleting medication request')
       })
   }
 

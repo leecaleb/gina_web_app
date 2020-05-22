@@ -3,7 +3,7 @@ import { StyleSheet, ScrollView, View, Text, RefreshControl, TouchableHighlight,
     Alert, Dimensions, AppState,Image, KeyboardAvoidingView, Platform } from 'react-native'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
-import { initializeChildren, markPresent, clearState } from '../../redux/parent/actions/index'
+import { setConnectState, initializeChildren, markPresent, clearState } from '../../redux/parent/actions/index'
 import Reloading from '../reloading'
 import WellnessCard from './wellnesscard';
 import AppetiteCard from './appetitecard';
@@ -19,7 +19,6 @@ import MedicationRequestCard from './medicinerequestcard'
 import TimeModal from './timemodal'
 import MorningReminderCard from './morningremindercard'
 import ENV from '../../variables'
-
 const { width } = Dimensions.get('window')
 
 class ParentHome extends React.Component {
@@ -45,7 +44,7 @@ class ParentHome extends React.Component {
     }, 10000)
 
     async poll(student_id) {
-        const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev/family/updates?student_id=${student_id}`
+        const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/family/updates?student_id=${student_id}`
         await fetch(query, {
             method: 'GET',
             headers: {
@@ -67,6 +66,14 @@ class ParentHome extends React.Component {
     }
 
     componentDidMount() {
+        window.addEventListener('offline', (e) => {
+            // console.log('offline ', e)
+            this.props.setConnectState(false) 
+        });
+        window.addEventListener('online', (e) => {
+            // console.log('online ', e)
+            this.props.setConnectState(true)
+        });
         this.initializeChildren()
         this.timeoutId = this.timer()
         AppState.addEventListener("change", this._handleAppStateChange);
@@ -80,7 +87,7 @@ class ParentHome extends React.Component {
         const { parent_id } = this.props.route.params
 
         this.setState({ child_id: '', date: new Date })
-        fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev/family/${parent_id}`, {
+        fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/family/${parent_id}`, {
             method: 'GET',
             headers: {
                 Accept: 'application/json',
@@ -91,11 +98,7 @@ class ParentHome extends React.Component {
             .then((resJson) => {
                 const { statusCode, message, data } = resJson
                 if (statusCode > 200 || message === 'Internal server error') {
-                    Alert.alert(
-                        'Sorry 電腦出狀況了！',
-                        '請截圖和與工程師聯繫' + message,
-                        [{ text: 'Ok' }]
-                    )
+                    alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫' + message)
                     return
                 }
                 this.props.initializeChildren(data)
@@ -106,11 +109,7 @@ class ParentHome extends React.Component {
                 })
             })
             .catch((err) => {
-                Alert.alert(
-                    'Sorry 電腦出狀況了！',
-                    '請截圖和與工程師聯繫: error occurred when initializing student profiles',
-                    [{ text: 'Ok' }]
-                )
+                alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫: error occurred when initializing student profiles')
         })
     }
 
@@ -146,7 +145,7 @@ class ParentHome extends React.Component {
         } else if (date.toDateString() === (new Date()).toDateString()) {
             date.setTime(new Date())
         } else {
-            date.setHours(16)
+            date.setHours(16, 0, 0)
         }
         this.setState({ date, showDateTimeModal: false })
     }
@@ -180,6 +179,8 @@ class ParentHome extends React.Component {
 
     render() {
         const { parent_id } = this.props.route.params
+        const { isConnected } = this.props
+        // console.log('isConnected: ', isConnected)
         const { date, child_id, showQR, temperature, showDateTimeModal, present } = this.state
         if (child_id === '') {
             return (
@@ -191,7 +192,7 @@ class ParentHome extends React.Component {
         return (
             <KeyboardAvoidingView
                 enabled
-                behavior={this.isIOS() && "padding"}
+                behavior={"padding"}
                 keyboardVerticalOffset={100}
                 style={{ flex: 1, zIndex: 1 }}
             >
@@ -210,7 +211,7 @@ class ParentHome extends React.Component {
                     : null
                 }
 
-                {showDateTimeModal ?
+                {showDateTimeModal ? // TODO: time box show in screen
                     <TimeModal
                         start_date={date}
                         datetime_type={'date'}
@@ -221,7 +222,7 @@ class ParentHome extends React.Component {
                     />
                     : null
                 }
-                <ScrollView
+                {<ScrollView
                     contentContainerStyle={{ alignItems: 'center', justifyContent: 'center', paddingBottom: 30 }}
                     refreshControl={
                         <RefreshControl
@@ -320,6 +321,7 @@ class ParentHome extends React.Component {
                         class_id={selected_student.class_id}
                         ref="morningreminder"
                         present={present}
+                        isConnected={isConnected}
                     />
 
                     <MedicationRequestCard
@@ -373,7 +375,7 @@ class ParentHome extends React.Component {
                         ref="diaper"
                     />
 
-                </ScrollView>
+                </ScrollView>}
             </KeyboardAvoidingView>
         );
     }
@@ -401,13 +403,15 @@ const styles = StyleSheet.create({
 
 const mapStateToProps = (state) => {
     return {
-        parent: state.parent
+        parent: state.parent,
+        isConnected: state.parent.isConnected
     }
 }
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        ...bindActionCreators({ 
+        ...bindActionCreators({
+            setConnectState,
             initializeChildren,
             markPresent,
             clearState

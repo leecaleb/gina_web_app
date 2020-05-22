@@ -48,3 +48,10 @@ export const markPresent = (student_id) => {
         student_id
     }
 }
+
+export const setConnectState = (isConnected) => {
+    return {
+        type: 'SET_CONNECT_STATE',
+        isConnected
+    }
+}

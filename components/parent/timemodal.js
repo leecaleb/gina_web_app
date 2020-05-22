@@ -83,8 +83,9 @@ export default class TimeModal extends React.Component {
                     width: '100%',
                     height: '100%', 
                     zIndex: 2,
-                    position: 'absolute', 
-                    justifyContent: 'center', 
+                    position: 'absolute',
+                    paddingVertical: 100,
+                    // justifyContent: 'center', 
                     alignItems: 'center', 
                     backgroundColor: 'rgba(0,0,0,0.7)' 
                 }}
@@ -107,12 +108,12 @@ export default class TimeModal extends React.Component {
                             onChange={(time) => this.selectDatetimeConfirm(time)}
                             showTimeSelect
                             showTimeSelectOnly
-                            timeIntervals={15}
+                            timeIntervals={30}
                             timeCaption="Time"
                             dateFormat="h:mm aa"
                             selected={datetime}
-                            minDate={new Date(minDatetime)}
-                            maxDate={new Date(maxDatetime)}
+                            minTime={new Date(minDatetime).setHours(7, 0, 0)}
+                            maxTime={new Date(maxDatetime).setHours(20, 0, 0)}
                             onClickOutside={() => this.props.hideModal()}
                         />
                     }

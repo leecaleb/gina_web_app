@@ -1,4 +1,5 @@
 // import { connect } from "react-redux"
+import ENV from '../variables'
 
 export const formatDate = (date) => {
     return date.getFullYear() + '-' + ('0' + (date.getMonth()+ 1)).slice(-2) + '-' + ('0' + date.getDate()).slice(-2)
@@ -26,7 +27,7 @@ export const formatHourMinute = (date) => {
 
 export const get = async (endpoint) => {
     var success = true
-    const result = await fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev${endpoint}`, {
+    const result = await fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}${endpoint}`, {
             method: 'GET',
             headers: {
                 Accept: 'application/json',
@@ -68,7 +69,7 @@ export const get = async (endpoint) => {
 
 export const post = async (endpoint, body) => {
     var success = true
-    const result = await fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev${endpoint}`, {
+    const result = await fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}${endpoint}`, {
             method: 'POST',
             headers: {
                 Accept: 'application/json',
@@ -110,7 +111,7 @@ export const post = async (endpoint, body) => {
 
 export const put = async (endpoint, body) => {
     var success = true
-    const result = await fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev${endpoint}`, {
+    const result = await fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}${endpoint}`, {
             method: 'PUT',
             headers: {
                 Accept: 'application/json',
@@ -152,7 +153,7 @@ export const put = async (endpoint, body) => {
 
 export const delete_by_id = async (endpoint) => {
     var success = true
-    const result = await fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev${endpoint}`, {
+    const result = await fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}${endpoint}`, {
             method: 'DELETE',
             headers: {
                 Accept: 'application/json',
@@ -193,7 +194,7 @@ export const delete_by_id = async (endpoint) => {
 
 export const fetchData = async (type, child_id, start_date, end_date) => {
     // const date = formatDate(new Date());
-    const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev/${type}/${child_id}?start_date=${start_date}&end_date=${end_date}`
+    const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/${type}/${child_id}?start_date=${start_date}&end_date=${end_date}`
 
     const fetchedData = await fetch(query, {
         method: 'GET',
@@ -214,7 +215,7 @@ export const fetchData = async (type, child_id, start_date, end_date) => {
 }
 
 export const fetchClassData = async (type, class_id, start_date, end_date) => {
-    const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev/${type}/class/${class_id}?start_date=${start_date}&end_date=${end_date}`
+    const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/${type}/class/${class_id}?start_date=${start_date}&end_date=${end_date}`
     const fetchedData = await fetch(query, {
         method: 'GET',
         headers: {
@@ -235,7 +236,7 @@ export const fetchClassData = async (type, class_id, start_date, end_date) => {
 
 export const fetchMessagesByConversationId = async (conversation_id, sender_id, recipient_id) => {
     console.log('fetchMessageByConvId/recipient_id', recipient_id)
-    const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev/message?conversation_id=${conversation_id}&sender_id=${sender_id}`
+    const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/message?conversation_id=${conversation_id}&sender_id=${sender_id}`
     const messageData = await fetch(query, {
         method: 'GET',
         headers: {
@@ -273,7 +274,7 @@ export const fetchMessagesByConversationId = async (conversation_id, sender_id, 
 const markRead = (message_array, sender_id, recipient_id) => {
     // console.log('message_array: ', message_array)
     // const { sender_id, recipient_id } = this.state
-    const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev/message`
+    const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/message`
 
     const most_recent_message = message_array[0] ? message_array[0] : null
     if (most_recent_message === null || most_recent_message.sender_id === sender_id || most_recent_message.read_at !== null) {
@@ -301,7 +302,7 @@ const markRead = (message_array, sender_id, recipient_id) => {
 export const fetchReadReceipt = async (conversation_id,  sender_id) => {
     // const { conversation_id } = this.state.messageData
     // const sender_id = this.props.child_id
-    const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev/message/read-receipt?conversation_id=${conversation_id}&sender_id=${sender_id}`
+    const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/message/read-receipt?conversation_id=${conversation_id}&sender_id=${sender_id}`
     const success = true
     const message_id = await fetch(query, {
         method: 'GET',
@@ -351,7 +352,7 @@ export const sendWellnessData = async (wellness_data, class_id, date) => {
         data_objs
     }
 
-    const query = 'https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev/wellness/'
+    const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/wellness/`
     
     const fetchResult = await fetch(query, {
         method: 'POST',

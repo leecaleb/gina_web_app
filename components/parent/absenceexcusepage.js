@@ -4,10 +4,12 @@ import {
 } from 'react-native'
 import AbsenceExcuse from './absenceexcuse'
 import { formatDate } from '../util'
+import ENV from '../../variables'
+import { connect } from 'react-redux'
 
 const { height } = Dimensions.get('window')
 
-export default class AbsenceExcusePage extends React.Component {
+class AbsenceExcusePage extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
@@ -27,6 +29,11 @@ export default class AbsenceExcusePage extends React.Component {
     }
 
     componentDidMount() {
+        const { isConnected } = this.props
+        if (!isConnected) {
+            alert('網路連不到! 請稍後再試試看')
+            return
+        }
         this.fetchAbsenceExcuse()
         this.initializePage()
     }
@@ -38,7 +45,7 @@ export default class AbsenceExcusePage extends React.Component {
     async fetchAbsenceExcuse() {
         const { student_id } = this.props.route.params
         const date = formatDate(new Date())
-        const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev/absence-excuse/student/${student_id}?date=${date}`
+        const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/absence-excuse/student/${student_id}?date=${date}`
         await fetch(query, {
             method: 'GET',
             headers: {
@@ -50,22 +57,14 @@ export default class AbsenceExcusePage extends React.Component {
             .then(resJson => {
                 const { statusCode, message, data } = resJson
                 if (statusCode > 200 || message === 'Internal server error') {
-                    Alert.alert(
-                        'Sorry 電腦出狀況了！',
-                        '請截圖和與工程師聯繫' + message,
-                        [{ text: 'Ok' }]
-                    )
+                    alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫' + message)
                     return
                 }
                 this.denormalize(data)
                 this.setState({ requests: data })
             })
             .catch(err => {
-                Alert.alert(
-                  'Sorry 電腦出狀況了！',
-                  '請截圖和與工程師聯繫: error occurred when fetching absence request',
-                  [{ text: 'Ok' }]
-                )
+                alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫: error occurred when fetching absence request')
             })
     }
 
@@ -100,11 +99,7 @@ export default class AbsenceExcusePage extends React.Component {
     selectRequest(index) {
         const access_mode = this.refs['main'].fetchAccessMode()
         if (access_mode === 'edit') {
-            Alert.alert(
-                '還在編輯中喔',
-                '請完成再離開 多謝',
-                [{ text: 'Ok' }]
-            )
+            alert('還在編輯中喔請完成再離開 多謝')
             return
         }
         this.setState({ selected_request_index: index })
@@ -153,11 +148,7 @@ export default class AbsenceExcusePage extends React.Component {
             return
         }
 
-        Alert.alert(
-            '已經在這個日期請過假了',
-            '',
-            [{ text: 'Ok' }]
-        )
+        alert('已經在這個日期請過假了')
 
         this.refs['main'].duplicateDateFound()
     }
@@ -169,7 +160,7 @@ export default class AbsenceExcusePage extends React.Component {
         return (
             <KeyboardAvoidingView
                 style={{flex: 1, width: '100%', alignItems: 'center' }}
-                behavior={this.isIOS() && 'padding'}
+                behavior={'padding'}
                 keyboardVerticalOffset={85}
                 enabled
             >
@@ -276,3 +267,11 @@ export default class AbsenceExcusePage extends React.Component {
         )
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        isConnected: state.parent.isConnected
+    }
+}
+
+export default connect(mapStateToProps) (AbsenceExcusePage)

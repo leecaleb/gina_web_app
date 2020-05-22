@@ -2,7 +2,7 @@ import React from 'react'
 import { View, Text, ActivityIndicator } from 'react-native'
 import * as Font from 'expo-font'
 import Auth from '@aws-amplify/auth'
-// import SchoolApp from '../teacher/schoolapp'
+import SchoolApp from '../teacher/schoolapp'
 import Signin from './signin'
 import Signup from './signup'
 import ParentApp from '../parent/parentapp'
@@ -40,7 +40,7 @@ class AuthLoading extends React.Component {
             .then(user => {
                 //user is authenticated
                 console.log(user.username)
-                fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/prod/user?username=${user.username}`, {
+                fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/user?username=${user.username}`, {
                     method: 'GET',
                     headers: {
                         Accept: 'application/json',
@@ -101,8 +101,8 @@ class AuthLoading extends React.Component {
                 {
                     status.includes('parent') ?
                         <ParentApp parent_id={this.state.id} handleSignOut={() => this.handleSignOut()}/>
-                        : status === 'SignupPage' ?
-                            <Signup changeAuthState={(state, username) => this.changeAuthState(state, username)}/>
+                        : status === 'school' ? 
+                            <SchoolApp school_id={this.state.id} school_name={username} handleSignOut={() => this.handleSignOut()} />
                             : status === 'ConfirmSignUpPage' ?
                                 <ConfirmSignUp getCurrentUser={this.getCurrentUser} username={this.state.username}/>
                                 : status === 'signedout' || status === 'school' ?

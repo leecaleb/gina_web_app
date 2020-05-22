@@ -4,16 +4,14 @@ import {
     Text,
     Platform,
     StyleSheet,
-    TouchableHighlight, 
-    ScrollView, 
-    TextInput, 
-    KeyboardAvoidingView, 
-    Alert,
+    TouchableHighlight,
+    TextInput,
     Dimensions } from 'react-native'
-// import DateTimePicker from '@react-native-community/datetimepicker'
 import { formatDate, beautifyMonthDate } from '../util'
 import PickerComponent from '../picker'
 import TimeModal from './timemodal'
+import ENV from '../../variables'
+import { connect } from 'react-redux'
 
 const { width, height } = Dimensions.get('window')
 
@@ -27,7 +25,7 @@ const options = [
     { value: 'Cancel', label: '返回' }
 ]
 
-export default class AbsenceExcuse extends React.Component {
+class AbsenceExcuse extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
@@ -251,7 +249,7 @@ export default class AbsenceExcuse extends React.Component {
 
     sendAbsenceNote() {
         const { excuse_type, note } = this.state
-        const { student_id, class_id, school_id } = this.props
+        const { student_id, class_id, school_id, isConnected } = this.props
         const startDate = formatDate(this.state.startDate)
         const endDate = formatDate(this.state.endDate)
         const request_body = {
@@ -264,7 +262,12 @@ export default class AbsenceExcuse extends React.Component {
             note
         }
 
-        fetch('https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev/absence-excuse', {
+        if (!isConnected) {
+            alert('網路連不到! 請稍後再試試看')
+            return
+        }
+
+        fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/absence-excuse`, {
             method: 'POST',
             headers: {
                 Accept: 'application/json',
@@ -290,7 +293,7 @@ export default class AbsenceExcuse extends React.Component {
         const { excuse_type, note } = this.state
         const { class_id } = this.props
         const date = formatDate(this.state.startDate)
-        fetch('https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev/absence-excuse', {
+        fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/absence-excuse`, {
             method: 'PUT',
             headers: {
                 Accept: 'application/json',
@@ -327,7 +330,7 @@ export default class AbsenceExcuse extends React.Component {
 
     deleteRequest() {
         const { id } = this.props.request
-        fetch('https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev/absence-excuse', {
+        fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/absence-excuse`, {
             method: 'DELETE',
             headers: {
                 Accept: 'application/json',
@@ -394,10 +397,11 @@ export default class AbsenceExcuse extends React.Component {
         if (showSelect) {
             return (
                 <View style={{ padding: 30, height: '100%', alignItems: 'center' }}>
-                    {options.map(option => {
+                    {options.map((option, index) => {
                         const { label, value } = option
                         return (
                             <TouchableHighlight
+                                key={index}
                                 style={{ width: '50%', padding: 15, backgroundColor: 'white', borderWidth: 1, borderColor: 'lightgrey' }}
                                 onPress={() => this.handleSelectStatus(value)}
                             >
@@ -409,13 +413,6 @@ export default class AbsenceExcuse extends React.Component {
             )
         }
         return (
-            // <KeyboardAvoidingView
-            //     style={{ flex: 1 }}
-            //     behavior={'padding'}
-            //     // keyboardVerticalOffset={100}
-            //     enabled
-            // >
-            //     <ScrollView contentContainerStyle={{ }}>
                     <View style={{ paddingHorizontal: 30, paddingVertical: 30, height: '100%' }}>
 
                         <View
@@ -478,35 +475,18 @@ export default class AbsenceExcuse extends React.Component {
                                     textStyle={{ fontSize: 25, color: this.state.childIsSick ? 'white' : 'black', textAlign: 'center' }}
                                     selectedValue={excuse_type === 'none-medical' ? '病假' : excuse_type}
                                     showSelect={() => this.showSelect()}
-                                    options={[
-                                        "感冒",
-                                        "流感",
-                                        "腸病毒",
-                                        "水痘",
-                                        "腸胃炎",
-                                        "其他",
-                                        "Cancel"
-                                    ]}
+                                    // options={[
+                                    //     "感冒",
+                                    //     "流感",
+                                    //     "腸病毒",
+                                    //     "水痘",
+                                    //     "腸胃炎",
+                                    //     "其他",
+                                    //     "Cancel"
+                                    // ]}
                                     handleOnClick={this.setChildSick}
                                     handleSelectValue={(excuse_type) => this.handleSelectStatus(excuse_type)}
                                 />
-                                // <View
-                                //     style={{
-                                //         flex: 1,
-                                //         padding: 15,
-                                //         // height: '90%',
-                                //         borderTopRightRadius: 30,
-                                //         borderBottomRightRadius: 30,
-                                //         justifyContent: 'center',
-                                //         backgroundColor: this.state.childIsSick ? '#368cbf' : 'rgba(0,0,0,0.1)'
-                                //     }}
-                                // >
-                                //     <Select
-                                //         // value={selectedOption}
-                                //         // onChange={this.handleChange}
-                                //         options={options}
-                                //     />
-                                // </View>
                             }
                         </View>
                         <View style={{ width: '100%' }}>
@@ -563,21 +543,6 @@ export default class AbsenceExcuse extends React.Component {
                                                 <Text style={{ fontSize: width*0.09, color: 'white', fontWeight: 'bold' }}>
                                                     星期{this.state.days[startDate.getDay()]}
                                                 </Text>
-                                                {/* <View style={{}}>
-                                                    <Text style={{ color: 'white', fontSize: width*0.09, fontWeight: '800' }}>
-                                                        {startDate.getFullYear()}
-                                                    </Text>
-                                                </View>
-                                                <View style={{}}>
-                                                    <Text style={{ color: 'white', fontSize: width*0.09, fontWeight: '800' }}>
-                                                        {startDate.getMonth() + 1}/{startDate.getDate()}
-                                                    </Text>
-                                                </View>
-                                                <View style={{}}>
-                                                    <Text style={{ fontSize: width*0.08, color: 'white', fontWeight: '800' }}>
-                                                        星期{this.state.days[startDate.getDay()]}
-                                                    </Text>
-                                                </View> */}
                                             </View>
                                         </TouchableHighlight>
                                     </View>
@@ -601,23 +566,6 @@ export default class AbsenceExcuse extends React.Component {
                                                     星期{this.state.days[endDate.getDay()]}
                                                 </Text>
                                             </View>
-                                            {/* <View style={{ padding: '5%', justifyContent: 'center' }}>
-                                                <View style={{}}>
-                                                    <Text style={{ color: 'white', fontSize: width*0.09, fontWeight: '800', textAlign: 'right' }}>
-                                                        {endDate.getFullYear()}
-                                                    </Text>
-                                                </View>
-                                                <View style={{}}>
-                                                    <Text style={{ color: 'white', fontSize: width*0.09, fontWeight: '800', textAlign: 'right' }}>
-                                                        {endDate.getMonth() + 1}/{endDate.getDate()}
-                                                    </Text>
-                                                </View>
-                                                <View style={{}}>
-                                                    <Text style={{ fontSize: width*0.08, color: 'white', fontWeight: '800', textAlign: 'right' }}>
-                                                        星期{this.state.days[endDate.getDay()]}
-                                                    </Text>
-                                                </View>
-                                            </View> */}
                                         </TouchableHighlight>
                                         <Text style={{ color: 'rgba(0,0,0,0.4)', fontSize: width*0.1, textAlign: 'right' }}>結束</Text>
                                     </View>
@@ -729,64 +677,8 @@ export default class AbsenceExcuse extends React.Component {
                                         : null
                                 }
                             </View>
-                            {/* <View style={{ flex: 1, paddingRight: '2%' }}>
-                                {access_mode === 'edit' ?
-                                    <TouchableHighlight
-                                        style={{
-                                            height: '80%',
-                                            padding: 10,
-                                            justifyContent: 'center',
-                                            backgroundColor: 'rgba(255,255,255,0.4)'
-                                        }}
-                                        onPress={() => this.deleteRequestConfirm()}
-                                    >
-                                        <Text style={{ fontSize: 17, textAlign: 'center' }}>刪除</Text>
-                                    </TouchableHighlight>
-                                    : null
-                                }              
-                            </View>
-                            <View style={{ flex: 1, paddingHorizontal: '1%' }}>
-                                {access_mode === 'edit' ?
-                                    <TouchableHighlight
-                                        style={{
-                                            height: '80%',
-                                            padding: 10,
-                                            justifyContent: 'center',
-                                            backgroundColor: 'rgba(255,255,255,0.4)'
-                                        }}
-                                        onPress={() => this.setState({ access_mode: 'read'})}
-                                    >
-                                        <Text style={{ fontSize: 17, textAlign: 'center' }}>取消編輯</Text>
-                                    </TouchableHighlight>
-                                    : null
-                                }
-                            </View>
-                            <View style={{ flex: 1, paddingLeft: '2%' }}>
-                                <TouchableHighlight
-                                    style={{
-                                    height: '80%',
-                                    padding: 10,
-                                    justifyContent: 'center',
-                                    backgroundColor: 'rgba(255,255,255,0.4)'
-                                    }}
-                                    onPress={() => this.handleClickConfirmButton()}
-                                >
-                                    <Text style={{ fontSize: 25, textAlign: 'center' }}>
-                                        {access_mode === 'read' ?
-                                            '編輯'
-                                            : access_mode === 'create' ?
-                                            '新增'
-                                            : access_mode === 'edit' ?
-                                                '送出'
-                                                : null
-                                        }
-                                    </Text>
-                                </TouchableHighlight>
-                            </View> */}
                         </View>
                     </View>
-            //     </ScrollView>
-            // </KeyboardAvoidingView>
         )
     }
 }
@@ -798,3 +690,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     }
 })
+
+const mapStateToProps = (state) => {
+    return {
+        isConnected: state.parent.isConnected
+    }
+}
+
+export default connect(mapStateToProps, null, null, { forwardRef: true }) (AbsenceExcuse)

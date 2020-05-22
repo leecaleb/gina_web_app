@@ -6,6 +6,7 @@ import Reloading from '../reloading'
 import { connect } from 'react-redux'
 import { bindActionCreators} from 'redux'
 import { getMedRequestSuccess } from '../../redux/parent/actions/index'
+import ENV from '../../variables'
 
 class MedicationRequestCard extends React.Component {
   constructor(props) {
@@ -32,11 +33,11 @@ class MedicationRequestCard extends React.Component {
 
   afterFive() {
     const { date } = this.props
-    return date.getHours() > 17
+    return date.getHours() >= 17
   }
 
   async fetchData(student_id, date) {
-    const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev/medicationrequest/student/${student_id}?date=${formatDate(date)}`
+    const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/medicationrequest/student/${student_id}?date=${formatDate(date)}`
     await fetch(query, {
         method: 'GET',
         headers: {
@@ -54,11 +55,7 @@ class MedicationRequestCard extends React.Component {
           this.setState({ isLoading: false })
       })
       .catch(err => {
-          Alert.alert(
-              'Sorry 取得今日托藥單時電腦出狀況了！',
-              '請與工程師聯繫: error occurred when fetching medication request',
-              [{ text: 'Ok' }]
-          )
+          alert('Sorry 取得今日托藥單時電腦出狀況了！請與工程師聯繫: error occurred when fetching medication request')
       })
   }
 

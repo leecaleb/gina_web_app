@@ -91,7 +91,7 @@ class Signin extends React.Component {
         return (
             <KeyboardAvoidingView 
                 style={styles.container} 
-                behavior={Platform.OS === 'ios' ? 'padding' : ''}
+                behavior={'padding'}
                 keyboardVerticalOffset={keyboardVerticalOffset} 
                 enabled
             >

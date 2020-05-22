@@ -7,15 +7,10 @@ import { formatDate, beautifyTime, beautifyDate, beautifyMonthDate, get } from '
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { getMedRequestSuccess } from '../../redux/parent/actions/index'
+import ENV from '../../variables'
+
 
 const { width } = Dimensions.get('window')
-
-// Item = ({ data }) => (
-//     <View style={{ padding: 20 }}>
-//       <Text style={{fontSize: 30 }}>{beautifyTime(data.timestamp)}</Text>
-//     </View>
-//   );
-  
 
 class MedicationRequestPage extends React.Component {
     constructor(props) {
@@ -57,17 +52,18 @@ class MedicationRequestPage extends React.Component {
     }
 
     async fetchMedicationRequest() {
+        const { isConnected } = this.props
+        if (!isConnected) {
+            alert('網路連不到! 請稍後再試試看')
+            return
+        }
         const {student_id, onGoBack} = this.props.route.params
         const date = formatDate(new Date())
         const response = await get(`/medicationrequest/student/${student_id}?date=${date}`)
         const { success, statusCode, message, data } = response
         // console.log('fetchMedicationRequest: ', response)
         if (!success) {
-            Alert.alert(
-                'Sorry 取得托藥單時電腦出狀況了！',
-                '請稍後再試試或請截圖和與工程師聯繫\n\n' + message,
-                [{ text: 'Ok' }]
-            )
+            alert('Sorry 取得托藥單時電腦出狀況了！請稍後再試試或請截圖和與工程師聯繫\n\n' + message)
             return
         }
         this.denormalize(data)
@@ -124,13 +120,7 @@ class MedicationRequestPage extends React.Component {
     selectRequest(index) {
         const access_mode = this.refs['main'].fetchAccessMode()
         if (access_mode === 'edit') {
-            Alert.alert(
-                '還在編輯中喔',
-                '請完成再離開 多謝',
-                [
-                    { text: 'Ok' }
-                ]
-            )
+            alert('還在編輯中喔請完成再離開 多謝')
             return
         }
         this.setState({ selected_request_index: index })
@@ -180,22 +170,20 @@ class MedicationRequestPage extends React.Component {
     }
 
     deleteRequestConfirm(request_id) {
-        const confirmed = confirm(
-          '確定要刪除？'
-        //   '',
-        //   [
-        //     { text: '確定', onPress: () => this.deleteRequest(request_id) },
-        //     { text: 'Cancel', style: 'cancel' }
-        //   ]
-        )
+        const confirmed = confirm('確定要刪除？')
         if (confirmed) {
             this.deleteRequest(request_id)
         }
     }
 
     deleteRequest(request_id) {
+        const { isConnected } = this.props
+        if (!isConnected) {
+            alert('網路連不到! 請稍後再試試看')
+            return
+        }
         const { class_id } = this.props.route.params
-        fetch('https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev/medicationrequest/' + request_id, {
+        fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/medicationrequest/${request_id}`, {
           method: 'DELETE',
           headers: {
             Accept: 'application/json',
@@ -209,21 +197,13 @@ class MedicationRequestPage extends React.Component {
           .then((resJson) => {
             const { statusCode, message, data } = resJson
             if (statusCode > 200 || message === 'Internal Server Error') {
-              Alert.alert(
-                  'Sorry 電腦出狀況了！',
-                  '請截圖和與工程師聯繫' + message,
-                  [{ text: 'Ok' }]
-              )
+              alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫' + message)
               return
             }
             this.fetchMedicationRequest()
           })
           .catch(err => {
-            Alert.alert(
-                'Sorry 電腦出狀況了！',
-                '請截圖和與工程師聯繫: error occurred when deleting medication request',
-                [{ text: 'Ok' }]
-            )
+            alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫: error occurred when deleting medication request')
           })
       }
 
@@ -337,10 +317,16 @@ class MedicationRequestPage extends React.Component {
     }
 }
 
+const mapStateToProps = (state) => {
+    return {
+        isConnected: state.parent.isConnected
+    }
+}
+
 const mapDispatchToProps = (dispatch) => {
     return {
         ...bindActionCreators({getMedRequestSuccess}, dispatch)
     }
 }
 
-export default connect(null, mapDispatchToProps)(MedicationRequestPage)
+export default connect(mapStateToProps, mapDispatchToProps)(MedicationRequestPage)

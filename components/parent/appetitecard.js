@@ -133,8 +133,8 @@ export default class AppetiteCard extends React.Component {
                       </View>
                       <View
                         style={{
-                          width: '100%',
-                          aspectRatio: 1,
+                          width: 70,
+                          height: 70,
                           justifyContent: 'center',
                           alignItems: 'center'
                         }}
@@ -142,14 +142,14 @@ export default class AppetiteCard extends React.Component {
                         {/* {breakfast.rating_icon ?
                           <Image source={breakfast.rating_icon} />
                           :  */}
-                          <Text style={{ fontSize: 20 }}>{rating[breakfast.rating]}</Text>
+                          <Text style={{ fontSize: 20 }}>{rating[breakfast.rating] || breakfast.rating}</Text>
                         {/* } */}
                       </View>
 
                       <View style={{ padding: 5, justifyContent: 'center' }}>
                         <Text style={{ fontSize: 13, textAlign: 'center' }}>
                           {breakfast.water_drunk ?
-                            '有喝水' : ''
+                            '有喝水' : ' '
                           }
                         </Text>
                       </View>
@@ -164,8 +164,8 @@ export default class AppetiteCard extends React.Component {
                       </View>
                       <View
                         style={{
-                          width: '100%',
-                          aspectRatio: 1,
+                          width: 70,
+                          height: 70,
                           justifyContent: 'center',
                           alignItems: 'center'
                         }}
@@ -173,14 +173,14 @@ export default class AppetiteCard extends React.Component {
                         {/* {fruit.rating_icon ?
                           <Image source={fruit.rating_icon} />
                           :  */}
-                          <Text style={{ fontSize: 20 }}>{rating[fruit.rating]}</Text>
+                          <Text style={{ fontSize: 20 }}>{rating[fruit.rating] || fruit.rating}</Text>
                         {/* } */}
                       </View>
 
                       <View style={{ padding: 5, justifyContent: 'center' }}>
                         <Text style={{ fontSize: 13, textAlign: 'center' }}>
                           {fruit.water_drunk ?
-                            '有喝水' : ''
+                            '有喝水' : ' '
                           }
                         </Text>
                       </View>
@@ -196,8 +196,8 @@ export default class AppetiteCard extends React.Component {
 
                       <View
                         style={{
-                          width: '100%',
-                          aspectRatio: 1,
+                          width: 70,
+                          height: 70,
                           justifyContent: 'center',
                           alignItems: 'center'
                         }}
@@ -205,14 +205,14 @@ export default class AppetiteCard extends React.Component {
                         {/* {lunch.rating_icon ?
                           <Image source={lunch.rating_icon} />
                           :  */}
-                          <Text style={{ fontSize: 20 }}>{rating[lunch.rating]}</Text>
+                          <Text style={{ fontSize: 20 }}>{rating[lunch.rating] || lunch.rating}</Text>
                         {/* } */}
                       </View>
 
                       <View style={{ padding: 5, justifyContent: 'center' }}>
                         <Text style={{ fontSize: 13, textAlign: 'center' }}>
                           {lunch.water_drunk ?
-                            '有喝水' : ''
+                            '有喝水' : ' '
                           }
                         </Text>
                       </View>
@@ -229,8 +229,8 @@ export default class AppetiteCard extends React.Component {
 
                       <View
                         style={{
-                          width: '100%',
-                          aspectRatio: 1,
+                          width: 70,
+                          height: 70,
                           justifyContent: 'center',
                           alignItems: 'center'
                         }}
@@ -238,14 +238,14 @@ export default class AppetiteCard extends React.Component {
                         {/* {snack.rating_icon ?
                           <Image source={snack.rating_icon} />
                           :  */}
-                          <Text style={{ fontSize: 20 }}>{rating[snack.rating]}</Text>
+                          <Text style={{ fontSize: 20 }}>{rating[snack.rating] || snack.rating}</Text>
                         {/* } */}
                       </View>
 
                       <View style={{ padding: 5, justifyContent: 'center' }}>
                         <Text style={{ fontSize: 13, textAlign: 'center' }}>
                           {snack.water_drunk ?
-                            '有喝水' : ''
+                            '有喝水' : ' '
                           }
                         </Text>
                       </View>

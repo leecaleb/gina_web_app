@@ -86,9 +86,9 @@ export default class App extends React.Component {
     // }
 
     return (
-      <Root>
+      // <Root>
         <AuthLoading />
-      </Root>
+      // </Root>
     )
   }
 }
