@@ -1,7 +1,7 @@
 {
   "files": {
-    "app.js": "/gina_web_app/static/js/app.7c6e2ed6.chunk.js",
-    "app.js.map": "/gina_web_app/static/js/app.7c6e2ed6.chunk.js.map",
+    "app.js": "/gina_web_app/static/js/app.c73f37a2.chunk.js",
+    "app.js.map": "/gina_web_app/static/js/app.c73f37a2.chunk.js.map",
     "runtime~app.js": "/gina_web_app/static/js/runtime~app.ad331959.js",
     "runtime~app.js.map": "/gina_web_app/static/js/runtime~app.ad331959.js.map",
     "static/js/2.30d16b42.chunk.js": "/gina_web_app/static/js/2.30d16b42.chunk.js",
@@ -49,6 +49,6 @@
   "entrypoints": [
     "static/js/runtime~app.ad331959.js",
     "static/js/2.30d16b42.chunk.js",
-    "static/js/app.7c6e2ed6.chunk.js"
+    "static/js/app.c73f37a2.chunk.js"
   ]
 }
