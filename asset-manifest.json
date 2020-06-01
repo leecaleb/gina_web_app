@@ -1,11 +1,11 @@
 {
   "files": {
-    "app.js": "/gina_web_app/static/js/app.3db0bb38.chunk.js",
-    "app.js.map": "/gina_web_app/static/js/app.3db0bb38.chunk.js.map",
+    "app.js": "/gina_web_app/static/js/app.f580e955.chunk.js",
+    "app.js.map": "/gina_web_app/static/js/app.f580e955.chunk.js.map",
     "runtime~app.js": "/gina_web_app/static/js/runtime~app.ad331959.js",
     "runtime~app.js.map": "/gina_web_app/static/js/runtime~app.ad331959.js.map",
-    "static/js/2.30d16b42.chunk.js": "/gina_web_app/static/js/2.30d16b42.chunk.js",
-    "static/js/2.30d16b42.chunk.js.map": "/gina_web_app/static/js/2.30d16b42.chunk.js.map",
+    "static/js/2.d0ccf05a.chunk.js": "/gina_web_app/static/js/2.d0ccf05a.chunk.js",
+    "static/js/2.d0ccf05a.chunk.js.map": "/gina_web_app/static/js/2.d0ccf05a.chunk.js.map",
     "fonts/AntDesign.ttf": "/gina_web_app/./fonts/AntDesign.ttf",
     "fonts/Entypo.ttf": "/gina_web_app/./fonts/Entypo.ttf",
     "fonts/Feather.ttf": "/gina_web_app/./fonts/Feather.ttf",
@@ -48,7 +48,7 @@
   },
   "entrypoints": [
     "static/js/runtime~app.ad331959.js",
-    "static/js/2.30d16b42.chunk.js",
-    "static/js/app.3db0bb38.chunk.js"
+    "static/js/2.d0ccf05a.chunk.js",
+    "static/js/app.f580e955.chunk.js"
   ]
 }
