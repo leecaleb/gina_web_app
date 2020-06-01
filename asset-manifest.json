@@ -1,11 +1,11 @@
 {
   "files": {
-    "app.js": "/gina_web_app/static/js/app.c73f37a2.chunk.js",
-    "app.js.map": "/gina_web_app/static/js/app.c73f37a2.chunk.js.map",
-    "runtime~app.js": "/gina_web_app/static/js/runtime~app.ad331959.js",
-    "runtime~app.js.map": "/gina_web_app/static/js/runtime~app.ad331959.js.map",
-    "static/js/2.30d16b42.chunk.js": "/gina_web_app/static/js/2.30d16b42.chunk.js",
-    "static/js/2.30d16b42.chunk.js.map": "/gina_web_app/static/js/2.30d16b42.chunk.js.map",
+    "app.js": "/gina_web_app/static/js/app.3b76c279.chunk.js",
+    "app.js.map": "/gina_web_app/static/js/app.3b76c279.chunk.js.map",
+    "runtime~app.js": "/gina_web_app/static/js/runtime~app.d5c334a3.js",
+    "runtime~app.js.map": "/gina_web_app/static/js/runtime~app.d5c334a3.js.map",
+    "static/js/2.12620fdf.chunk.js": "/gina_web_app/static/js/2.12620fdf.chunk.js",
+    "static/js/2.12620fdf.chunk.js.map": "/gina_web_app/static/js/2.12620fdf.chunk.js.map",
     "fonts/AntDesign.ttf": "/gina_web_app/./fonts/AntDesign.ttf",
     "fonts/Entypo.ttf": "/gina_web_app/./fonts/Entypo.ttf",
     "fonts/Feather.ttf": "/gina_web_app/./fonts/Feather.ttf",
@@ -47,8 +47,8 @@
     "static/media/icon-wellness.png": "/gina_web_app/static/media/icon-wellness.8e4dfdb5.png"
   },
   "entrypoints": [
-    "static/js/runtime~app.ad331959.js",
-    "static/js/2.30d16b42.chunk.js",
-    "static/js/app.c73f37a2.chunk.js"
+    "static/js/runtime~app.d5c334a3.js",
+    "static/js/2.12620fdf.chunk.js",
+    "static/js/app.3b76c279.chunk.js"
   ]
 }
