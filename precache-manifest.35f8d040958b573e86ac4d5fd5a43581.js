@@ -1,7 +1,7 @@
 self.__precacheManifest = [
   {
-    "revision": "2708813d7b80e227a48d",
-    "url": "/gina_web_app/static/js/app.f580e955.chunk.js"
+    "revision": "a720bc74d9e09f8d59b9",
+    "url": "/gina_web_app/static/js/app.c175b1e9.chunk.js"
   },
   {
     "revision": "42ef4740eb5dc25b6be4",
@@ -164,7 +164,7 @@ self.__precacheManifest = [
     "url": "/gina_web_app/favicon.ico"
   },
   {
-    "revision": "12c242b1bb21a4dfb67409b5bf0d76de",
+    "revision": "a5573f2254988a26953a43a375d378e8",
     "url": "/gina_web_app/index.html"
   },
   {

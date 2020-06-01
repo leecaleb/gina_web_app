@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.6.3/workbox-sw.js");
 
 importScripts(
-  "/gina_web_app/precache-manifest.01da88ef674707e0bae4cdf447578280.js"
+  "/gina_web_app/precache-manifest.35f8d040958b573e86ac4d5fd5a43581.js"
 );
 
 workbox.skipWaiting();
