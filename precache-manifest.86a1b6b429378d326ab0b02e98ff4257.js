@@ -1,7 +1,7 @@
 self.__precacheManifest = [
   {
-    "revision": "e6ed36fbef78a0598695",
-    "url": "/gina_web_app/static/js/app.bb72b785.chunk.js"
+    "revision": "45a61997673fa88674bf",
+    "url": "/gina_web_app/static/js/app.1f10e076.chunk.js"
   },
   {
     "revision": "42ef4740eb5dc25b6be4",
@@ -144,12 +144,12 @@ self.__precacheManifest = [
     "url": "/gina_web_app/serve.json"
   },
   {
-    "revision": "9029a33d4f4fd27d78809364ba8b3ca0",
-    "url": "/gina_web_app/.expo/settings.json"
-  },
-  {
     "revision": "48c7ed4e7da9792af288a60d7242d615",
     "url": "/gina_web_app/expo-service-worker.js"
+  },
+  {
+    "revision": "9029a33d4f4fd27d78809364ba8b3ca0",
+    "url": "/gina_web_app/.expo/settings.json"
   },
   {
     "revision": "c5e28cce64ee8171a174789f78b968fb",
@@ -164,7 +164,7 @@ self.__precacheManifest = [
     "url": "/gina_web_app/favicon.ico"
   },
   {
-    "revision": "d9820dbab64e668d5afef3c1f104bea1",
+    "revision": "7ff7c064fe20a2d135b0633aa92f41fe",
     "url": "/gina_web_app/index.html"
   },
   {
