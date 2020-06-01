@@ -4,7 +4,7 @@
   "lang": "en",
   "name": "gina_web",
   "short_name": "gina_web",
-  "start_url": "/?utm_source=web_app_manifest",
+  "start_url": "/gina_web_app/?utm_source=web_app_manifest",
   "orientation": "portrait",
   "icons": [
     {
