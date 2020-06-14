@@ -1,7 +1,7 @@
 {
   "files": {
-    "app.js": "/gina_web_app/static/js/app.8e6b6642.chunk.js",
-    "app.js.map": "/gina_web_app/static/js/app.8e6b6642.chunk.js.map",
+    "app.js": "/gina_web_app/static/js/app.81ee0031.chunk.js",
+    "app.js.map": "/gina_web_app/static/js/app.81ee0031.chunk.js.map",
     "runtime~app.js": "/gina_web_app/static/js/runtime~app.d5c334a3.js",
     "runtime~app.js.map": "/gina_web_app/static/js/runtime~app.d5c334a3.js.map",
     "static/js/2.dc22a05a.chunk.js": "/gina_web_app/static/js/2.dc22a05a.chunk.js",
@@ -25,7 +25,7 @@
     "favicon-32.png": "/gina_web_app/favicon-32.png",
     "favicon.ico": "/gina_web_app/favicon.ico",
     "index.html": "/gina_web_app/index.html",
-    "manifest.json": "/gina_web_app/manifest_v8.json",
+    "manifest.json": "/gina_web_app/manifest_v9.json",
     "serve.json": "/gina_web_app/serve.json",
     "static/media/app-splash.gif": "/gina_web_app/static/media/app-splash.0a3ec935.gif",
     "static/media/app_logo.png": "/gina_web_app/static/media/app_logo.fee19d58.png",
@@ -49,6 +49,6 @@
   "entrypoints": [
     "static/js/runtime~app.d5c334a3.js",
     "static/js/2.dc22a05a.chunk.js",
-    "static/js/app.8e6b6642.chunk.js"
+    "static/js/app.81ee0031.chunk.js"
   ]
 }
