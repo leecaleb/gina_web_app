@@ -18,7 +18,7 @@ export const formatTime = (date) => {
 }
 
 export const beautifyTime = (date) => {
-    return date.getHours() + ':' + date.getMinutes()
+    return date.getHours() + ':' + ('0' + date.getMinutes()).slice(-2)
 }
 
 export const formatHourMinute = (date) => {

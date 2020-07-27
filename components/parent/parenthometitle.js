@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, TouchableHighlight, Image, Text} from 'react-native'
+import { View, TouchableOpacity, Image, Text} from 'react-native'
 import { Card } from 'native-base'
 
 export default class ParentHomeTitle extends React.Component {
@@ -59,9 +59,9 @@ export default class ParentHomeTitle extends React.Component {
                     {temperature === '' ? '未量' : `${temperature}°`}
                   </Text>
                 </View>
-                <TouchableHighlight
+                <TouchableOpacity
                   style={{ backgroundColor: '#F5F5F5', alignItems: 'center', justifyContent: 'center' }}
-                  onPress={() => this.props.viewQRCode()}
+                  onClick={() => this.props.viewQRCode()}
                 >
                   <Image
                     source={require('../../assets/icon-qr.png')}
@@ -70,16 +70,16 @@ export default class ParentHomeTitle extends React.Component {
                         height: 65,
                     }}
                   />
-                </TouchableHighlight>
+                </TouchableOpacity>
               </View>
             </View>
           </View>
         </Card>
         <Card style={{ width: '20%'}}>
-          <TouchableHighlight
+          <TouchableOpacity
             style={{ flex: 1, justifyContent: 'center', paddingLeft: 5 }}
             underlayColor='#F5F5F5'
-            onPress={() => this.props.selectOtherChildProfile()}
+            onClick={() => this.props.selectOtherChildProfile()}
           >
             <Image
               source={require('../../assets/icon-babies.png')}
@@ -89,7 +89,7 @@ export default class ParentHomeTitle extends React.Component {
                 opacity: 0.6
               }}
             />
-          </TouchableHighlight>
+          </TouchableOpacity>
         </Card>
       </View>
     )

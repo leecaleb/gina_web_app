@@ -4,7 +4,7 @@ import {
     Text,
     Platform,
     StyleSheet,
-    TouchableHighlight,
+    TouchableOpacity,
     TextInput,
     Dimensions } from 'react-native'
 import { formatDate, beautifyMonthDate } from '../util'
@@ -42,7 +42,10 @@ class AbsenceExcuse extends React.Component {
             days: ['天', '一', '二', '三', '四', '五', '六'],
             months: ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'],
             access_mode: 'create',
-            note: ''
+            note: '',
+            absence_time: 'all_day',
+            scrollHeight: '100%',
+            request_id: ''
         }
         this.setStartDate = this.setStartDate.bind(this)
         this.setEndDate = this.setEndDate.bind(this)
@@ -62,20 +65,25 @@ class AbsenceExcuse extends React.Component {
                     childIsSick: 0,
                     excuse_type: 'none-medical',
                     note: '',
+                    absence_time: 'all_day',
                     access_mode: 'create',
-                    cached_date: null
+                    cached_date: null,
+                    scrollHeight: '100%',
+                    request_id: ''
                 })
                 return
             }
-            const { date, excuse_type, note } = request
+            const { id, date, excuse_type, note, absence_time } = request
             this.setState({
                 startDate: date,
                 endDate: null,
                 childIsSick: excuse_type === 'none-medical' ? 0 : 1,
                 excuse_type,
                 note,
+                absence_time,
                 access_mode: 'read',
-                cached_date: null
+                cached_date: null,
+                request_id: id
             })
         }
     }
@@ -97,6 +105,8 @@ class AbsenceExcuse extends React.Component {
     }
     
     setChildNotSick () {
+        const { access_mode } = this.state
+        if (access_mode === 'read') return
         this.setState({ childIsSick: 0, excuse_type: 'none-medical' })
     }
 
@@ -233,6 +243,10 @@ class AbsenceExcuse extends React.Component {
         this.setState({ excuse_type: value })
     }
 
+    setScrollHeight(scrollHeight) {
+        this.setState({ scrollHeight })
+    }
+
     handleClickConfirmButton() {
         const { access_mode } = this.state
         if (access_mode === 'read') {
@@ -248,7 +262,7 @@ class AbsenceExcuse extends React.Component {
     }
 
     sendAbsenceNote() {
-        const { excuse_type, note } = this.state
+        const { excuse_type, note, absence_time } = this.state
         const { student_id, class_id, school_id, isConnected } = this.props
         const startDate = formatDate(this.state.startDate)
         const endDate = formatDate(this.state.endDate)
@@ -259,7 +273,8 @@ class AbsenceExcuse extends React.Component {
             startDate,
             endDate,
             excuse_type,
-            note
+            note,
+            absence_time
         }
 
         if (!isConnected) {
@@ -290,7 +305,7 @@ class AbsenceExcuse extends React.Component {
     }
 
     editAbsenceNote(request_id) {
-        const { excuse_type, note } = this.state
+        const { excuse_type, note, absence_time } = this.state
         const { class_id } = this.props
         const date = formatDate(this.state.startDate)
         fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/absence-excuse`, {
@@ -304,7 +319,8 @@ class AbsenceExcuse extends React.Component {
                 excuse_type,
                 note,
                 date,
-                class_id
+                class_id,
+                absence_time
             })
         })
             .then((res) => res.json())
@@ -365,10 +381,13 @@ class AbsenceExcuse extends React.Component {
             note,
             show_start_date_picker,
             show_end_date_picker,
-            showSelect } = this.state
+            showSelect,
+            absence_time,
+            scrollHeight,
+            request_id } = this.state
         if (show_start_date_picker) {
             return (
-                <View style={{ marginVertical: 100, height: '100%' }}>
+                <View style={{ height, marginTop: -120 }}>
                     <TimeModal
                         start_date={startDate}
                         datetime_type={'date'}
@@ -376,13 +395,14 @@ class AbsenceExcuse extends React.Component {
                         selectDatetimeConfirm={(date) => this.setStartDate(date)}
                         minDatetime={new Date()}
                         maxDatetime={max_date}
+                        paddingVertical={100}
                     />
                 </View>
             )
         }
         if (show_end_date_picker) {
             return (
-                <View style={{ marginVertical: 100, height: '100%' }}>
+                <View style={{ height, marginTop: -120 }}>
                     <TimeModal
                         start_date={endDate}
                         datetime_type={'date'}
@@ -390,6 +410,7 @@ class AbsenceExcuse extends React.Component {
                         selectDatetimeConfirm={(date) => this.setEndDate(date)}
                         minDatetime={new Date()}
                         maxDatetime={max_date}
+                        paddingVertical={100}
                     />
                 </View>
             )
@@ -400,13 +421,13 @@ class AbsenceExcuse extends React.Component {
                     {options.map((option, index) => {
                         const { label, value } = option
                         return (
-                            <TouchableHighlight
+                            <TouchableOpacity
                                 key={index}
                                 style={{ width: '50%', padding: 15, backgroundColor: 'white', borderWidth: 1, borderColor: 'lightgrey' }}
-                                onPress={() => this.handleSelectStatus(value)}
+                                onClick={() => this.handleSelectStatus(value)}
                             >
                                 <Text style={{ fontSize: 25 }}>{label}</Text>
-                            </TouchableHighlight>
+                            </TouchableOpacity>
                         )
                     })}
                 </View>
@@ -423,7 +444,7 @@ class AbsenceExcuse extends React.Component {
                                 // alignItems: 'center',
                             }}
                         >
-                            <TouchableHighlight
+                            <TouchableOpacity
                                 disabled={access_mode === 'read'}
                                 style={{
                                     flex: 1,
@@ -435,9 +456,9 @@ class AbsenceExcuse extends React.Component {
                                     borderBottomLeftRadius: 30
                                 }}
                                 underlayColor='#368cbf'
-                                onPress={this.setChildNotSick}>
+                                onClick={this.setChildNotSick}>
                                 <Text style={{ fontSize: 25, color: this.state.childIsSick === 0 ? 'white' : 'black', textAlign: 'center' }}>事假</Text>
-                            </TouchableHighlight>
+                            </TouchableOpacity>
 
                             {editing_other_option ? 
                                 <View
@@ -498,10 +519,13 @@ class AbsenceExcuse extends React.Component {
                                         alignSelf: 'center'
                                     }}
                                 >
-                                    <TouchableHighlight
+                                    <TouchableOpacity
                                         disabled={access_mode === 'read'}
                                         style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
-                                        onPress={() => this.setState({ show_start_date_picker: true })}
+                                        onClick={() => {
+                                            if (access_mode === 'read') return
+                                            this.setState({ show_start_date_picker: true })
+                                        }}
                                     >
                                         <View style={{ padding: 15, justifyContent: 'center' }}>
                                             <View style={{}}>
@@ -520,7 +544,7 @@ class AbsenceExcuse extends React.Component {
                                                 </Text>
                                             </View>
                                         </View>
-                                    </TouchableHighlight>
+                                    </TouchableOpacity>
                                 </View>
                                 :
                                 <View
@@ -532,9 +556,9 @@ class AbsenceExcuse extends React.Component {
                                 >
                                     <View style={{ width: '100%' }}>
                                         <Text style={{ color: 'rgba(0,0,0,0.4)', fontSize: width*0.1 }}>開始</Text>
-                                        <TouchableHighlight
+                                        <TouchableOpacity
                                             style={{ backgroundColor: 'rgba(0,0,0,0.4)', padding: 15 }}
-                                            onPress={() => this.setState({ show_start_date_picker: true })}
+                                            onClick={() => this.setState({ show_start_date_picker: true })}
                                         >
                                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Text style={{ color: 'white', fontSize: width*0.09, fontWeight: 'bold' }}>
@@ -544,19 +568,19 @@ class AbsenceExcuse extends React.Component {
                                                     星期{this.state.days[startDate.getDay()]}
                                                 </Text>
                                             </View>
-                                        </TouchableHighlight>
+                                        </TouchableOpacity>
                                     </View>
 
                                     <View style={{ width: '100%', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-                                        <Text style={{ fontSize: 20 }}>
+                                        <Text style={{ fontSize: 25 }}>
                                             總計 {this.getDayDifference()} 天
                                         </Text>
                                     </View>
 
                                     <View style={{width: '100%' }}>
-                                        <TouchableHighlight
+                                        <TouchableOpacity
                                             style={{ backgroundColor: 'rgba(0,0,0,0.4)', padding: 15 }}
-                                            onPress={() => this.setState({ show_end_date_picker: true })}
+                                            onClick={() => this.setState({ show_end_date_picker: true })}
                                         >
                                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Text style={{ color: 'white', fontSize: width*0.09, fontWeight: 'bold' }}>
@@ -566,7 +590,7 @@ class AbsenceExcuse extends React.Component {
                                                     星期{this.state.days[endDate.getDay()]}
                                                 </Text>
                                             </View>
-                                        </TouchableHighlight>
+                                        </TouchableOpacity>
                                         <Text style={{ color: 'rgba(0,0,0,0.4)', fontSize: width*0.1, textAlign: 'right' }}>結束</Text>
                                     </View>
                                 </View>
@@ -577,32 +601,133 @@ class AbsenceExcuse extends React.Component {
                                 style={{ flex: 1,width: '100%', alignItems: 'center' }}
                             >
                                 <TextInput
+                                    key={request_id}
                                     editable={access_mode !== 'read'}
                                     placeholder='備註'
                                     placeholderTextColor='grey'
                                     multiline
                                     // textAlignVertical='center'
                                     scrollEnabled={false}
-                                    blurOnSubmit={true}
+                                    // blurOnSubmit={true}
                                     value={note}
                                     style={{
                                         width: '100%',
-                                        // height: '100%',
+                                        height: scrollHeight,
                                         backgroundColor: '#eaf8f8',
                                         borderRadius: 3,
-                                        fontSize: 20,
+                                        fontSize: 25,
                                         paddingTop: 20,
                                         paddingBottom: 20,
                                         paddingHorizontal: 20,
                                         textAlignVertical: 'center'
                                     }}
                                     onChangeText={note => this.setState({ note })}
+                                    onChange={(e) => this.setScrollHeight(e.target.scrollHeight)}
+                                    onLayout={(event) => {
+                                        const { scrollHeight } = event.nativeEvent.target
+                                        this.setState({
+                                            scrollHeight
+                                        })
+                                    }}
                                 />
+                            </View>
+
+                            <View
+                                style={{
+                                    flex: 1,
+                                    width: '100%',
+                                    alignItems: 'center',
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between'
+                                }}
+                            >
+                                <TouchableOpacity
+                                    disabled={access_mode === 'read'}
+                                    style={{
+                                        flex: 1,
+                                        paddingVertical: 15,
+                                        justifyContent: 'center'
+                                    }}
+                                    underlayColor='transparent'
+                                    onClick={() => {
+                                        if (access_mode === 'read') return
+                                        this.setState({ absence_time: 'all_day' })
+                                    }}
+                                >
+                                    <Text 
+                                        style={{
+                                            width: '90%',
+                                            fontSize: 25,
+                                            backgroundColor: absence_time === 'all_day' ? '#368cbf' : 'rgba(0,0,0,0.1)',
+                                            color: absence_time === 'all_day' ? 'white' : 'black',
+                                            padding: 15,
+                                            textAlign: 'center'
+                                        }}
+                                    >
+                                        全天
+                                    </Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    disabled={access_mode === 'read'}
+                                    style={{
+                                        flex: 1,
+                                        paddingVertical: 10,
+                                        justifyContent: 'center',
+                                        alignItems: 'center'
+                                    }}
+                                    underlayColor='transparent'
+                                    onClick={() => {
+                                        if (access_mode === 'read') return
+                                        this.setState({ absence_time: 'morning' })
+                                    }}
+                                >
+                                    <Text 
+                                        style={{
+                                            width: '90%',
+                                            fontSize: 25,
+                                            backgroundColor: absence_time === 'morning' ? '#368cbf' : 'rgba(0,0,0,0.1)',
+                                            color: absence_time === 'morning' ? 'white' : 'black',
+                                            padding: 15,
+                                            textAlign: 'center'
+                                        }}
+                                    >
+                                        早上
+                                    </Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    disabled={access_mode === 'read'}
+                                    style={{
+                                        flex: 1,
+                                        paddingVertical: 10,
+                                        justifyContent: 'center',
+                                        alignItems: 'flex-end'
+                                    }}
+                                    underlayColor='transparent'
+                                    onClick={() => {
+                                        if (access_mode === 'read') return
+                                        this.setState({ absence_time: 'evening' })
+                                    }}
+                                >
+                                    <Text 
+                                        style={{
+                                            width: '90%',
+                                            fontSize: 25,
+                                            backgroundColor: absence_time === 'evening' ? '#368cbf' : 'rgba(0,0,0,0.1)',
+                                            color: absence_time === 'evening' ? 'white' : 'black',
+                                            padding: 15,
+                                            textAlign: 'center'
+                                        }}
+                                    >
+                                        下午
+                                    </Text>
+                                </TouchableOpacity>
                             </View>
                             
                             <View
                                 style={{
-                                    marginVertical: 30,
+                                    marginVertical: 20,
                                     width: '100%',
                                     flexDirection: 'row',
                                     // padding: 10,
@@ -611,7 +736,7 @@ class AbsenceExcuse extends React.Component {
                                 }}
                             >
                                 {access_mode !== 'edit' ?
-                                    <TouchableHighlight
+                                    <TouchableOpacity
                                         style={{
                                             // height: '80%',
                                             width: '100%',
@@ -619,7 +744,7 @@ class AbsenceExcuse extends React.Component {
                                             justifyContent: 'center',
                                             backgroundColor: 'rgba(0,0,0,0.1)'
                                         }}
-                                        onPress={() => this.handleClickConfirmButton()}
+                                        onClick={() => this.handleClickConfirmButton()}
                                     >
                                         <Text style={{ fontSize: 25, textAlign: 'center' }}>
                                             {access_mode === 'read' ?
@@ -629,10 +754,10 @@ class AbsenceExcuse extends React.Component {
                                                     : null
                                             }
                                         </Text>
-                                    </TouchableHighlight>
+                                    </TouchableOpacity>
                                     : access_mode === 'edit' ?
                                         <View style={{ width: '100%', flex: 1, flexDirection: 'row' }}>
-                                            <TouchableHighlight
+                                            <TouchableOpacity
                                                 style={{
                                                     // height: '80%',
                                                     flex: 1,
@@ -641,12 +766,12 @@ class AbsenceExcuse extends React.Component {
                                                     justifyContent: 'center',
                                                     backgroundColor: '#fa625f'
                                                 }}
-                                                onPress={() => this.deleteRequestConfirm()}
+                                                onClick={() => this.deleteRequestConfirm()}
                                             >
                                                 <Text style={{ fontSize: 25, textAlign: 'center' }}>刪除</Text>
-                                            </TouchableHighlight>
+                                            </TouchableOpacity>
 
-                                            <TouchableHighlight
+                                            <TouchableOpacity
                                                 style={{
                                                     // height: '80%',
                                                     flex: 1,
@@ -655,12 +780,12 @@ class AbsenceExcuse extends React.Component {
                                                     justifyContent: 'center',
                                                     backgroundColor: 'rgba(0,0,0,0.1)'
                                                 }}
-                                                onPress={() => this.setState({ access_mode: 'read'})}
+                                                onClick={() => this.setState({ access_mode: 'read'})}
                                             >
                                                 <Text style={{ fontSize: 20, textAlign: 'center' }}>取消編輯</Text>
-                                            </TouchableHighlight>
+                                            </TouchableOpacity>
 
-                                            <TouchableHighlight
+                                            <TouchableOpacity
                                                 style={{
                                                     // height: '80%',
                                                     flex: 1,
@@ -669,10 +794,10 @@ class AbsenceExcuse extends React.Component {
                                                     justifyContent: 'center',
                                                     backgroundColor: '#00c07f'
                                                 }}
-                                                onPress={() => this.handleClickConfirmButton()}
+                                                onClick={() => this.handleClickConfirmButton()}
                                             >
                                                 <Text style={{ fontSize: 25, textAlign: 'center' }}>送出</Text>
-                                            </TouchableHighlight>
+                                            </TouchableOpacity>
                                         </View>
                                         : null
                                 }

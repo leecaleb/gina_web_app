@@ -14,7 +14,8 @@ export default class RestroomCard extends React.Component {
   }
 
   componentDidMount() {
-    this.fetchData(this.props.child_id, new Date())
+    const { date } = this.props
+    this.fetchData(this.props.child_id, new Date(date.getTime()))
   }
 
   componentDidUpdate(prevProps) {
@@ -46,6 +47,7 @@ export default class RestroomCard extends React.Component {
 
   render() {
     const { isLoading, diaperData } = this.state
+    // console.log('diaperData: ', diaperData)
     const today = formatDate(this.props.date)
     return (
       <Card style={{ width: '93%' }}>
@@ -75,28 +77,34 @@ export default class RestroomCard extends React.Component {
                       <Text style={{ fontSize: 15, textAlign: 'center', color: '#606060' }}>排泄</Text>
                     </View>
                     <View style={{ flex: 1}}>
+                      <Text style={{ fontSize: 15, textAlign: 'center', color: '#606060' }}>使用</Text>
+                    </View>
+                    <View style={{ flex: 1}}>
                       <Text style={{ fontSize: 15, textAlign: 'center', color: '#606060' }}>狀況</Text>
                     </View>
                   </View>
                   {diaperData[today].map((record, index) => {
-                    const { time, pee_or_poo, poo_condition, teacher_id } = record
+                    const { time, cloth_diaper, pee_or_poo, condition, teacher_id } = record
                     return (
                       <View key={index} style={{ flexDirection: 'row' }}>
                         <View style={{ flex: 1}}>
-                          <Text style={{ fontSize: 25, textAlign: 'center', color: '#404040' }}>{time}</Text>
+                          <Text style={{ fontSize: 23, textAlign: 'center', color: '#404040' }}>{time}</Text>
                         </View>
                         <View style={{ flex: 1}}>
-                          <Text style={{ fontSize: 25, textAlign: 'center', color: '#404040' }}>{pee_or_poo}</Text>
+                          <Text style={{ fontSize: 23, textAlign: 'center', color: '#404040' }}>{pee_or_poo}</Text>
                         </View>
                         <View style={{ flex: 1}}>
-                          <Text style={{ fontSize: 25, textAlign: 'center', color: '#404040' }}>{poo_condition}</Text>
+                          <Text style={{ fontSize: 23, textAlign: 'center', color: '#404040' }}>{cloth_diaper ? '學習褲' : '尿布'}</Text>
+                        </View>
+                        <View style={{ flex: 1}}>
+                          <Text style={{ fontSize: 23, textAlign: 'center', color: '#404040' }}>{condition}</Text>
                         </View>
                       </View>
                     )
                   })}
                 </View>
                 : <View style={{ flex: 1, paddingVertical: 8 }}>
-                  <Text>沒有新紀錄</Text>
+                  <Text style={{ fontSize: 17 }}>沒有新紀錄</Text>
                 </View>
             }
           </View>

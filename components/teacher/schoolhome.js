@@ -14,7 +14,7 @@ import {
     addPickupRequest,
     updateViewingStatus,
     fetchStudentAttendanceSuccess } from '../../redux/school/actions/index'
-import { get } from '../util'
+import { get, formatDate } from '../util'
 import NetInfo from '@react-native-community/netinfo'
 import LoginNumberPad from './loginnumberpad'
 // import PickupAlert from './pickupalert'

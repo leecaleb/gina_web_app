@@ -1,5 +1,6 @@
 import React from 'react'
-import { View, Text, TouchableHighlight, TextInput, ScrollView, Image, KeyboardAvoidingView, Platform, Alert, Dimensions } from 'react-native'
+import { View, Text, TouchableOpacity, TextInput, ScrollView, Image,
+  KeyboardAvoidingView, Platform, Alert, Dimensions } from 'react-native'
 import { formatDate, beautifyTime, beautifyMonthDate, post, formatTime } from '../util';
 import TimeModal from './timemodal'
 import Reloading from '../reloading'
@@ -27,6 +28,9 @@ class AddMedicationRequestPage extends React.Component {
       gel: null,
       other_type: null,
       note: '',
+      administered: false,
+      teacher_name: '',
+      medicated_timestamp: null,
       fever_entry: {
         temperature: '',
         powder: false,
@@ -36,7 +40,8 @@ class AddMedicationRequestPage extends React.Component {
       },
       data: null,
       index: -1,
-      access_mode: 'create'
+      access_mode: 'create',
+      scrollHeight: '100%'
     }
   }
 
@@ -56,7 +61,7 @@ class AddMedicationRequestPage extends React.Component {
 
   switchRequest(index) {
     const { data } = this.props.route.params
-    const { id, timestamp, administered, fever_entry, medication, note } = data[index]
+    const { id, timestamp, administered, fever_entry, medication, note, teacher_name, medicated_timestamp } = data[index]
     // const { before_meal, powder, powder_refrigerated, syrup, gel, other_type } = medication
     this.setState({
       index,
@@ -67,6 +72,9 @@ class AddMedicationRequestPage extends React.Component {
       ...medication,
       note,
       fever_entry,
+      administered,
+      teacher_name,
+      medicated_timestamp: medicated_timestamp !== null ? new Date(medicated_timestamp) : null,
       access_mode: 'read',
       isLoading: false
     })
@@ -121,7 +129,8 @@ class AddMedicationRequestPage extends React.Component {
       syrup: syrup.length ? []
         : [{
           amount: '',
-          need_refrigerated: false
+          need_refrigerated: false,
+          note: ''
         }]
     })
   }
@@ -129,6 +138,14 @@ class AddMedicationRequestPage extends React.Component {
   editSyrupAmountEntry(amount, index) {
     const { syrup } = this.state
     syrup[index].amount = amount
+    this.setState({
+      syrup
+    })
+  }
+
+  editSyrupNoteEntry(note, index) {
+    const { syrup } = this.state
+    syrup[index].note = note
     this.setState({
       syrup
     })
@@ -258,6 +275,17 @@ class AddMedicationRequestPage extends React.Component {
     }
   }
 
+  editable(){
+    const { date } = this.state
+    // console.log('date: ', date)
+    const threshold = new Date()
+    threshold.setHours(10,0,0,0)
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setHours(0,0,0,0)
+    return (date.toDateString() === (new Date).toDateString() && new Date() < threshold) || date.getTime() > tomorrow.getTime()
+  }
+
   onClickConfirm() {
     const { access_mode } = this.state
     if (access_mode === 'create' || access_mode === 'edit') {
@@ -331,8 +359,12 @@ class AddMedicationRequestPage extends React.Component {
       other_type,
       note,
       fever_entry,
+      administered,
+      teacher_name,
+      medicated_timestamp,
       data,
-      access_mode
+      access_mode,
+      scrollHeight
     } = this.state
     
     if(isLoading) {
@@ -353,6 +385,9 @@ class AddMedicationRequestPage extends React.Component {
             selectDatetimeConfirm={(datetime) => this.selectDatetimeConfirm(datetime)}
             minDatetime={new Date()}
             maxDatetime={(new Date()).setDate((new Date()).getDate() + 7)}
+            minTime={new Date().setHours(7, 0, 0)}
+            maxTime={new Date().setHours(20, 0, 0)}
+            paddingVertical={100}
           />
           : null
         }
@@ -365,7 +400,7 @@ class AddMedicationRequestPage extends React.Component {
                   {data.map((request, index) => {
                     return (
                       <View key={index} style={{ padding: 10 }}>
-                        <TouchableHighlight
+                        <TouchableOpacity
                           key={request.id}
                           style={{
                             padding: 10,
@@ -374,14 +409,14 @@ class AddMedicationRequestPage extends React.Component {
                             borderRadius: 30
                           }}
                           underlayColor='#ffddb7'
-                          onPress={() => this.switchRequest(index)}
+                          onClick={() => this.switchRequest(index)}
                         >
                           <Text
                             style={{ fontSize: 30, color: this.state.index === index ? 'grey' : 'white' }}
                           >
                             {beautifyTime(request.timestamp)}
                           </Text>
-                        </TouchableHighlight>
+                        </TouchableOpacity>
                       </View>
                     )
                   })}
@@ -390,9 +425,18 @@ class AddMedicationRequestPage extends React.Component {
           }
 
           <View style={{ backgroundColor: 'white', borderTopRightRadius: 30, borderTopLeftRadius: 30}}>
+            {administered &&
+              <View style={{ alignItems: 'center'}}>
+                {/* MEDICATED RESPONSE - BODY */}
+                <View style={{ width: '100%', backgroundColor: 'white', padding: 20 }}>
+                  <Text style={{ fontSize: 30 }}>餵藥老師：{teacher_name}</Text>
+                  <Text style={{ fontSize: 30 }}>餵藥時間：{beautifyTime(medicated_timestamp)}</Text>
+                </View>
+              </View>}
+
           {/* DATE */}
           <View style={{ alignItems: 'center'}}>
-            <TouchableHighlight
+            <TouchableOpacity
               disabled={access_mode === 'read'}
               style={{
                 width: '100%',
@@ -403,23 +447,29 @@ class AddMedicationRequestPage extends React.Component {
                 borderTopRightRadius: 30
               }}
               underlayColor='transparent'
-              onPress={() => this.setState({ showDateTimeModal: true, datetime_type: 'date' })}
+              onClick={() => {
+                if (access_mode === 'read') return
+                this.setState({ showDateTimeModal: true, datetime_type: 'date' })
+              }}
             >
               <Text style={{ fontSize: 30, alignSelf: 'center' }}>日期 {beautifyMonthDate(date)}</Text>
-            </TouchableHighlight>
+            </TouchableOpacity>
 
             {/* TIME */}
             <View style={{flex: 1, flexDirection: 'row', width: '100%', backgroundColor: 'white', padding: 20 }}>
 
               <View style={{ flex: 1, alignItems: 'center' }}>
-                <TouchableHighlight 
+                <TouchableOpacity 
                   disabled={access_mode === 'read' || access_mode === 'edit'}
                   style={{
                     width: '80%',
                     paddingBottom: 10
                   }}
                   underlayColor='transparent'
-                  onPress={() => this.setState({ showDateTimeModal: true, datetime_type: 'time' })}
+                  onClick={() => {
+                    if (access_mode === 'read' || access_mode === 'edit') return
+                    this.setState({ showDateTimeModal: true, datetime_type: 'time' })
+                  }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <View style={{ flex: 1 }}>
@@ -432,7 +482,7 @@ class AddMedicationRequestPage extends React.Component {
                       />
                     }
                   </View>
-                </TouchableHighlight>
+                </TouchableOpacity>
 
                 {time_array.map((time, index) => {
                   return (
@@ -444,7 +494,7 @@ class AddMedicationRequestPage extends React.Component {
                         paddingBottom: 10
                       }}
                     >
-                      <TouchableHighlight
+                      <TouchableOpacity
                         disabled={access_mode === 'read'}
                         style={{
                           width: '70%',
@@ -454,11 +504,14 @@ class AddMedicationRequestPage extends React.Component {
                           justifyContent: 'center'
                         }}
                         underlayColor='transparent'
-                        onPress={() => this.setState({ showDateTimeModal: true, datetime_type: 'time', time_selected_index: index })}
+                        onClick={() => {
+                          if (access_mode === 'read') return
+                          this.setState({ showDateTimeModal: true, datetime_type: 'time', time_selected_index: index })
+                        }}
                       >
                         <Text style={{ fontSize: 25, alignSelf: 'center' }}>{beautifyTime(time)}</Text>
-                      </TouchableHighlight>
-                      <TouchableHighlight
+                      </TouchableOpacity>
+                      <TouchableOpacity
                         disabled={access_mode === 'read'}
                         style={{
                           width: '30%',
@@ -469,20 +522,23 @@ class AddMedicationRequestPage extends React.Component {
                           borderTopRightRadius: 15
                         }}
                         underlayColor='transparent'
-                        onPress={() => this.removeTime(index)}
+                        onClick={() => {
+                          if (access_mode === 'read') return
+                          this.removeTime(index)
+                        }}
                       >
                         <Image
                           source={require('../../assets/icon-delete.png')}
                           style={{ width: 32, height: 32 }}
                         />
-                      </TouchableHighlight>
+                      </TouchableOpacity>
                     </View>
                   )
                 })}
               </View>
 
               <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <TouchableHighlight
+                <TouchableOpacity
                   disabled={access_mode === 'read'}
                   style={{ 
                     padding: 15,
@@ -491,11 +547,14 @@ class AddMedicationRequestPage extends React.Component {
                     backgroundColor: (before_meal !== null && before_meal) ? '#ffddb7' : 'white'
                   }}
                   underlayColor='#ff8944'
-                  onPress={() => this.setState({ before_meal: before_meal ? null : true })}
+                  onClick={() => {
+                    if (access_mode === 'read') return
+                    this.setState({ before_meal: before_meal ? null : true })
+                  }}
                 >
                   <Text style={{ fontSize: 25 }}>餐前</Text>
-                </TouchableHighlight>
-                <TouchableHighlight
+                </TouchableOpacity>
+                <TouchableOpacity
                   disabled={access_mode === 'read'}
                   style={{
                     padding: 15,
@@ -505,17 +564,20 @@ class AddMedicationRequestPage extends React.Component {
                     backgroundColor: (before_meal !== null && !before_meal) ? '#ffddb7' : 'white'
                   }}
                   underlayColor='#ff8944'
-                  onPress={() => this.setState({ before_meal: before_meal === false ? null : false })}
+                  onClick={() => {
+                    if (access_mode === 'read') return
+                    this.setState({ before_meal: before_meal === false ? null : false })
+                  }}
                 >
                   <Text style={{ fontSize: 25 }}>餐後</Text>
-                </TouchableHighlight>
+                </TouchableOpacity>
               </View>
             </View>
           </View>
 
           {/* MEDICATION TYPE - HEADER */}
           <View style={{ alignItems: 'center'}}>
-            <TouchableHighlight
+            <TouchableOpacity
               disabled={access_mode === 'read'}
               style={{
                 width: '100%',
@@ -525,10 +587,10 @@ class AddMedicationRequestPage extends React.Component {
                 borderTopLeftRadius: 30,
                 borderTopRightRadius: 30
               }}
-              // onPress={() => }
+              // onClick={() => }
             >
               <Text style={{ fontSize: 30, alignSelf: 'center' }}>藥物</Text>
-            </TouchableHighlight>
+            </TouchableOpacity>
 
             {/* MEDICATION TYPE - BODY */}
             <View style={{ width: '100%', backgroundColor: 'white', paddingHorizontal: 20 }}>
@@ -536,10 +598,13 @@ class AddMedicationRequestPage extends React.Component {
               {/* POWDER */}
               <View style={{ backgroundColor: '' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <TouchableHighlight
+                  <TouchableOpacity
                     disabled={access_mode === 'read'}
                     style={{ paddingTop: 20, paddingBottom: 10 }}
-                    onPress={() => this.setState({ powder: !powder })}
+                    onClick={() => {
+                      if (access_mode === 'read') return
+                      this.setState({ powder: !powder })
+                    }}
                     underlayColor='transparent'
                   >
                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
@@ -558,13 +623,16 @@ class AddMedicationRequestPage extends React.Component {
                       </View>
                       <Text style={{ fontSize: 25, marginLeft: 10, alignSelf: 'center' }}>藥粉    </Text>
                     </View>
-                  </TouchableHighlight>
+                  </TouchableOpacity>
                   
 
-                  <TouchableHighlight
+                  <TouchableOpacity
                     disabled={access_mode === 'read'}
                     style={{ paddingTop: 20, paddingBottom: 10 }}
-                    onPress={() => this.setState({ powder_refrigerated: !powder_refrigerated})}
+                    onClick={() => {
+                      if (access_mode === 'read') return
+                      this.setState({ powder_refrigerated: !powder_refrigerated})
+                    }}
                     underlayColor='transparent'
                   >
                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
@@ -588,7 +656,7 @@ class AddMedicationRequestPage extends React.Component {
 
                     </View>
 
-                  </TouchableHighlight>
+                  </TouchableOpacity>
                 </View>
                 
               </View>
@@ -596,10 +664,13 @@ class AddMedicationRequestPage extends React.Component {
               {/* SYRUP */}
               <View style={{ backgroundColor: '' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <TouchableHighlight
+                  <TouchableOpacity
                     disabled={access_mode === 'read'}
                     style={{ paddingVertical: 10 }}
-                    onPress={() => this.onSelectSyrup()}
+                    onClick={() => {
+                      if (access_mode === 'read') return
+                      this.onSelectSyrup()
+                    }}
                     underlayColor='transparent'
                   >
                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
@@ -618,13 +689,12 @@ class AddMedicationRequestPage extends React.Component {
                       </View>
                       <Text style={{ fontSize: 25, marginLeft: 10 }}>藥水    </Text>
                     </View>
-                  </TouchableHighlight>
+                  </TouchableOpacity>
                   {syrup.length && access_mode !== 'read'? 
-                    <TouchableHighlight
-                      // disabled={access_mode === 'read'}
+                    <TouchableOpacity
                       style={{ padding: 10 }}
-                      onPress={() => this.setState({
-                        syrup: [...syrup, { amount: '', need_refrigerated: false }]
+                      onClick={() => this.setState({
+                        syrup: [...syrup, { amount: '', need_refrigerated: false, note: '' }]
                       })}
                       underlayColor='transparent'
                     >
@@ -632,7 +702,7 @@ class AddMedicationRequestPage extends React.Component {
                         source={require('../../assets/icon-plus-green.png')}
                         style={{ width: 32, height: 32 }}
                       />
-                    </TouchableHighlight>
+                    </TouchableOpacity>
                     : null
                   }
                 </View>
@@ -642,7 +712,7 @@ class AddMedicationRequestPage extends React.Component {
                     <View key={index} style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'center', marginBottom: 20 }}>
                       <TextInput
                         editable={access_mode !== 'read'}
-                        style={{ width: 62, fontSize: 25 }}
+                        style={{ width: 35, fontSize: 25, textAlign: 'center', marginHorizontal: 10 }}
                         keyboardType="number-pad"
                         autoFocus={true}
                         placeholder={'____'}
@@ -650,12 +720,15 @@ class AddMedicationRequestPage extends React.Component {
                         onChangeText={(amount) => this.editSyrupAmountEntry(amount, index)}
                       />
 
-                      <Text style={{ fontSize: 25, marginRight: 5 }}>c.c.</Text>
+                      <Text style={{ fontSize: 20, marginRight: 5 }}>c.c.</Text>
 
-                      <TouchableHighlight
+                      <TouchableOpacity
                         disabled={access_mode === 'read'}
                         style={{ padding: 5 }}
-                        onPress={() => this.editSyrupRefrigerationEntry(!entry.need_refrigerated, index)}
+                        onClick={() => {
+                          if (access_mode === 'read') return
+                          this.editSyrupRefrigerationEntry(!entry.need_refrigerated, index)
+                        }}
                         underlayColor='transparent'
                       >
                         <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
@@ -675,19 +748,28 @@ class AddMedicationRequestPage extends React.Component {
                           <Text style={{ fontSize: 25, marginHorizontal: 5 }}>需冷藏</Text>
                         </View>
 
-                      </TouchableHighlight>
+                      </TouchableOpacity>
 
-                      {access_mode !== 'read' && <TouchableHighlight
-                        disabled={access_mode === 'read'}
+                      <TextInput
+                        editable={access_mode !== 'read'}
+                        style={{ fontSize: 25, textAlign: 'center', marginHorizontal: 10, width: 60 }}
+                        // keyboardType="default"
+                        // autoFocus={true}
+                        placeholder={'備註'}
+                        value={entry.note}
+                        onChangeText={(note) => this.editSyrupNoteEntry(note, index)}
+                      />
+
+                      {access_mode !== 'read' && <TouchableOpacity
                         style={{ paddingHorizontal: 10 }}
-                        onPress={() => this.removeSyrupEntry(index)}
+                        onClick={() => this.removeSyrupEntry(index)}
                         underlayColor='transparent'
                       >
                         <Image
                           source={require('../../assets/icon-delete.png')}
                           style={{ width: 32, height: 32 }}
                         />
-                      </TouchableHighlight>
+                      </TouchableOpacity>
                       }
                     </View>
                   )
@@ -698,12 +780,15 @@ class AddMedicationRequestPage extends React.Component {
               {/* GEL */}
               <View style={{ }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <TouchableHighlight
+                  <TouchableOpacity
                     disabled={access_mode === 'read'}
                     style={{ paddingVertical: 10 }}
-                    onPress={() => this.setState({ 
-                      gel: gel === null ? '' : null
-                    })}
+                    onClick={() => {
+                      if (access_mode === 'read') return
+                      this.setState({ 
+                        gel: gel === null ? '' : null
+                      })
+                    }}
                     underlayColor='transparent'
                   >
                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
@@ -722,7 +807,7 @@ class AddMedicationRequestPage extends React.Component {
                       </View>
                       <Text style={{ fontSize: 25, marginHorizontal: 10 }}>藥膏</Text>
                     </View>
-                  </TouchableHighlight>
+                  </TouchableOpacity>
                   {gel === null ? 
                     null
                     :
@@ -742,12 +827,15 @@ class AddMedicationRequestPage extends React.Component {
               {/* OTHER */}
               <View style={{ }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <TouchableHighlight
+                  <TouchableOpacity
                     disabled={access_mode === 'read'}
                     style={{ paddingVertical: 10 }}
-                    onPress={() => this.setState({ 
-                      other_type: other_type === null ? '' : null
-                    })}
+                    onClick={() => {
+                      if (access_mode === 'read') return
+                      this.setState({ 
+                        other_type: other_type === null ? '' : null
+                      })
+                    }}
                     underlayColor='transparent'
                   >
                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
@@ -766,7 +854,7 @@ class AddMedicationRequestPage extends React.Component {
                       </View>
                       <Text style={{ fontSize: 25, marginHorizontal: 10 }}>其他</Text>
                     </View>
-                  </TouchableHighlight>
+                  </TouchableOpacity>
                   {other_type === null ? 
                     null
                     :
@@ -792,7 +880,7 @@ class AddMedicationRequestPage extends React.Component {
 
           {/* NOTE - HEADER */}
           <View style={{ alignItems: 'center'}}>
-            <TouchableHighlight
+            <TouchableOpacity
               disabled={access_mode === 'read'}
               style={{
                 width: '100%',
@@ -802,29 +890,38 @@ class AddMedicationRequestPage extends React.Component {
                 borderTopLeftRadius: 30,
                 borderTopRightRadius: 30
               }}
-              // onPress={() => }
+              // onClick={() => }
             >
               <Text style={{ fontSize: 30, alignSelf: 'center' }}>備註</Text>
-            </TouchableHighlight>
+            </TouchableOpacity>
 
             {/* NOTE - BODY */}
             <View style={{ width: '100%', backgroundColor: 'white', padding: 20 }}>
               <TextInput
                 editable={access_mode !== 'read'}
-                style={{ padding : 15, fontSize: 25 }}
+                style={{ height: scrollHeight, padding: 15, fontSize: 25 }}
                 placeholder={'點擊填寫...'}
                 multiline={true}
                 blurOnSubmit={true}
                 scrollEnabled={false}
                 value={note}
                 onChangeText={(note) => this.setState({ note})}
+                onChange={(e) => this.setState({
+                  scrollHeight: e.target.scrollHeight
+                })}
+                onLayout={(event) => {
+                  const { scrollHeight } = event.nativeEvent.target
+                  this.setState({
+                      scrollHeight
+                  })
+                }}
               />
             </View>
           </View>
 
           {/* FEVER MEDS - HEADER */}
           <View style={{ alignItems: 'center'}}>
-            <TouchableHighlight
+            <TouchableOpacity
               disabled={access_mode === 'read'}
               style={{
                 width: '100%',
@@ -834,10 +931,10 @@ class AddMedicationRequestPage extends React.Component {
                 borderTopLeftRadius: 30,
                 borderTopRightRadius: 30
               }}
-              // onPress={() => }
+              // onClick={() => }
             >
               <Text style={{ fontSize: 30, alignSelf: 'center' }}>發燒餵藥</Text>
-            </TouchableHighlight>
+            </TouchableOpacity>
 
             {/* FEVER MEDS - BODY */}
             <View style={{ width: '100%', backgroundColor: 'white', padding: 20 }}>
@@ -865,15 +962,18 @@ class AddMedicationRequestPage extends React.Component {
                 {/* POWDER */}
                 <View style={{ backgroundColor: '' }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <TouchableHighlight
+                    <TouchableOpacity
                       disabled={access_mode === 'read'}
                       style={{ paddingTop: 20, paddingBottom: 10 }}
-                      onPress={() => this.setState({ 
-                        fever_entry: {
-                          ...fever_entry,
-                          powder: !fever_entry.powder 
-                        }
-                      })}
+                      onClick={() => {
+                        if (access_mode === 'read') return
+                        this.setState({ 
+                          fever_entry: {
+                            ...fever_entry,
+                            powder: !fever_entry.powder 
+                          }
+                        })
+                      }}
                       underlayColor='transparent'
                     >
                       <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
@@ -892,18 +992,21 @@ class AddMedicationRequestPage extends React.Component {
                         </View>
                         <Text style={{ fontSize: 25, marginLeft: 10 }}>藥粉    </Text>
                       </View>
-                    </TouchableHighlight>
+                    </TouchableOpacity>
                     
 
-                    <TouchableHighlight
+                    <TouchableOpacity
                       disabled={access_mode === 'read'}
                       style={{ paddingTop: 20, paddingBottom: 10 }}
-                      onPress={() => this.setState({
-                        fever_entry: {
-                          ...fever_entry,
-                          powder_refrigerated: !fever_entry.powder_refrigerated
-                        }
-                      })}
+                      onClick={() => {
+                        if (access_mode === 'read') return
+                        this.setState({
+                          fever_entry: {
+                            ...fever_entry,
+                            powder_refrigerated: !fever_entry.powder_refrigerated
+                          }
+                        })
+                      }}
                       underlayColor='transparent'
                     >
                       <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
@@ -927,7 +1030,7 @@ class AddMedicationRequestPage extends React.Component {
 
                       </View>
 
-                    </TouchableHighlight>
+                    </TouchableOpacity>
                   </View>
                   
                 </View>
@@ -935,10 +1038,13 @@ class AddMedicationRequestPage extends React.Component {
                 {/* SYRUP */}
               <View style={{ backgroundColor: '' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <TouchableHighlight
+                  <TouchableOpacity
                     disabled={access_mode === 'read'}
                     style={{ paddingVertical: 10 }}
-                    onPress={() => this.onSelectFeverSyrup()}
+                    onClick={() => {
+                      if (access_mode === 'read') return
+                      this.onSelectFeverSyrup()
+                    }}
                     underlayColor='transparent'
                   >
                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
@@ -957,12 +1063,11 @@ class AddMedicationRequestPage extends React.Component {
                       </View>
                       <Text style={{ fontSize: 25, marginLeft: 10 }}>藥水    </Text>
                     </View>
-                  </TouchableHighlight>
+                  </TouchableOpacity>
                   {fever_entry.syrup.length && access_mode !== 'read'? 
-                    <TouchableHighlight
-                      // disabled={access_mode === 'read'}
+                    <TouchableOpacity
                       style={{ padding: 10 }}
-                      onPress={() => this.setState({
+                      onClick={() => this.setState({
                         fever_entry: {
                           ...fever_entry,
                           syrup: [...fever_entry.syrup, { amount: '', need_refrigerated: false }]
@@ -974,7 +1079,7 @@ class AddMedicationRequestPage extends React.Component {
                         source={require('../../assets/icon-plus-red.png')}
                         style={{ width: 32, height: 32 }}
                       />
-                    </TouchableHighlight>
+                    </TouchableOpacity>
                     : null
                   }
                 </View>
@@ -994,10 +1099,13 @@ class AddMedicationRequestPage extends React.Component {
 
                       <Text style={{ fontSize: 25, marginRight: 5 }}>c.c.</Text>
 
-                      <TouchableHighlight
+                      <TouchableOpacity
                         disabled={access_mode === 'read'}
                         style={{ padding: 5 }}
-                        onPress={() => this.editFeverSyrupRefrigerationEntry(!entry.need_refrigerated, index)}
+                        onClick={() => {
+                          if (access_mode === 'read') return
+                          this.editFeverSyrupRefrigerationEntry(!entry.need_refrigerated, index)
+                        }}
                         underlayColor='transparent'
                       >
                         <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
@@ -1017,20 +1125,23 @@ class AddMedicationRequestPage extends React.Component {
                           <Text style={{ fontSize: 25, marginHorizontal: 5 }}>需冷藏</Text>
                         </View>
 
-                      </TouchableHighlight>
+                      </TouchableOpacity>
 
                       {access_mode !== 'read' && 
-                        <TouchableHighlight
+                        <TouchableOpacity
                           disabled={access_mode === 'read'}
                           style={{ paddingHorizontal: 10 }}
-                          onPress={() => this.removeFeverSyrupEntry(index)}
+                          onClick={() => {
+                            if (access_mode === 'read') return
+                            this.removeFeverSyrupEntry(index)
+                          }}
                           underlayColor='transparent'
                         >
                           <Image
                             source={require('../../assets/icon-delete.png')}
                             style={{ width: 32, height: 32 }}
                           />
-                        </TouchableHighlight>
+                        </TouchableOpacity>
                       }
                     </View>
                   )
@@ -1041,15 +1152,18 @@ class AddMedicationRequestPage extends React.Component {
                 {/* OTHER */}
               <View style={{ }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <TouchableHighlight
+                  <TouchableOpacity
                     disabled={access_mode === 'read'}
                     style={{ paddingVertical: 10 }}
-                    onPress={() => this.setState({
-                      fever_entry: {
-                        ...fever_entry,
-                        other_type: fever_entry.other_type === null ? '' : null
-                      }
-                    })}
+                    onClick={() => {
+                      if (access_mode === 'read') return
+                      this.setState({
+                        fever_entry: {
+                          ...fever_entry,
+                          other_type: fever_entry.other_type === null ? '' : null
+                        }
+                      })
+                    }}
                     underlayColor='transparent'
                   >
                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
@@ -1068,7 +1182,7 @@ class AddMedicationRequestPage extends React.Component {
                       </View>
                       <Text style={{ fontSize: 25, marginHorizontal: 10 }}>其他</Text>
                     </View>
-                  </TouchableHighlight>
+                  </TouchableOpacity>
                   {fever_entry.other_type === null ? 
                     null
                     :
@@ -1104,59 +1218,61 @@ class AddMedicationRequestPage extends React.Component {
           style={{ height: 90, width: '100%', paddingHorizontal: 20 }}
         >
           {access_mode === 'read' ?
-            <TouchableHighlight 
-              disabled={((new Date()) - date) > (-60*60*1000)}
+            <TouchableOpacity 
+              disabled={!this.editable()}
               style={{ width: '100%', height: '70%', backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center' }}
-              onPress={() => this.onClickConfirm()}
+              onClick={() => {
+                if (!this.editable()) return
+                this.onClickConfirm()
+              }}
               underlayColor='transparent'
             >
               <Text style={{ fontSize: 40, textAlign: 'center', color: 'white' }}>
                 編輯
               </Text>
-            </TouchableHighlight>
+            </TouchableOpacity>
             : access_mode === 'edit' ?
               <View style={{ width: '100%', height: '70%', flexDirection: 'row' }}>
-                <TouchableHighlight 
+                <TouchableOpacity 
                   style={{  flex:1, backgroundColor: '#fa625f', justifyContent: 'center' }}
-                  onPress={() => this.deleteRequestConfirm()}
+                  onClick={() => this.deleteRequestConfirm()}
                   underlayColor='transparent'
                 >
                   <Text style={{ fontSize: 30, textAlign: 'center' }}>
                     刪除
                   </Text>
-                </TouchableHighlight>
+                </TouchableOpacity>
 
-                <TouchableHighlight 
+                <TouchableOpacity 
                   style={{  flex:1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center' }}
-                  onPress={() => this.cancelEdit()}
+                  onClick={() => this.cancelEdit()}
                   underlayColor='transparent'
                 >
                   <Text style={{ fontSize: width * 0.06, textAlign: 'center', color: 'white' }}>
                     取消編輯
                   </Text>
-                </TouchableHighlight>
+                </TouchableOpacity>
 
-                <TouchableHighlight 
+                <TouchableOpacity 
                   style={{ flex:1, backgroundColor: '#00c07f', justifyContent: 'center' }}
-                  onPress={() => this.onClickConfirm()}
+                  onClick={() => this.onClickConfirm()}
                   underlayColor='transparent'
                   >
                   <Text style={{ fontSize: 30, textAlign: 'center' }}>
                     送出
                   </Text>
-                </TouchableHighlight>
+                </TouchableOpacity>
               </View>
             : // access_mode === 'create
-              <TouchableHighlight 
-                // disabled={access_mode === 'read'}
+              <TouchableOpacity
                 style={{ width: '100%', height: '70%', backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center' }}
-                onPress={() => this.onClickConfirm()}
+                onClick={() => this.onClickConfirm()}
                 underlayColor='transparent'
               >
                 <Text style={{ fontSize: 50, textAlign: 'center', color: 'white' }}>
                   送出
                 </Text>
-              </TouchableHighlight>
+              </TouchableOpacity>
           }
         </View>
         

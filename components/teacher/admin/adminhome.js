@@ -1,6 +1,7 @@
 import React from 'react'
-import { View, Text, TouchableHighlight, StyleSheet, ScrollView } from 'react-native'
+import { View, Text, TouchableHighlight, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
 import Header from '../../header'
+// import { TouchableOpacity } from 'react-native-gesture-handler'
 
 export default class AdminHome extends React.Component {
   constructor(props) {
@@ -28,35 +29,36 @@ export default class AdminHome extends React.Component {
   render() {
     return (
       <ScrollView contentContainerStyle={{ alignItems: 'center', justifyContent: 'center'}}>
-        <TouchableHighlight
+        <TouchableOpacity
           style={styles.button}
-          onPress={()=> this.handleNavigate('Registration')}
+          onClick={()=> this.handleNavigate('Registration')}
+          // onPress={()=> this.handleNavigate('Registration')}
           underlayColor="#368cbf"
         >
           <Text style={{ fontSize: 70 }}>新生註冊</Text>
-        </TouchableHighlight>
-        <TouchableHighlight
+        </TouchableOpacity>
+        <TouchableOpacity
           style={styles.button}
-          onPress={()=> this.handleNavigate('Students')}
+          onClick={()=> this.handleNavigate('Students')}
           underlayColor="#368cbf"
         >
           <Text style={{ fontSize: 70 }}>學生資料</Text>
-        </TouchableHighlight>
-        <TouchableHighlight
+        </TouchableOpacity>
+        <TouchableOpacity
           style={styles.button}
-          onPress={()=> this.handleNavigate('Teachers')}
+          onClick={()=> this.handleNavigate('Teachers')}
           underlayColor="#368cbf"
         >
           <Text style={{ fontSize: 70 }}>教師資料</Text>
-        </TouchableHighlight>
+        </TouchableOpacity>
 
-        <TouchableHighlight
+        <TouchableOpacity
           style={styles.button}
-          onPress={()=> this.handleNavigate('DownloadPage')}
+          onClick={()=> this.handleNavigate('DownloadPage')}
           underlayColor="#368cbf"
         >
           <Text style={{ fontSize: 70 }}>下載</Text>
-        </TouchableHighlight>
+        </TouchableOpacity>
       </ScrollView>
     )
   }

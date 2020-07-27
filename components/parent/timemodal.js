@@ -70,9 +70,15 @@ export default class TimeModal extends React.Component {
     onChange = date => {
         console.log(date)
     }
+    
+    isWeekday = date => {
+        const special_date = new Date('June 20, 2020')
+        const day = date.getDay()
+        return (day !== 0 && day !== 6) || date.toDateString() === special_date.toDateString();
+    };
 
     render() {
-        const { datetime_type, minDatetime, maxDatetime } = this.props
+        const { datetime_type, minDatetime, maxDatetime, minTime, maxTime, paddingVertical } = this.props
         const { datetime, isLoading } = this.state
         if (isLoading) {
             return null
@@ -84,14 +90,14 @@ export default class TimeModal extends React.Component {
                     height: '100%', 
                     zIndex: 2,
                     position: 'absolute',
-                    paddingVertical: 100,
+                    paddingVertical,
                     // justifyContent: 'center', 
                     alignItems: 'center', 
                     backgroundColor: 'rgba(0,0,0,0.7)' 
                 }}
                 // onPress={() => this.props.hideModal()}
             >
-                <View style={{  }}>
+                <View style={{ }}>
                     {datetime_type === 'date' &&
                         <DatePicker
                             onChange={(date) => this.selectDatetimeConfirm(date)}
@@ -100,6 +106,7 @@ export default class TimeModal extends React.Component {
                             minDate={new Date(minDatetime)}
                             maxDate={new Date(maxDatetime)}
                             onClickOutside={() => this.props.hideModal()}
+                            filterDate={this.isWeekday}
                         />
                     }
 
@@ -112,8 +119,8 @@ export default class TimeModal extends React.Component {
                             timeCaption="Time"
                             dateFormat="h:mm aa"
                             selected={datetime}
-                            minTime={new Date(minDatetime).setHours(7, 0, 0)}
-                            maxTime={new Date(maxDatetime).setHours(20, 0, 0)}
+                            minTime={minTime}
+                            maxTime={maxTime}
                             onClickOutside={() => this.props.hideModal()}
                         />
                     }

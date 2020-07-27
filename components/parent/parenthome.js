@@ -1,5 +1,5 @@
 import React from 'react'
-import { StyleSheet, ScrollView, View, Text, RefreshControl, TouchableHighlight, 
+import { StyleSheet, ScrollView, View, Text, RefreshControl, TouchableOpacity,
     Alert, Dimensions, AppState,Image, KeyboardAvoidingView, Platform } from 'react-native'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
@@ -14,7 +14,7 @@ import MessageCard from './messagecard'
 import ParentHomeTitle from './parenthometitle'
 import ProfileSelector from './profileselector'
 import QRPage from './qrpage'
-import { formatDate, beautifyDate, beautifyTime } from '../util'
+import { formatDate, beautifyDate, beautifyTime, get } from '../util'
 import MedicationRequestCard from './medicinerequestcard'
 import TimeModal from './timemodal'
 import MorningReminderCard from './morningremindercard'
@@ -34,7 +34,8 @@ class ParentHome extends React.Component {
             temperature: '',
             appState: '',
             showDateTimeModal: false,
-            present: false
+            present: false,
+            showTimeModal: false
         }
         this.initializeChildren = this.initializeChildren.bind(this)
     }
@@ -54,9 +55,11 @@ class ParentHome extends React.Component {
         })
             .then(res => res.json())
             .then(resJson => {
+                // console.log('parenthome/poll: ')
                 const update_types = resJson.data
                 update_types.forEach(update_type => {
-                    this.refs[update_type].fetchData(student_id, new Date())
+                    // console.log(update_type)
+                    this.refs[update_type].fetchData(student_id, new Date(this.state.date))
                 })  
             })
             .catch(err => {
@@ -66,6 +69,7 @@ class ParentHome extends React.Component {
     }
 
     componentDidMount() {
+        // this.setDate()
         window.addEventListener('offline', (e) => {
             // console.log('offline ', e)
             this.props.setConnectState(false) 
@@ -79,6 +83,71 @@ class ParentHome extends React.Component {
         AppState.addEventListener("change", this._handleAppStateChange);
     }
 
+    // // SPECIAL DAY QUICK TEMP FIX
+    // isSpecialDate(date) {
+    //     const special_date = new Date()
+    //     special_date.setMonth(5,20)
+    //     return date.toDateString() === special_date.toDateString()
+    // }
+    
+    // goBackADay() {
+    //     const date = new Date(this.state.date.getTime())
+    //     const special_date = new Date()
+    //     special_date.setMonth(5,22)
+    //     if (date.getDay() === 1 && (date.toDateString() !== special_date.toDateString())) {
+    //         date.setDate(date.getDate() - 3)
+    //     } else if (date.toDateString() === special_date.toDateString()) {
+    //         date.setDate(date.getDate() - 2)
+    //     } else {
+    //         date.setDate(date.getDate() - 1)
+    //     }
+    //     this.selectDatetimeConfirm(date)
+    // }
+
+    // goForwardADay() {
+    //     const date = new Date(this.state.date.getTime())
+    //     if (date.getDay() === 5 && !this.tomorrowHasClass()) {
+    //         date.setDate(date.getDate() + 3)
+    //     } else if (date.getDay() === 6 && this.isSpecialDate(date)) {
+    //         date.setDate(date.getDate() + 2)
+    //     } else {
+    //         date.setDate(date.getDate() + 1)
+    //     }
+    //     this.selectDatetimeConfirm(date)
+    // }
+
+    // tomorrowHasClass() {
+    //     const date = new Date(this.state.date)
+    //     date.setDate(date.getDate() + 1)
+    //     const special_date = new Date()
+    //     special_date.setMonth(5, 20)
+    //     if (date.toDateString() === special_date.toDateString()) {
+    //         return true
+    //     }
+    //     return false
+    // }
+
+    
+    setDate() {
+        let date = new Date()
+        if (date.getDay() === 6) {  
+            date.setDate(date.getDate() - 1)
+        } else if (date.getDay() === 0) {
+            date.setDate(date.getDate() - 2)
+        }
+        this.selectDatetimeConfirm(date)
+    }
+
+    // // SPECIAL DAY QUICK TEMP FIX
+    // setDate() {
+    //     let date = new Date()
+    //     if (date.getDay() === 0) {
+    //         date.setDate(date.getDate() - 1)
+    //     }
+    //     this.selectDatetimeConfirm(date)
+    // }
+
+
     isIOS() {
         return Platform.OS === 'ios'
     }
@@ -86,7 +155,8 @@ class ParentHome extends React.Component {
     initializeChildren() {
         const { parent_id } = this.props.route.params
 
-        this.setState({ child_id: '', date: new Date })
+        // this.setState({ child_id: '', date: new Date })
+        // this.setDate()
         fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/family/${parent_id}`, {
             method: 'GET',
             headers: {
@@ -107,6 +177,8 @@ class ParentHome extends React.Component {
                     child_id: student_id_array[0],
                     student_id_array
                 })
+                // this.checkStudentAttendance(student_id_array[0])
+                this.setDate()
             })
             .catch((err) => {
                 alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫: error occurred when initializing student profiles')
@@ -118,12 +190,34 @@ class ParentHome extends React.Component {
             this.state.appState.match(/inactive|background/) &&
             nextAppState === "active"
         ) {
-            if (this.state.date.toDateString() !== (new Date).toDateString()) {
+            this.checkStudentAttendance(this.state.child_id)
+
+            if (this.state.date.toDateString() !== (new Date).toDateString() && (new Date).getHours() > 3) {
                 this.initializeChildren()
             }
         }
         this.setState({ appState: nextAppState });
     };
+
+    async checkStudentAttendance(student_id) {
+        if (this.state.date.toDateString() !== (new Date).toDateString()) {
+            return
+        }
+        const date = new Date()
+        const response = await get(`/attendance/${student_id}?date=${formatDate(date)}`)
+        const { success, statusCode, message, data } = response
+        // console.log('response: ', response)
+        if (success) {
+            const { in_time, out_time, excuse_type } = data
+            if ((in_time !== null && out_time !== null) || excuse_type !== null) {
+                let date = new Date()
+                date.setHours(18,0,0,0)
+                this.setState({
+                    date
+                })
+            }
+        }
+    }
 
     onSelectStudent(child_id) {
         this.setState({ child_id })
@@ -140,14 +234,14 @@ class ParentHome extends React.Component {
     selectDatetimeConfirm(date) {
         const threshold = new Date()
         threshold.setHours(0,0,0,0)
-        if (date.getTime() < threshold.getTime()) {
+        if (date.getTime() < threshold.getTime()) { // if selected date is before today
             date.setHours(18)
-        } else if (date.toDateString() === (new Date()).toDateString()) {
+        } else if (date.toDateString() === (new Date()).toDateString()) { // if selected date is today
             date.setTime(new Date())
-        } else {
+        } else { // if selected date is tomorrow
             date.setHours(16, 0, 0)
         }
-        this.setState({ date, showDateTimeModal: false })
+        this.setState({ date, showDateTimeModal: false }, () => this.checkStudentAttendance(this.state.child_id))
     }
 
     getDayDifference(startDate, endDate) {
@@ -159,15 +253,24 @@ class ParentHome extends React.Component {
         return Math.round((end - start) / (oneDay))
     }
 
+    // SPECIAL DAY QUICK TEMP FIX
     goBackADay() {
         const date = new Date(this.state.date.getTime())
-        date.setDate(date.getDate() - 1)
+        if (date.getDay() === 1) {
+            date.setDate(date.getDate() - 3)
+        } else {
+            date.setDate(date.getDate() - 1)
+        }
         this.selectDatetimeConfirm(date)
     }
 
     goForwardADay() {
         const date = new Date(this.state.date.getTime())
-        date.setDate(date.getDate() + 1)
+        if (date.getDay() === 5) {
+            date.setDate(date.getDate() + 3)
+        } else {
+            date.setDate(date.getDate() + 1)
+        }
         this.selectDatetimeConfirm(date)
     }
 
@@ -181,7 +284,8 @@ class ParentHome extends React.Component {
         const { parent_id } = this.props.route.params
         const { isConnected } = this.props
         // console.log('isConnected: ', isConnected)
-        const { date, child_id, showQR, temperature, showDateTimeModal, present } = this.state
+        const { date, child_id, showQR, temperature, showDateTimeModal, present, showTimeModal } = this.state
+        // console.log('parenthome: ', date)
         if (child_id === '') {
             return (
                 <Reloading />
@@ -211,7 +315,7 @@ class ParentHome extends React.Component {
                     : null
                 }
 
-                {showDateTimeModal ? // TODO: time box show in screen
+                {showDateTimeModal ?
                     <TimeModal
                         start_date={date}
                         datetime_type={'date'}
@@ -219,9 +323,25 @@ class ParentHome extends React.Component {
                         selectDatetimeConfirm={(datetime) => this.selectDatetimeConfirm(datetime)}
                         minDatetime={(new Date()).setDate((new Date()).getDate() - 7)}
                         maxDatetime={(new Date()).setDate((new Date()).getDate() + 1)}
+                        paddingVertical={100}
                     />
                     : null
                 }
+
+                {showTimeModal &&
+                    <TimeModal
+                        start_date={new Date()}
+                        datetime_type={'time'}
+                        hideModal={() => this.setState({ showTimeModal: false })}
+                        selectDatetimeConfirm={(time) => this.refs['morningreminder'].selectDatetimeConfirm(time)}
+                        minDatetime={null}
+                        maxDatetime={null}
+                        minTime={null}
+                        maxTime={null}
+                        paddingVertical={400}
+                    />
+                }
+
                 {<ScrollView
                     contentContainerStyle={{ alignItems: 'center', justifyContent: 'center', paddingBottom: 30 }}
                     refreshControl={
@@ -240,44 +360,45 @@ class ParentHome extends React.Component {
                     <View style={{ width: '100%', flexDirection: 'row', backgroundColor: 'white' }}> 
                         <View style={{ width: '15%'}}>
                             {day_difference < 7 ?
-                                <TouchableHighlight
+                                <TouchableOpacity
                                     style={{ flex: 1, justifyContent: 'center', alignItems: 'center'}}
-                                    onPress={() => this.goBackADay()}
+                                    onClick={() => this.goBackADay()}
                                 >
                                     <Image
                                         source={require('../../assets/icon-back.png')}
                                         style={{ width: 40, height: 40 }}
                                     />
-                                </TouchableHighlight>
+                                </TouchableOpacity>
                                 : null
                             }
                         </View>
-                        <TouchableHighlight
+                        <TouchableOpacity
                             style={{ width: '70%', justifyContent: 'center'}}
-                            onPress={() => this.setState({ showDateTimeModal: true })}
+                            onClick={() => this.setState({ showDateTimeModal: true })}
                         >
 
                             <Text style={{ fontSize: width * 0.12, textAlign: 'center' }}>
                                 {beautifyDate(date)}
                             </Text>
-                        </TouchableHighlight>
+                        </TouchableOpacity>
                         <View style={{ width: '15%'}}>
                             {day_difference >= 0 ?
-                                <TouchableHighlight
+                                <TouchableOpacity
                                     style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
-                                    onPress={() => this.goForwardADay()}
+                                    onClick={() => this.goForwardADay()}
                                 >
                                     <Image
                                         source={require('../../assets/icon-forward.png')}
                                         style={{ width: 40, height: 40 }}
                                     />
-                                </TouchableHighlight>
+                                </TouchableOpacity>
                                 : null
                             }
                         </View>
                     </View>
                     <ParentHomeTitle
                         student={selected_student}
+                        students={this.props.parent.child_of_id}
                         student_name={this.props.parent.child_of_id[child_id].name}
                         selectOtherChildProfile={() => this.refs['profile_selector'].slideIn()}
                         viewQRCode={() => this.setState({
@@ -287,32 +408,32 @@ class ParentHome extends React.Component {
                     />
 
                     <View style={{ flex: 1, width: '93%', flexDirection: 'row', justifyContent: 'space-between', marginVertical: 5 }}>
-                        <TouchableHighlight
+                        <TouchableOpacity
                             style={{width: '30%', padding: 10, backgroundColor: '#ffe1d0'}}
-                            onPress={() => this.props.navigation.navigate('PickupRequest', {
+                            onClick={() => this.props.navigation.navigate('PickupRequest', {
                                 child_id,
                                 school_id: selected_student.school_id
                             })}>
                             <Text style={{ fontSize: width * 0.05, textAlign: 'center'}}>接回告知</Text>
-                        </TouchableHighlight>
-                        <TouchableHighlight
+                        </TouchableOpacity>
+                        <TouchableOpacity
                             style={{width: '30%', padding: 10, backgroundColor: '#fff1b5'}}
-                            onPress={() => this.props.navigation.push('MedicationRequestPage', {
+                            onClick={() => this.props.navigation.push('MedicationRequestPage', {
                                 onGoBack: () => this.refs['med_request'].fetchData(child_id, new Date()),
                                 student_id: child_id,
                                 class_id: selected_student.class_id
                             })}>
                             <Text style={{ fontSize: width * 0.05, textAlign: 'center' }}>托藥單</Text>
-                        </TouchableHighlight>
-                        <TouchableHighlight
+                        </TouchableOpacity>
+                        <TouchableOpacity
                             style={{width: '30%', padding: 10, backgroundColor: '#b5e9e9'}}
-                            onPress={() => this.props.navigation.navigate('AbsenceExcusePage', {
+                            onClick={() => this.props.navigation.navigate('AbsenceExcusePage', {
                                 student_id: child_id,
                                 class_id: selected_student.class_id === null ? "" : selected_student.class_id,
                                 school_id: selected_student.school_id
                             })}>
                             <Text style={{ fontSize: width * 0.05, textAlign: 'center' }}>請假單</Text>
-                        </TouchableHighlight>
+                        </TouchableOpacity>
                     </View>
 
                     <MorningReminderCard
@@ -322,6 +443,8 @@ class ParentHome extends React.Component {
                         ref="morningreminder"
                         present={present}
                         isConnected={isConnected}
+                        parent_id={parent_id}
+                        showTimeModal={() => this.setState({ showTimeModal: true })}
                     />
 
                     <MedicationRequestCard
@@ -349,6 +472,7 @@ class ParentHome extends React.Component {
                         date={date}
                         class_id={selected_student.class_id}
                         ref="messages"
+                        parent_id={parent_id}
                     />
 
                     <AppetiteCard

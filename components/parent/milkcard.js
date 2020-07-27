@@ -14,7 +14,8 @@ export default class MilkCard extends React.Component {
   }
 
   componentDidMount() {
-    this.fetchData(this.props.child_id, new Date())
+    const { date } = this.props
+    this.fetchData(this.props.child_id, new Date(date.getTime()))
   }
 
   componentDidUpdate(prevProps) {
@@ -46,6 +47,7 @@ export default class MilkCard extends React.Component {
 
   render() {
     const { milkIntakeData, isLoading } = this.state
+    // console.log('milkIntakeData: ', milkIntakeData)
     const today = formatDate(this.props.date)
     return (
       <Card style={{ width: '93%' }}>
@@ -61,7 +63,7 @@ export default class MilkCard extends React.Component {
           </View>
           <View style={{ flex: 1 }}>
             <View style={{ paddingTop: 8 }}>
-              <Text style={{ fontSize: 20 }}>餵奶</Text>
+              <Text style={{ fontSize: 20 }}>喝奶</Text>
             </View>
             {isLoading ? 
               <Reloading />
@@ -70,37 +72,43 @@ export default class MilkCard extends React.Component {
                   <View
                     style={{ flexDirection: 'row', paddingBottom: 5 }}
                   >
-                    <View style={{ flex: 1, justifyContent: 'center' }}>
+                    <View style={{ width: '25%', justifyContent: 'center' }}>
                       <Text style={{ fontSize: 15, textAlign: 'center', color: '#606060' }}>時間</Text>
                     </View>
-                    <View style={{ flex: 1, justifyContent: 'center' }}>
+                    <View style={{ width: '28%', justifyContent: 'center' }}>
                       <Text style={{ fontSize: 15, textAlign: 'center', color: '#606060' }}>量</Text>
                     </View>
-                    <View style={{ flex: 1, justifyContent: 'center' }}>
-                      <Text style={{ fontSize: 15, textAlign: 'center', color: '#606060' }}>餵藥老師</Text>
+                    <View style={{ width: '28%', justifyContent: 'center' }}>
+                      <Text style={{ fontSize: 15, textAlign: 'center', color: '#606060' }}>乳品</Text>
+                    </View>
+                    <View style={{ width: '19%', justifyContent: 'center' }}>
+                      <Text style={{ fontSize: 15, textAlign: 'center', color: '#606060' }}>老師</Text>
                     </View>
                   </View>
                   {milkIntakeData[today].map((record, index) => {
-                    const { time, amount, teacher_name } = record
+                    const { time, amount, milk_type, teacher_name } = record
                     return (
                       <View key={index}
                         style={{ flexDirection: 'row' }}
                       >
-                        <View style={{ flex: 1}}>
-                          <Text style={{ fontSize: 25, textAlign: 'center', color: '#404040' }}>{time}</Text>
+                        <View style={{ width: '25%' }}>
+                          <Text style={{ fontSize: 20, textAlign: 'center', color: '#404040' }}>{time}</Text>
                         </View>
-                        <View style={{ flex: 1}}>
-                          <Text style={{ fontSize: 25, textAlign: 'center', color: '#404040' }}>{amount} c.c.</Text>
+                        <View style={{ width: '28%' }}>
+                          <Text style={{ fontSize: 20, textAlign: 'center', color: '#404040' }}>{amount} c.c.</Text>
                         </View>
-                        <View style={{ flex: 1}}>
-                          <Text style={{fontSize: 25, textAlign: 'center', color: '#404040' }}>{teacher_name !== null && teacher_name.slice(1)}</Text>
+                        <View style={{ width: '28%' }}>
+                          <Text style={{ fontSize: 20, textAlign: 'center', color: '#404040' }}>{milk_type}</Text>
+                        </View>
+                        <View style={{ width: '19%' }}>
+                          <Text style={{fontSize: 20, textAlign: 'center', color: '#404040' }}>{teacher_name !== null && teacher_name.slice(1)}</Text>
                         </View>
                       </View>
                     )
                   })}
                 </View>
               : <View style={{ flex: 1, paddingVertical: 8  }}>
-                  <Text>沒有新紀錄</Text>
+                  <Text style={{ fontSize: 17 }}>沒有新紀錄</Text>
                 </View>
             }
           </View>

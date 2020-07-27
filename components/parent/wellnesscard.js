@@ -15,21 +15,22 @@ export default class WellnessCard extends React.Component {
   }
 
   componentDidMount() {
-    this.fetchData(this.state.child_id, new Date())
+    const { date } = this.props
+    this.fetchData(this.state.child_id, new Date(date.getTime()))
   }
 
   componentDidUpdate(prevProps) {
     if (this.props.date !== prevProps.date) {
       this.setState({ isLoading: true })
-      this.fetchData(this.props.child_id, this.props.date);
+      this.fetchData(this.props.child_id, new Date(this.props.date.getTime()));
     } else if (this.props.child_id !== prevProps.child_id) {
       this.setState({ isLoading: true })
       this.fetchData(this.props.child_id, new Date());
     }
   }
 
-  async fetchData(child_id, datetime) {
-    const date = new Date(datetime.getTime())
+  async fetchData(child_id, date) {
+    // const date = new Date(datetime.getTime())
     const start_date = formatDate(date)
     date.setDate(date.getDate() + 1)
     const end_date = formatDate(date)
@@ -101,7 +102,7 @@ export default class WellnessCard extends React.Component {
                   })}
                 </View>
                 : <View style={{ flex: 1, paddingVertical: 8 }}>
-                  <Text>沒有新紀錄</Text>
+                    <Text style={{ fontSize: 17 }}>沒有新紀錄</Text>
                 </View>
             }
           </View>

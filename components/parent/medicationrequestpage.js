@@ -1,6 +1,6 @@
 import React from 'react'
 import {
-    View, TouchableHighlight, Text, Animated, ScrollView, Alert, SectionList, Dimensions, Platform
+    View, TouchableOpacity, Text, Animated, ScrollView, Alert, SectionList, Dimensions, Platform
 } from 'react-native'
 import MedicationRequestMain from './medicationrequestmain'
 import { formatDate, beautifyTime, beautifyDate, beautifyMonthDate, get } from '../util'
@@ -237,7 +237,7 @@ class MedicationRequestPage extends React.Component {
                                 alignItems: 'center'
                             }}
                         >
-                            <TouchableHighlight 
+                            <TouchableOpacity 
                                 style={{ 
                                     width:'65%',
                                     height: '100%',
@@ -247,7 +247,7 @@ class MedicationRequestPage extends React.Component {
                                     justifyContent: 'center',
                                     alignItems: 'center'
                                 }}
-                                onPress={() => this.props.navigation.push('AddMedicationRequestPage', {
+                                onClick={() => this.props.navigation.push('AddMedicationRequestPage', {
                                     onGoBack: () => this.fetchMedicationRequest(),
                                     student_id,
                                     class_id,
@@ -256,8 +256,8 @@ class MedicationRequestPage extends React.Component {
                                 })}
                             >
                                 <Text style={{ fontSize: 30 }}>{beautifyTime(item.timestamp)}</Text>
-                            </TouchableHighlight>
-                            <TouchableHighlight
+                            </TouchableOpacity>
+                            <TouchableOpacity
                                 style={{ 
                                     width:'30%', 
                                     height: '100%',
@@ -266,12 +266,12 @@ class MedicationRequestPage extends React.Component {
                                     justifyContent: 'center',
                                     borderRadius: 40
                                 }}
-                                onPress={() => this.deleteRequestConfirm(item.id)}
+                                onClick={() => this.deleteRequestConfirm(item.id)}
                             >
                                 <Text style={{ fontSize: width * 0.07, textAlign: 'center' }}>
                                     刪除
                                 </Text>
-                            </TouchableHighlight>
+                            </TouchableOpacity>
                         </View>
                     }
                     renderSectionHeader={({ section: { title } }) => (
@@ -295,9 +295,9 @@ class MedicationRequestPage extends React.Component {
                 />
 
                 <View style={{ width: '100%', paddingVertical: 10, justifyContent: 'center', backgroundColor: 'transparent' }}>
-                    <TouchableHighlight
+                    <TouchableOpacity
                         style={{ backgroundColor: '#f4d41f', padding: this.isIOS() ? 20 : 12, justifyContent: 'center', borderRadius: 40 }}
-                        onPress={() => this.props.navigation.push('AddMedicationRequestPage', {
+                        onClick={() => this.props.navigation.push('AddMedicationRequestPage', {
                             onGoBack: () => this.fetchMedicationRequest(),
                             student_id, 
                             class_id,
@@ -308,7 +308,7 @@ class MedicationRequestPage extends React.Component {
                         <Text style={{ fontSize: 30, alignSelf: 'center' }}>
                             新增
                         </Text>
-                    </TouchableHighlight>
+                    </TouchableOpacity>
                 </View>
 
                 

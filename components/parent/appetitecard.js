@@ -16,17 +16,19 @@ export default class AppetiteCard extends React.Component {
       fruit: null,
       lunch: null,
       snack: null,
-      rating: {
-        'Awesome': '胃口好',
-        'Good': '還不錯',
-        'Ok': '吃不多'
-      }
+      // rating: {
+      //   'Awesome': '滿滿一碗',
+      //   'Good': '７/8分滿',
+      //   'Ok': '半碗',
+      //   'Poor': '胃口不佳'
+      // }
     }
     this.fetchData = this.fetchData.bind(this)
   }
 
   componentDidMount() {
-    this.fetchData(this.state.child_id, new Date())
+    const { date } = this.props
+    this.fetchData(this.state.child_id, new Date(date.getTime()))
   }
 
   componentDidUpdate(prevProps) {
@@ -58,6 +60,7 @@ export default class AppetiteCard extends React.Component {
     const today = formatDate(date)
     if (appetiteData && appetiteData[today]){
       const { fruit_name, breakfast_rating, fruit_rating, lunch_rating, snack_rating } = appetiteData[today]
+      // console.log('fruit_name: ', fruit_name)
       const breakfast = this.parseData(breakfast_rating)
       const fruit = this.parseData(fruit_rating)
       const lunch = this.parseData(lunch_rating)
@@ -83,13 +86,13 @@ export default class AppetiteCard extends React.Component {
   parseData(data_string) {
     const rating = data_string.slice(0, -1)
     const water_drunk = parseInt(data_string.slice(-1))
-    const rating_icons = {
-      'Awesome': require('../../assets/icon-appetite-awesome.png'),
-      'Good': require('../../assets/icon-appetite-good.png'),
-      'Ok': require('../../assets/icon-appetite-ok.png')
-    }
+    // const rating_icons = {
+    //   'Awesome': require('../../assets/icon-appetite-awesome.png'),
+    //   'Good': require('../../assets/icon-appetite-good.png'),
+    //   'Ok': require('../../assets/icon-appetite-ok.png')
+    // }
     return {
-      rating_icon: rating_icons[rating],
+      // rating_icon: rating_icons[rating],
       rating,
       water_drunk
     }
@@ -104,7 +107,7 @@ export default class AppetiteCard extends React.Component {
   }
 
   render() {
-    const { appetiteData, isLoading, breakfast, fruit, lunch, snack, rating} = this.state
+    const { appetiteData, isLoading, breakfast, fruit, lunch, snack, rating, fruit_name } = this.state
     const today = formatDate(this.props.date)
     return (
       <Card style={{ width: '93%' }}>
@@ -125,29 +128,25 @@ export default class AppetiteCard extends React.Component {
             {isLoading ? 
               <Reloading />
               : appetiteData && appetiteData[today] ? 
-                <View style={{ flex: 1, flexDirection: 'row', paddingVertical: 8 }}>
+                <View>
+                  <View style={{ flex: 1, flexDirection: 'row', paddingVertical: 8 }}>
                   {breakfast ?
-                    <View style={{ flex: 1, justifyContent: 'center', backgroundColor: '#F5F5F5', marginRight: 10 }}>
+                    <View style={{ width: '45%', justifyContent: 'center', backgroundColor: '#F5F5F5', marginRight: '5%' }}>
                       <View style={{ padding: 5 }}>
-                        <Text style={{color: 'rgba(0,0,0,0.8)'}}>早餐</Text>
+                        <Text style={{ fontSize: 17, color: 'rgba(0,0,0,0.8)'}}>早餐</Text>
                       </View>
                       <View
                         style={{
-                          width: 70,
-                          height: 70,
                           justifyContent: 'center',
-                          alignItems: 'center'
+                          alignItems: 'center',
+                          padding: 8
                         }}
                       >
-                        {/* {breakfast.rating_icon ?
-                          <Image source={breakfast.rating_icon} />
-                          :  */}
-                          <Text style={{ fontSize: 20 }}>{rating[breakfast.rating] || breakfast.rating}</Text>
-                        {/* } */}
+                        <Text style={{ fontSize: 20 }}>{breakfast.rating || ' '}</Text>
                       </View>
 
                       <View style={{ padding: 5, justifyContent: 'center' }}>
-                        <Text style={{ fontSize: 13, textAlign: 'center' }}>
+                        <Text style={{ fontSize: 17, textAlign: 'center' }}>
                           {breakfast.water_drunk ?
                             '有喝水' : ' '
                           }
@@ -158,27 +157,22 @@ export default class AppetiteCard extends React.Component {
                   }
 
                   {fruit ?
-                    <View style={{ flex: 1, justifyContent: 'center', backgroundColor: '#F5F5F5', marginRight: 10 }}>
+                    <View style={{ width: '45%', justifyContent: 'center', backgroundColor: '#F5F5F5', marginRight: '5%' }}>
                       <View style={{ padding: 5 }}>
-                        <Text style={{color: 'rgba(0,0,0,0.8)'}}>水果</Text>
+                        <Text style={{ fontSize: 17, color: 'rgba(0,0,0,0.8)'}}>{(fruit_name !== '水果' && `水果餐: ${fruit_name}`) || '水果'}</Text>
                       </View>
                       <View
                         style={{
-                          width: 70,
-                          height: 70,
                           justifyContent: 'center',
-                          alignItems: 'center'
+                          alignItems: 'center',
+                          padding: 8
                         }}
                       >
-                        {/* {fruit.rating_icon ?
-                          <Image source={fruit.rating_icon} />
-                          :  */}
-                          <Text style={{ fontSize: 20 }}>{rating[fruit.rating] || fruit.rating}</Text>
-                        {/* } */}
+                        <Text style={{ fontSize: 20 }}>{fruit.rating || ' '}</Text>
                       </View>
 
                       <View style={{ padding: 5, justifyContent: 'center' }}>
-                        <Text style={{ fontSize: 13, textAlign: 'center' }}>
+                        <Text style={{ fontSize: 17, textAlign: 'center' }}>
                           {fruit.water_drunk ?
                             '有喝水' : ' '
                           }
@@ -187,30 +181,26 @@ export default class AppetiteCard extends React.Component {
                     </View>
                     : null
                   }
-
+                  </View>
+                  <View style={{ flex: 1, flexDirection: 'row', paddingVertical: 8 }}>
                   {lunch ?
-                    <View style={{ flex: 1, justifyContent: 'center', backgroundColor: '#F5F5F5', marginRight: 10 }}>
+                    <View style={{ width: '45%', justifyContent: 'center', backgroundColor: '#F5F5F5', marginRight: '5%' }}>
                       <View style={{ padding: 5 }}>
-                        <Text style={{color: 'rgba(0,0,0,0.8)'}}>午餐</Text>
+                        <Text style={{ fontSize: 17, color: 'rgba(0,0,0,0.8)'}}>午餐</Text>
                       </View>
 
                       <View
                         style={{
-                          width: 70,
-                          height: 70,
                           justifyContent: 'center',
-                          alignItems: 'center'
+                          alignItems: 'center',
+                          padding: 8
                         }}
                       >
-                        {/* {lunch.rating_icon ?
-                          <Image source={lunch.rating_icon} />
-                          :  */}
-                          <Text style={{ fontSize: 20 }}>{rating[lunch.rating] || lunch.rating}</Text>
-                        {/* } */}
+                        <Text style={{ fontSize: 20 }}>{lunch.rating || ' '}</Text>
                       </View>
 
                       <View style={{ padding: 5, justifyContent: 'center' }}>
-                        <Text style={{ fontSize: 13, textAlign: 'center' }}>
+                        <Text style={{ fontSize: 17, textAlign: 'center' }}>
                           {lunch.water_drunk ?
                             '有喝水' : ' '
                           }
@@ -222,28 +212,23 @@ export default class AppetiteCard extends React.Component {
                   }
 
                   {snack ?
-                    <View style={{ flex: 1, justifyContent: 'center', backgroundColor: '#F5F5F5', marginRight: 10 }}>
+                    <View style={{ width: '45%', justifyContent: 'center', backgroundColor: '#F5F5F5', marginRight: '5%' }}>
                       <View style={{ padding: 5 }}>
-                        <Text style={{color: 'rgba(0,0,0,0.8)'}}>點心</Text>
+                        <Text style={{ fontSize: 17, color: 'rgba(0,0,0,0.8)'}}>點心</Text>
                       </View>
 
                       <View
                         style={{
-                          width: 70,
-                          height: 70,
                           justifyContent: 'center',
-                          alignItems: 'center'
+                          alignItems: 'center',
+                          padding: 8
                         }}
                       >
-                        {/* {snack.rating_icon ?
-                          <Image source={snack.rating_icon} />
-                          :  */}
-                          <Text style={{ fontSize: 20 }}>{rating[snack.rating] || snack.rating}</Text>
-                        {/* } */}
+                        <Text style={{ fontSize: 20 }}>{snack.rating || ' '}</Text>
                       </View>
 
                       <View style={{ padding: 5, justifyContent: 'center' }}>
-                        <Text style={{ fontSize: 13, textAlign: 'center' }}>
+                        <Text style={{ fontSize: 17, textAlign: 'center' }}>
                           {snack.water_drunk ?
                             '有喝水' : ' '
                           }
@@ -254,8 +239,9 @@ export default class AppetiteCard extends React.Component {
                   }
 
                 </View>
+                </View>
             : <View style={{ flex: 1, paddingVertical: 8 }}>
-                <Text>沒有新紀錄</Text>
+                <Text style={{ fontSize: 17 }}>沒有新紀錄</Text>
               </View>
             }
           </View>

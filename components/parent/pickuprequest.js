@@ -1,6 +1,6 @@
 
 import React from 'react'
-import { View, Text, TouchableHighlight, TextInput, KeyboardAvoidingView, ScrollView, Alert, Dimensions } from 'react-native'
+import { View, Text, TouchableOpacity, TextInput, KeyboardAvoidingView, ScrollView, Alert, Dimensions } from 'react-native'
 import { formatDate, formatTime } from '../util'
 import ENV from '../../variables'
 import { connect } from 'react-redux'
@@ -99,7 +99,7 @@ class PickupRequest extends React.Component {
                                         justifyContent: 'center'
                                     }}
                                 >
-                                    <TouchableHighlight
+                                    <TouchableOpacity
                                         style={{
                                             width: '90%',
                                             height: '90%',
@@ -108,13 +108,13 @@ class PickupRequest extends React.Component {
                                             backgroundColor: time == minute ? hightlighted_colors[index] : colors[index]
                                         }}
                                         underlayColor={hightlighted_colors[index]}
-                                        onPress={() => this.setState({ time: minute, choose_other_option: false })}
+                                        onClick={() => this.setState({ time: minute, choose_other_option: false })}
                                     >
                                         <View style={{ flex:1, flexDirection:'row', justifyContent: 'center', alignItems: 'center' }}>
                                             <Text style={{ fontSize: total_width*0.20 }}>{minute}</Text>
                                             <Text style={{ fontSize: total_width*0.09 }}>分鐘</Text>
                                         </View>
-                                    </TouchableHighlight>
+                                    </TouchableOpacity>
                                 </View>
                             )
                         })}
@@ -129,7 +129,7 @@ class PickupRequest extends React.Component {
                                 backgroundColor: choose_other_option ? 'black' : 'white'
                             }}
                         >
-                            <TouchableHighlight
+                            <TouchableOpacity
                                     style={{
                                         flexDirection: 'row',
                                         width: '90%',
@@ -140,7 +140,7 @@ class PickupRequest extends React.Component {
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                     }}
-                                    onPress={() => this.setState({ choose_other_option: true, time: '' })}
+                                    onClick={() => this.setState({ choose_other_option: true, time: '' })}
                             >
                                 {choose_other_option ?
                                     <View
@@ -170,21 +170,21 @@ class PickupRequest extends React.Component {
                                     </View>
                                     : <Text style={{ fontSize: 50 }}>其他</Text>
                                 }
-                            </TouchableHighlight>
+                            </TouchableOpacity>
                         </View>
                     </View>
                     <View style={{ height: total_height*0.16 }}>
-                        <TouchableHighlight
+                        <TouchableOpacity
                             style={{
                                 flex: 1,
                                 backgroundColor: 'lightgrey',
                                 alignItems: 'center',
                                 justifyContent: 'center'
                             }}
-                            onPress={() => this.sendRequest()}
+                            onClick={() => this.sendRequest()}
                         >
                             <Text style={{ fontSize: 50 }}>送出</Text>
-                        </TouchableHighlight>
+                        </TouchableOpacity>
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>

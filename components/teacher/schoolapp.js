@@ -110,7 +110,7 @@ export default class SchoolApp extends React.Component {
                         <Stack.Screen 
                             name="DownloadTeacherAttendance"
                             component={DownloadTeacherAttendance}
-                            options={{ gestureEnabled: true, title: '教師出勤下載' }}
+                            options={{ gestureEnabled: true, title: '學生出勤下載' }}
                         />
                         <Stack.Screen 
                             name="AttendancePage"

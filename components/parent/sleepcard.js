@@ -14,7 +14,8 @@ export default class SleepCard extends React.Component {
   }
 
   componentDidMount() {
-    this.fetchData(this.props.child_id, new Date())
+    const { date } = this.props
+    this.fetchData(this.props.child_id, new Date(date.getTime()))
   }
 
   componentDidUpdate(prevProps) {
@@ -100,7 +101,7 @@ export default class SleepCard extends React.Component {
                   })}
                 </View>
                 : <View style={{ flex: 1, paddingVertical: 8 }}>
-                  <Text>沒有新紀錄</Text>
+                  <Text style={{ fontSize: 17 }}>沒有新紀錄</Text>
                 </View>
             }
           </View>

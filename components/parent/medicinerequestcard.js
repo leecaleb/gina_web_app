@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, TextInput, Image, TouchableHighlight, ScrollView, Alert } from 'react-native'
+import { View, Text, TextInput, Image, TouchableOpacity, ScrollView, Alert } from 'react-native'
 import { Card, CardItem, Button } from 'native-base'
 import { formatDate, fetchData, beautifyTime } from '../util'
 import Reloading from '../reloading'
@@ -13,19 +13,24 @@ class MedicationRequestCard extends React.Component {
     super(props)
     this.state = {
       isLoading: true,
-      med_requests: []
+      med_requests: [],
+      // date: new Date()
     }
   }
 
   componentDidMount() {
-    this.fetchData(this.props.child_id, new Date())
+    const { date } = this.props
+    this.fetchData(this.props.child_id, new Date(date.getTime()))
   }
 
   componentDidUpdate(prevProps) {
     if (this.props.date !== prevProps.date) {
+      // const { date } = this.props
+      // console.log('this.props.date !== prevProps.date: ', this.props.date.toDateString())
       this.setState({ isLoading: true })
       this.fetchData(this.props.child_id, new Date(this.props.date.getTime()));
     } else if (this.props.child_id !== prevProps.child_id) {
+      // console.log('this.props.child_id !== prevProps.child_id')
       this.setState({ isLoading: true })
       this.fetchData(this.props.child_id, new Date());
     }
@@ -48,7 +53,7 @@ class MedicationRequestCard extends React.Component {
       .then((res) => res.json())
       .then((resJson) => {
           const {data} = resJson
-          const med_requests = this.get_todays_requests(data)
+          const med_requests = this.get_todays_requests(data, date)
           this.setState({
             med_requests
           })
@@ -59,11 +64,13 @@ class MedicationRequestCard extends React.Component {
       })
   }
 
-  get_todays_requests(object_array) {
-    const { date } = this.props
+  get_todays_requests(object_array, date) {
+    // const { date } = this.props
     let med_requests = []
     for (var i = 0; i < object_array.length; i++) {
       const timestamp = new Date(object_array[i].title)
+      // console.log('timestamp: ', timestamp.toDateString())
+      // console.log('date: ', date.toDateString())
       if (timestamp.toDateString() === (date).toDateString()) {
         med_requests = object_array[i].data
         for(var j = 0; j < med_requests.length; j++) {
@@ -78,6 +85,8 @@ class MedicationRequestCard extends React.Component {
   render() {
     const { med_requests } = this.state
     const { isLoading } = this.state
+    // console.log('med_requests: ', med_requests)
+    // console.log('med/this.props.date: ', this.props.date.toDateString())
     return (
       <Card style={{ width: '93%' }}>
         <View style={{ flex: 1, flexDirection: 'row' }}>
@@ -101,7 +110,7 @@ class MedicationRequestCard extends React.Component {
                   <ScrollView horizontal contentContainerStyle={{ paddingBottom: 10}}>
                   {med_requests.map((request, index) => {
                     return (
-                      <TouchableHighlight 
+                      <TouchableOpacity 
                         key={request.id}
                         style={{
                           padding: 10,
@@ -110,7 +119,7 @@ class MedicationRequestCard extends React.Component {
                           justifyContent: 'center'
                         }}
                         underlayColor='#ff8944'
-                        onPress={() => this.props.viewMedRequest(index, med_requests)}
+                        onClick={() => this.props.viewMedRequest(index, med_requests)}
                       >
                         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
                           {this.afterFive() && request.administered ? 
@@ -125,13 +134,13 @@ class MedicationRequestCard extends React.Component {
                           }
                           <Text style={{ alignSelf: 'center', fontSize: 25, color: 'rgba(0,0,0,0.8)' }}>{beautifyTime(request.timestamp)}</Text>
                         </View>
-                      </TouchableHighlight>
+                      </TouchableOpacity>
                     )
                   })}
                   </ScrollView>
                 </View>
                 : <View style={{ flex: 1, paddingVertical: 8 }}>
-                  <Text>沒有新紀錄</Text>
+                    <Text style={{ fontSize: 17 }}>沒有新紀錄</Text>
                 </View>
             }
           </View>

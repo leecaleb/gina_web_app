@@ -1,6 +1,6 @@
 import React from 'react'
 import {
-    View, TouchableHighlight, Text, Animated, ScrollView, Alert, KeyboardAvoidingView, Platform, Dimensions
+    View, TouchableOpacity, Text, Animated, ScrollView, Alert, KeyboardAvoidingView, Platform, Dimensions
 } from 'react-native'
 import AbsenceExcuse from './absenceexcuse'
 import { formatDate } from '../util'
@@ -188,7 +188,7 @@ class AbsenceExcusePage extends React.Component {
                                         ]
                                     }}
                                 >
-                                    <TouchableHighlight
+                                    <TouchableOpacity
                                         style={{
                                             height: 100,
                                             width: 100,
@@ -197,7 +197,7 @@ class AbsenceExcusePage extends React.Component {
                                             borderRadius: 10
                                         }}
                                         underlayColor='#368cbf'
-                                        onPress={() => this.selectRequest(index)}
+                                        onClick={() => this.selectRequest(index)}
                                     >
                                         <View>
                                             {formatDate(request.date) === todays_date ?
@@ -206,7 +206,7 @@ class AbsenceExcusePage extends React.Component {
                                             }
                                             <Text style={{ fontSize: 20, color: selected_request_index === index ? 'white' : 'black' }}>{date}</Text>
                                         </View>
-                                    </TouchableHighlight>
+                                    </TouchableOpacity>
                                 </Animated.View>
                             )
                         })}
@@ -224,7 +224,7 @@ class AbsenceExcusePage extends React.Component {
                                 ]
                             }}
                         >
-                            <TouchableHighlight
+                            <TouchableOpacity
                                 style={{
                                     height: 100,
                                     width: 100,
@@ -234,12 +234,12 @@ class AbsenceExcusePage extends React.Component {
                                 }}
                                 underlayColor='#ff8944'
                                 ref={'welrnf'}
-                                onPress={() => this.selectRequest(-1)}
+                                onClick={() => this.selectRequest(-1)}
                             >
                                 <View>
                                     <Text style={{ fontSize: 20, color: selected_request_index === -1 ? 'white' : 'black' }}>新增</Text>
                                 </View>
-                            </TouchableHighlight>
+                            </TouchableOpacity>
                         </Animated.View>
                     </ScrollView>
                 </View>
