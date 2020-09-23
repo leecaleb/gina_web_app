@@ -18,7 +18,7 @@ class AddMedicationRequestPage extends React.Component {
       today: new Date(),
       showDateTimeModal: false,
       datetime_type: '',
-      date: null,
+      // date: null,
       time_array: [],
       time_selected_index: null,
       before_meal: null,
@@ -41,7 +41,9 @@ class AddMedicationRequestPage extends React.Component {
       data: null,
       index: -1,
       access_mode: 'create',
-      scrollHeight: '100%'
+      scrollHeight: '100%',
+      date_array: [],
+      date_selected_index: null
     }
   }
 
@@ -50,7 +52,7 @@ class AddMedicationRequestPage extends React.Component {
 
     if (data === null) {
       this.setState({
-        date: new Date(),
+        date_array: [new Date()],
         isLoading: false
       })
       return
@@ -67,7 +69,7 @@ class AddMedicationRequestPage extends React.Component {
       index,
       data,
       request_id: id,
-      date: timestamp,
+      date_array: [timestamp],
       time_array: [timestamp],
       ...medication,
       note,
@@ -87,19 +89,73 @@ class AddMedicationRequestPage extends React.Component {
   }
 
   selectDatetimeConfirm(datetime) {
-    const { datetime_type, time_array, time_selected_index } = this.state
+    const { datetime_type } = this.state
     if (datetime_type === 'date') {
+      this.handleDateSelected(datetime)
+    } else {
+      this.handleTimeSelected(datetime)
+    }
+    // const { datetime_type, time_array, time_selected_index } = this.state
+    // if (datetime_type === 'date') {
+    //   this.setState({
+    //     date: datetime,
+    //     showDateTimeModal: false
+    //   })
+    // } else if (time_selected_index !== null){
+    //   const updated_time_array = []
+    //   for(var i = 0; i < time_array.length; i++) {
+    //     if(i !== time_selected_index) {
+    //       updated_time_array.push(time_array[i])
+    //     } else {
+    //       updated_time_array.push(datetime)
+    //     }
+    //   }
+    //   this.setState({
+    //     time_array: updated_time_array,
+    //     time_selected_index: null,
+    //     showDateTimeModal: false
+    //   })
+    // } else {
+    //   this.setState({
+    //     time_array: [...this.state.time_array, datetime],
+    //     showDateTimeModal: false
+    //   })
+    // }
+  }
+
+  handleDateSelected(date) {
+    const { date_array, date_selected_index } = this.state
+    if (date_selected_index !== null) {
+      let updated_date_array = []
+      for(var i = 0; i < date_array.length; i++) {
+        if(i !== date_selected_index) {
+          updated_date_array.push(date_array[i])
+        } else {
+          updated_date_array.push(date)
+        }
+      }
       this.setState({
-        date: datetime,
+        date_array: updated_date_array,
+        date_selected_index: null,
         showDateTimeModal: false
       })
-    } else if (time_selected_index !== null){
-      const updated_time_array = []
+    } else {
+      this.setState({
+        date_array: [...date_array, date],
+        showDateTimeModal: false
+      })
+    }
+  }
+
+  handleTimeSelected(time) {
+    const { time_array, time_selected_index } = this.state
+    if (time_selected_index !== null){
+      let updated_time_array = []
       for(var i = 0; i < time_array.length; i++) {
         if(i !== time_selected_index) {
           updated_time_array.push(time_array[i])
         } else {
-          updated_time_array.push(datetime)
+          updated_time_array.push(time)
         }
       }
       this.setState({
@@ -109,10 +165,18 @@ class AddMedicationRequestPage extends React.Component {
       })
     } else {
       this.setState({
-        time_array: [...this.state.time_array, datetime],
+        time_array: [...time_array, time],
         showDateTimeModal: false
       })
     }
+  }
+
+  removeDate(index) {
+    const { date_array } = this.state
+    date_array.splice(index, 1)
+    this.setState({
+      date_array
+    })
   }
 
   removeTime(index) {
@@ -241,7 +305,7 @@ class AddMedicationRequestPage extends React.Component {
     const { class_id } = this.props.route.params
     const {
       request_id, 
-      date,
+      date_array,
       time_array,
       before_meal ,
       powder,
@@ -256,7 +320,8 @@ class AddMedicationRequestPage extends React.Component {
     return{
       request_id,
       class_id,
-      date: formatDate(date), 
+      // date: formatDate(date), 
+      date_array: date_array.map(date => formatDate(date)),
       time_array: time_array.map(time => formatTime(time)), 
       before_meal,
       powder,
@@ -276,8 +341,8 @@ class AddMedicationRequestPage extends React.Component {
   }
 
   editable(){
-    const { date } = this.state
-    // console.log('date: ', date)
+    const { date_array } = this.state
+    let date = date_array[0]
     const threshold = new Date()
     threshold.setHours(10,0,0,0)
     const tomorrow = new Date()
@@ -302,7 +367,7 @@ class AddMedicationRequestPage extends React.Component {
     const { request_id } = this.state
     const confirmed = confirm('確定要刪除？')
     if (confirmed) {
-      this.deleteRequest(request_id)
+      this.deleteRequest(request_id)  
     }
   }
 
@@ -346,7 +411,7 @@ class AddMedicationRequestPage extends React.Component {
   render() {
     const { 
       isLoading,
-      date, 
+      // date, 
       time_array, 
       showDateTimeModal, 
       datetime_type, 
@@ -364,7 +429,9 @@ class AddMedicationRequestPage extends React.Component {
       medicated_timestamp,
       data,
       access_mode,
-      scrollHeight
+      scrollHeight,
+      date_array,
+      date_selected_index
     } = this.state
     
     if(isLoading) {
@@ -412,7 +479,7 @@ class AddMedicationRequestPage extends React.Component {
                           onClick={() => this.switchRequest(index)}
                         >
                           <Text
-                            style={{ fontSize: 30, color: this.state.index === index ? 'grey' : 'white' }}
+                            style={{ fontSize: 25, color: this.state.index === index ? 'grey' : 'white' }}
                           >
                             {beautifyTime(request.timestamp)}
                           </Text>
@@ -429,14 +496,28 @@ class AddMedicationRequestPage extends React.Component {
               <View style={{ alignItems: 'center'}}>
                 {/* MEDICATED RESPONSE - BODY */}
                 <View style={{ width: '100%', backgroundColor: 'white', padding: 20 }}>
-                  <Text style={{ fontSize: 30 }}>餵藥老師：{teacher_name}</Text>
-                  <Text style={{ fontSize: 30 }}>餵藥時間：{beautifyTime(medicated_timestamp)}</Text>
+                  <Text style={{ fontSize: 25 }}>餵藥老師：{teacher_name}</Text>
+                  <Text style={{ fontSize: 25 }}>餵藥時間：{beautifyTime(medicated_timestamp)}</Text>
                 </View>
               </View>}
 
           {/* DATE */}
           <View style={{ alignItems: 'center'}}>
-            <TouchableOpacity
+            <View
+              style={{ 
+                width: '100%', 
+                flexDirection: 'row', 
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#ff8944',
+                padding: 10,
+                borderTopLeftRadius: 30,
+                borderTopRightRadius: 30
+              }}
+            >
+              <Text style={{ fontSize: 25 }}>日期 </Text>
+            </View>
+            {/* <TouchableOpacity
               disabled={access_mode === 'read'}
               style={{
                 width: '100%',
@@ -453,17 +534,104 @@ class AddMedicationRequestPage extends React.Component {
               }}
             >
               <Text style={{ fontSize: 30, alignSelf: 'center' }}>日期 {beautifyMonthDate(date)}</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             {/* TIME */}
-            <View style={{flex: 1, flexDirection: 'row', width: '100%', backgroundColor: 'white', padding: 20 }}>
+            <View 
+              style={{ 
+                flex: 1,
+                flexDirection: 'row', 
+                width: '100%', 
+                backgroundColor: 'white', 
+                padding: 20,
+                alignItems: 'flex-start'
+              }}
+            >
+
+            <View style={{ flex: 1, alignItems: 'center' }}>
+                <TouchableOpacity 
+                  disabled={access_mode === 'read' || access_mode === 'edit'}
+                  style={{
+                    width: '80%',
+                    paddingBottom: 15
+                  }}
+                  underlayColor='transparent'
+                  onClick={() => {
+                    if (access_mode === 'read' || access_mode === 'edit') return
+                    this.setState({ showDateTimeModal: true, datetime_type: 'date' })
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ flex: 1, paddingLeft: 15 }}>
+                      <Text style={{ fontSize: 25 }}>日期</Text>
+                    </View >
+                    {access_mode === 'create' &&
+                      <Image
+                        source={require('../../assets/icon-plus.png')}
+                        style={{ width: 32, height: 32, alignSelf: 'flex-end'}}
+                      />
+                    }
+                  </View>
+                </TouchableOpacity>
+                {date_array.map((date, index) => {
+                  return (
+                    <View key={index} 
+                      style={{
+                        width: '90%',
+                        justifyContent: 'center',
+                        flexDirection: 'row',
+                        paddingBottom: 10
+                      }}
+                    >
+                      <TouchableOpacity
+                        disabled={access_mode === 'read'}
+                        style={{
+                          width: '70%',
+                          backgroundColor: '#ffddb7',
+                          borderTopLeftRadius: 15,
+                          borderBottomLeftRadius: 15,
+                          justifyContent: 'center'
+                        }}
+                        underlayColor='transparent'
+                        onClick={() => {
+                          if (access_mode === 'read') return
+                          this.setState({ showDateTimeModal: true, datetime_type: 'date', date_selected_index: index })
+                        }}
+                      >
+                        <Text style={{ fontSize: 25, alignSelf: 'center' }}>{beautifyMonthDate(date)}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        disabled={access_mode === 'read'}
+                        style={{
+                          width: '30%',
+                          justifyContent: 'center',
+                          padding: 5,
+                          backgroundColor: '#ffddb7',
+                          borderBottomRightRadius: 15,
+                          borderTopRightRadius: 15
+                        }}
+                        underlayColor='transparent'
+                        onClick={() => {
+                          if (access_mode === 'read') return
+                          this.removeDate(index)
+                        }}
+                      >
+                        <Image
+                          source={require('../../assets/icon-delete.png')}
+                          style={{ width: 32, height: 32 }}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  )
+                })}
+              </View>
 
               <View style={{ flex: 1, alignItems: 'center' }}>
                 <TouchableOpacity 
                   disabled={access_mode === 'read' || access_mode === 'edit'}
                   style={{
                     width: '80%',
-                    paddingBottom: 10
+                    paddingBottom: 15
                   }}
                   underlayColor='transparent'
                   onClick={() => {
@@ -472,8 +640,8 @@ class AddMedicationRequestPage extends React.Component {
                   }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 30 }}>時間</Text>
+                    <View style={{ flex: 1, paddingLeft: 15 }}>
+                      <Text style={{ fontSize: 25 }}>時間</Text>
                     </View >
                     {access_mode === 'create' &&
                       <Image
@@ -536,42 +704,41 @@ class AddMedicationRequestPage extends React.Component {
                   )
                 })}
               </View>
-
-              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <TouchableOpacity
-                  disabled={access_mode === 'read'}
-                  style={{ 
-                    padding: 15,
-                    borderWidth: 1,
-                    borderColor: 'grey',
-                    backgroundColor: (before_meal !== null && before_meal) ? '#ffddb7' : 'white'
-                  }}
-                  underlayColor='#ff8944'
-                  onClick={() => {
-                    if (access_mode === 'read') return
-                    this.setState({ before_meal: before_meal ? null : true })
-                  }}
-                >
-                  <Text style={{ fontSize: 25 }}>餐前</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  disabled={access_mode === 'read'}
-                  style={{
-                    padding: 15,
-                    borderWidth: 1,
-                    borderTopWidth: 0,
-                    borderColor: 'grey',
-                    backgroundColor: (before_meal !== null && !before_meal) ? '#ffddb7' : 'white'
-                  }}
-                  underlayColor='#ff8944'
-                  onClick={() => {
-                    if (access_mode === 'read') return
-                    this.setState({ before_meal: before_meal === false ? null : false })
-                  }}
-                >
-                  <Text style={{ fontSize: 25 }}>餐後</Text>
-                </TouchableOpacity>
-              </View>
+            </View>
+            <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingBottom: 20 }}>
+              <TouchableOpacity
+                disabled={access_mode === 'read'}
+                style={{ 
+                  padding: 15,
+                  borderWidth: 1,
+                  borderColor: 'grey',
+                  backgroundColor: (before_meal !== null && before_meal) ? '#ffddb7' : 'white'
+                }}
+                underlayColor='#ff8944'
+                onClick={() => {
+                  if (access_mode === 'read') return
+                  this.setState({ before_meal: before_meal ? null : true })
+                }}
+              >
+                <Text style={{ fontSize: 25 }}>餐前</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                disabled={access_mode === 'read'}
+                style={{
+                  padding: 15,
+                  borderWidth: 1,
+                  borderLeftWidth: 0,
+                  borderColor: 'grey',
+                  backgroundColor: (before_meal !== null && !before_meal) ? '#ffddb7' : 'white'
+                }}
+                underlayColor='#ff8944'
+                onClick={() => {
+                  if (access_mode === 'read') return
+                  this.setState({ before_meal: before_meal === false ? null : false })
+                }}
+              >
+                <Text style={{ fontSize: 25 }}>餐後</Text>
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -589,7 +756,7 @@ class AddMedicationRequestPage extends React.Component {
               }}
               // onClick={() => }
             >
-              <Text style={{ fontSize: 30, alignSelf: 'center' }}>藥物</Text>
+              <Text style={{ fontSize: 25, alignSelf: 'center' }}>藥物</Text>
             </TouchableOpacity>
 
             {/* MEDICATION TYPE - BODY */}
@@ -892,7 +1059,7 @@ class AddMedicationRequestPage extends React.Component {
               }}
               // onClick={() => }
             >
-              <Text style={{ fontSize: 30, alignSelf: 'center' }}>備註</Text>
+              <Text style={{ fontSize: 25, alignSelf: 'center' }}>備註</Text>
             </TouchableOpacity>
 
             {/* NOTE - BODY */}
@@ -933,7 +1100,7 @@ class AddMedicationRequestPage extends React.Component {
               }}
               // onClick={() => }
             >
-              <Text style={{ fontSize: 30, alignSelf: 'center' }}>發燒餵藥</Text>
+              <Text style={{ fontSize: 25, alignSelf: 'center' }}>發燒餵藥</Text>
             </TouchableOpacity>
 
             {/* FEVER MEDS - BODY */}
@@ -1269,7 +1436,7 @@ class AddMedicationRequestPage extends React.Component {
                 onClick={() => this.onClickConfirm()}
                 underlayColor='transparent'
               >
-                <Text style={{ fontSize: 50, textAlign: 'center', color: 'white' }}>
+                <Text style={{ fontSize: 30, textAlign: 'center', color: 'white' }}>
                   送出
                 </Text>
               </TouchableOpacity>
