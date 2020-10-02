@@ -1,11 +1,11 @@
 {
   "files": {
-    "app.js": "/gina_web_app/static/js/app.f4148703.chunk.js",
-    "app.js.map": "/gina_web_app/static/js/app.f4148703.chunk.js.map",
+    "app.js": "/gina_web_app/static/js/app.5d4ca163.chunk.js",
+    "app.js.map": "/gina_web_app/static/js/app.5d4ca163.chunk.js.map",
     "runtime~app.js": "/gina_web_app/static/js/runtime~app.d5c334a3.js",
     "runtime~app.js.map": "/gina_web_app/static/js/runtime~app.d5c334a3.js.map",
-    "static/js/2.fad40fcb.chunk.js": "/gina_web_app/static/js/2.fad40fcb.chunk.js",
-    "static/js/2.fad40fcb.chunk.js.map": "/gina_web_app/static/js/2.fad40fcb.chunk.js.map",
+    "static/js/2.80241edd.chunk.js": "/gina_web_app/static/js/2.80241edd.chunk.js",
+    "static/js/2.80241edd.chunk.js.map": "/gina_web_app/static/js/2.80241edd.chunk.js.map",
     "fonts/AntDesign.ttf": "/gina_web_app/./fonts/AntDesign.ttf",
     "fonts/Entypo.ttf": "/gina_web_app/./fonts/Entypo.ttf",
     "fonts/Feather.ttf": "/gina_web_app/./fonts/Feather.ttf",
@@ -25,7 +25,7 @@
     "favicon-32.png": "/gina_web_app/favicon-32.png",
     "favicon.ico": "/gina_web_app/favicon.ico",
     "index.html": "/gina_web_app/index.html",
-    "manifest.json": "/gina_web_app/manifest_v4.json",
+    "manifest.json": "/gina_web_app/manifest_v5.json",
     "serve.json": "/gina_web_app/serve.json",
     "static/media/app-splash.gif": "/gina_web_app/static/media/app-splash.0a3ec935.gif",
     "static/media/app_logo.png": "/gina_web_app/static/media/app_logo.fee19d58.png",
@@ -48,7 +48,7 @@
   },
   "entrypoints": [
     "static/js/runtime~app.d5c334a3.js",
-    "static/js/2.fad40fcb.chunk.js",
-    "static/js/app.f4148703.chunk.js"
+    "static/js/2.80241edd.chunk.js",
+    "static/js/app.5d4ca163.chunk.js"
   ]
 }
