@@ -1,11 +1,11 @@
 {
   "files": {
-    "app.js": "/gina_web_app/static/js/app.51e803e3.chunk.js",
-    "app.js.map": "/gina_web_app/static/js/app.51e803e3.chunk.js.map",
+    "app.js": "/gina_web_app/static/js/app.4363c06a.chunk.js",
+    "app.js.map": "/gina_web_app/static/js/app.4363c06a.chunk.js.map",
     "runtime~app.js": "/gina_web_app/static/js/runtime~app.d5c334a3.js",
     "runtime~app.js.map": "/gina_web_app/static/js/runtime~app.d5c334a3.js.map",
-    "static/js/2.f275cf25.chunk.js": "/gina_web_app/static/js/2.f275cf25.chunk.js",
-    "static/js/2.f275cf25.chunk.js.map": "/gina_web_app/static/js/2.f275cf25.chunk.js.map",
+    "static/js/2.0e9e6f0e.chunk.js": "/gina_web_app/static/js/2.0e9e6f0e.chunk.js",
+    "static/js/2.0e9e6f0e.chunk.js.map": "/gina_web_app/static/js/2.0e9e6f0e.chunk.js.map",
     "fonts/AntDesign.ttf": "/gina_web_app/./fonts/AntDesign.ttf",
     "fonts/Entypo.ttf": "/gina_web_app/./fonts/Entypo.ttf",
     "fonts/Feather.ttf": "/gina_web_app/./fonts/Feather.ttf",
@@ -25,10 +25,11 @@
     "favicon-32.png": "/gina_web_app/favicon-32.png",
     "favicon.ico": "/gina_web_app/favicon.ico",
     "index.html": "/gina_web_app/index.html",
-    "manifest.json": "/gina_web_app/manifest_v7.json",
+    "manifest.json": "/gina_web_app/manifest_v8.json",
     "serve.json": "/gina_web_app/serve.json",
     "static/media/app-splash.gif": "/gina_web_app/static/media/app-splash.0a3ec935.gif",
     "static/media/app_logo.png": "/gina_web_app/static/media/app_logo.fee19d58.png",
+    "static/media/icon-announcement.png": "/gina_web_app/static/media/icon-announcement.b546f363.png",
     "static/media/icon-babies.png": "/gina_web_app/static/media/icon-babies.a7fc62df.png",
     "static/media/icon-checked-box.png": "/gina_web_app/static/media/icon-checked-box.add46308.png",
     "static/media/icon-checked.png": "/gina_web_app/static/media/icon-checked.83ee9de4.png",
@@ -48,7 +49,7 @@
   },
   "entrypoints": [
     "static/js/runtime~app.d5c334a3.js",
-    "static/js/2.f275cf25.chunk.js",
-    "static/js/app.51e803e3.chunk.js"
+    "static/js/2.0e9e6f0e.chunk.js",
+    "static/js/app.4363c06a.chunk.js"
   ]
 }
