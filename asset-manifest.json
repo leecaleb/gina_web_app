@@ -1,11 +1,11 @@
 {
   "files": {
-    "app.js": "/gina_web_app/static/js/app.332af749.chunk.js",
-    "app.js.map": "/gina_web_app/static/js/app.332af749.chunk.js.map",
+    "app.js": "/gina_web_app/static/js/app.f822d565.chunk.js",
+    "app.js.map": "/gina_web_app/static/js/app.f822d565.chunk.js.map",
     "runtime~app.js": "/gina_web_app/static/js/runtime~app.d5c334a3.js",
     "runtime~app.js.map": "/gina_web_app/static/js/runtime~app.d5c334a3.js.map",
-    "static/js/2.f3427a92.chunk.js": "/gina_web_app/static/js/2.f3427a92.chunk.js",
-    "static/js/2.f3427a92.chunk.js.map": "/gina_web_app/static/js/2.f3427a92.chunk.js.map",
+    "static/js/2.db681c4e.chunk.js": "/gina_web_app/static/js/2.db681c4e.chunk.js",
+    "static/js/2.db681c4e.chunk.js.map": "/gina_web_app/static/js/2.db681c4e.chunk.js.map",
     "fonts/AntDesign.ttf": "/gina_web_app/./fonts/AntDesign.ttf",
     "fonts/Entypo.ttf": "/gina_web_app/./fonts/Entypo.ttf",
     "fonts/Feather.ttf": "/gina_web_app/./fonts/Feather.ttf",
@@ -25,11 +25,12 @@
     "favicon-32.png": "/gina_web_app/favicon-32.png",
     "favicon.ico": "/gina_web_app/favicon.ico",
     "index.html": "/gina_web_app/index.html",
-    "manifest.json": "/gina_web_app/manifest_v9.json",
+    "manifest.json": "/gina_web_app/manifest_v10.json",
     "serve.json": "/gina_web_app/serve.json",
     "static/media/app-splash.gif": "/gina_web_app/static/media/app-splash.0a3ec935.gif",
     "static/media/app_logo.png": "/gina_web_app/static/media/app_logo.fee19d58.png",
     "static/media/icon-announcement.png": "/gina_web_app/static/media/icon-announcement.b546f363.png",
+    "static/media/icon-attendance.png": "/gina_web_app/static/media/icon-attendance.96ff830b.png",
     "static/media/icon-babies.png": "/gina_web_app/static/media/icon-babies.a7fc62df.png",
     "static/media/icon-checked-box.png": "/gina_web_app/static/media/icon-checked-box.add46308.png",
     "static/media/icon-checked.png": "/gina_web_app/static/media/icon-checked.83ee9de4.png",
@@ -49,7 +50,7 @@
   },
   "entrypoints": [
     "static/js/runtime~app.d5c334a3.js",
-    "static/js/2.f3427a92.chunk.js",
-    "static/js/app.332af749.chunk.js"
+    "static/js/2.db681c4e.chunk.js",
+    "static/js/app.f822d565.chunk.js"
   ]
 }
