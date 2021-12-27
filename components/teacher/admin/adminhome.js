@@ -31,6 +31,14 @@ export default class AdminHome extends React.Component {
       <ScrollView contentContainerStyle={{ alignItems: 'center', justifyContent: 'center'}}>
         <TouchableOpacity
           style={styles.button}
+          onClick={()=> this.handleNavigate('AnnouncementHome')}
+          underlayColor="#368cbf"
+        >
+          <Text style={{ fontSize: 70 }}>公告</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={styles.button}
           onClick={()=> this.handleNavigate('Registration')}
           // onPress={()=> this.handleNavigate('Registration')}
           underlayColor="#368cbf"

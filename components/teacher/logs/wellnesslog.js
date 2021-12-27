@@ -11,8 +11,10 @@ import {
     addWellnessRecord,
     invalidateWellnessData
 } from '../../../redux/school/actions/index'
-import { formatDate, fetchClassData, sendWellnessData } from '../../util';
+import { formatDate, fetchClassData, sendWellnessData, beautifyDate } from '../../util';
 import WellnessForm from '../wellnessform'
+import TimeModal from '../../parent/timemodal'
+import Reloading from '../../reloading'
 
 class WellnessLog extends React.Component {
     constructor(props) {
@@ -20,7 +22,8 @@ class WellnessLog extends React.Component {
         this.state = {
             isLoading: true,
             date: new Date(),
-            show_record: false
+            show_record: false,
+            showDateTimeModal: false
         }
         this.handleSend = this.handleSend.bind(this)
         this.addRecord = this.addRecord.bind(this)
@@ -29,8 +32,12 @@ class WellnessLog extends React.Component {
     componentDidMount() {
         const { record_id_for_update } = this.props.wellness
         const { isConnected } = this.props.class
+        const { date, teacher_name } = this.props.route.params
         if (record_id_for_update.size === 0 && isConnected) {
-            this.fetchClassData()
+            this.setState({
+                date
+            })
+            this.fetchClassData(date)
         }
         else {
             this.setState({
@@ -40,17 +47,26 @@ class WellnessLog extends React.Component {
 
         if (!isConnected) {
             Toast.show({
-                text: '拍謝 網路連不到! 等一下再試試看',
+                text: '網路連線連不到! 等一下再試試看',
                 buttonText: 'Okay',
                 position: "top",
-                type: "warning",
-                duration: 2000
+                type: "danger",
+                duration: 4000
             })
         }
+
+        this.props.navigation.setOptions({ 
+            title: `健康 - ${teacher_name}`
+        })
     }
 
-    async fetchClassData() {
-        const date = new Date()
+    async fetchClassData(propsDate) {
+        this.props.navigation.setOptions({ 
+            headerRight: () => (
+                <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#f4d41f', marginRight: 20 }} />
+            )
+        })
+        const date = new Date(propsDate)
         const start_date = formatDate(date)
         date.setDate(date.getDate() + 1)
         const end_date = formatDate(date)
@@ -60,6 +76,11 @@ class WellnessLog extends React.Component {
         this.props.fetchClassWellnessData(wellnessData.data)
         this.setState({
             isLoading: false
+        })
+        this.props.navigation.setOptions({ 
+            headerRight: () => (
+                <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#00c07f', marginRight: 20 }} />
+            )
         })
     }
 
@@ -99,21 +120,22 @@ class WellnessLog extends React.Component {
     }
 
     async handleSend() {
-        if (!this.wellnessDataValidated()) {
-            return
-        }
+        // if (!this.wellnessDataValidated()) {
+        //     return
+        // }
         const { wellness } = this.props
         const { isConnected } = this.props.class
         if (!isConnected) {
             Toast.show({
-                text: '拍謝 網路連不到! 等一下再試試看',
+                text: '網路連線連不到! 等一下再試試看',
                 buttonText: 'Okay',
                 position: "top",
-                type: "warning",
-                duration: 2000
+                type: "danger",
+                duration: 4000
             })
             return
         }
+        this.setState({ isLoading: true })
         const sendDataResult = await sendWellnessData(wellness, this.props.class.class_id, formatDate(new Date))
         if (sendDataResult.success) {
             sendDataResult.data.forEach(student_id => {
@@ -123,7 +145,13 @@ class WellnessLog extends React.Component {
             this.props.navigation.goBack()
         } else {
             this.props.sendWellnessDataFail(sendDataResult.message)
+            Alert.alert(
+                'Err',
+                sendDataResult.message,
+                [{text: 'OK'}]
+            )
         }
+        this.setState({ isLoading: false })
     }
 
     wellnessDataValidated() {
@@ -141,24 +169,53 @@ class WellnessLog extends React.Component {
         return validated
     }
 
+    selectDatetimeConfirm(date) {
+        this.setState({
+            date,
+            showDateTimeModal: false
+        })
+        this.fetchClassData(date)
+    }
+
     render() {
         const { by_student_id, records } = this.props.wellness
-        const { teacher_id } = this.props.route.params
-        const date = this.state.date
-        console.log('wellness: ', this.props.wellness)
+        const { teacher_id, isAdmin } = this.props.route.params
+        const { showDateTimeModal, date, isLoading } = this.state
+        
         return (
             <KeyboardAvoidingView
                 style={{
                     flex: 1
                 }}
-                // behavior='padding'
-                // keyboardVerticalOffset={100}
+                behavior='height'
+                keyboardVerticalOffset={80}
                 enabled
             >
+                {showDateTimeModal && <TimeModal
+                    start_date={date}
+                    datetime_type={'date'}
+                    hideModal={() => this.setState({ showDateTimeModal: false })}
+                    selectDatetimeConfirm={(datetime) => this.selectDatetimeConfirm(datetime)}
+                    minDatetime={null}
+                    maxDatetime={new Date()}
+                />}
                 <View style={{ flexDirection: 'row', width: '90%', justifyContent: 'space-between', alignSelf: 'center', alignItems: 'center'}}>
-                    <Text style={{ fontSize: 40 }}>{formatDate(date)}</Text>
                     <TouchableHighlight
-                        style={{ backgroundColor: '#dcf3d0', padding: 10  }}
+                        onPress={() => {
+                            const { data_dispatched } = this.props.wellness
+                            if (!data_dispatched || !isAdmin) return
+                            this.setState({ showDateTimeModal: true })
+                        }}
+                    >
+                        <Text style={{ fontSize: 40 }}>{beautifyDate(date)}</Text>
+                    </TouchableHighlight>
+
+                    <TouchableHighlight
+                        disabled={isLoading}
+                        style={{ 
+                            backgroundColor: isLoading ? 'rgba(0,0,0,0.5)' : '#dcf3d0', 
+                            padding: 10  
+                        }}
                         onPress={this.handleSend}>
                         <Text style={{ fontSize: 40}}>送出</Text>
                     </TouchableHighlight>

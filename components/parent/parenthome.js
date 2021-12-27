@@ -1,6 +1,6 @@
 import React from 'react'
 import { StyleSheet, ScrollView, View, Text, RefreshControl, TouchableOpacity,
-    Alert, Dimensions, AppState,Image, KeyboardAvoidingView, Platform } from 'react-native'
+    Alert, Dimensions, AppState, Image, KeyboardAvoidingView, Platform, } from 'react-native'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
 import { setConnectState, initializeChildren, markPresent, clearState } from '../../redux/parent/actions/index'
@@ -18,7 +18,10 @@ import { formatDate, beautifyDate, beautifyTime, get } from '../util'
 import MedicationRequestCard from './medicinerequestcard'
 import TimeModal from './timemodal'
 import MorningReminderCard from './morningremindercard'
+import AnnouncementCard from './announcementcard'
+import AttendanceCard from './attendancecard'
 import ENV from '../../variables'
+import MainMenu from './mainmenu/mainmenu'
 const { width } = Dimensions.get('window')
 
 class ParentHome extends React.Component {
@@ -35,7 +38,8 @@ class ParentHome extends React.Component {
             appState: '',
             showDateTimeModal: false,
             present: false,
-            showTimeModal: false
+            showTimeModal: false,
+            showMainMenu: false
         }
         this.initializeChildren = this.initializeChildren.bind(this)
     }
@@ -81,6 +85,19 @@ class ParentHome extends React.Component {
         this.initializeChildren()
         this.timeoutId = this.timer()
         AppState.addEventListener("change", this._handleAppStateChange);
+        this.props.navigation.setOptions({
+            headerLeft: () => (
+                <TouchableOpacity
+                    style={{ padding: 15 }}
+                    onClick={() => this.setState({ showMainMenu: !this.state.showMainMenu })}
+                >
+                    <Image
+                        source={require('../../assets/icon-menu.png')}
+                        style={{ width: 20, height: 20 }}
+                    />
+                </TouchableOpacity>
+            )
+        })
     }
 
     // // SPECIAL DAY QUICK TEMP FIX
@@ -129,9 +146,9 @@ class ParentHome extends React.Component {
 
     
     setDate() {
-        let date = new Date()
+        const date = new Date()
         if (date.getDay() === 6) {  
-            date.setDate(date.getDate() - 1)
+            // date.setDate(date.getDate() - 1)
         } else if (date.getDay() === 0) {
             date.setDate(date.getDate() - 2)
         }
@@ -177,7 +194,7 @@ class ParentHome extends React.Component {
                     child_id: student_id_array[0],
                     student_id_array
                 })
-                // this.checkStudentAttendance(student_id_array[0])
+                this.checkStudentAttendance(student_id_array[0])
                 this.setDate()
             })
             .catch((err) => {
@@ -200,16 +217,21 @@ class ParentHome extends React.Component {
     };
 
     async checkStudentAttendance(student_id) {
+        console.log('this.state.date.toDateString(): ', this.state.date.toDateString())
+        console.log('(new Date).toDateString(): ', (new Date).toDateString())
         if (this.state.date.toDateString() !== (new Date).toDateString()) {
             return
         }
         const date = new Date()
         const response = await get(`/attendance/${student_id}?date=${formatDate(date)}`)
         const { success, statusCode, message, data } = response
-        // console.log('response: ', response)
+        console.log('response: ', response)
         if (success) {
-            const { in_time, out_time, excuse_type } = data
-            if ((in_time !== null && out_time !== null) || excuse_type !== null) {
+            console.log('data: ', data)
+            const { in_time, out_time, excuse_type, absence_time } = data
+            if (this.studentIsPickedUp(in_time, out_time, excuse_type) || this.studentIsAbsentAllDay(absence_time)) {
+                // if student has checked in and out or if s/he has submit an absence excuse for the day,
+                // then we set time to 18:00 so parents can edit messages for next day
                 let date = new Date()
                 date.setHours(18,0,0,0)
                 this.setState({
@@ -217,6 +239,22 @@ class ParentHome extends React.Component {
                 })
             }
         }
+    }
+
+    studentIsPickedUp = (in_time, out_time, excuse_type) => {
+        return in_time !== null && out_time !== null;
+    }
+
+    studentIsAbsentAllDay = (absence_time) => {
+        return absence_time !== null && absence_time === 'all_day'
+    }
+
+    studentIsAbsentMorning = (absence_time) => {
+        return absence_time === 'morning';
+    }
+
+    studentIsAbsentEvening = (absence_time) => {
+        return absence_time === 'evening';
     }
 
     onSelectStudent(child_id) {
@@ -274,6 +312,15 @@ class ParentHome extends React.Component {
         this.selectDatetimeConfirm(date)
     }
 
+    onMenuItemClick(item) {
+        const { child_id } = this.state
+        this.setState({ showMainMenu: false })
+        this.props.navigation.navigate(item, {
+            student_id: child_id,
+            students: this.props.parent.child_of_id
+        })
+    }
+
     componentWillUnmount() {
         clearTimeout(this.timeoutId)
         AppState.removeEventListener("change", this._handleAppStateChange);
@@ -284,8 +331,8 @@ class ParentHome extends React.Component {
         const { parent_id } = this.props.route.params
         const { isConnected } = this.props
         // console.log('isConnected: ', isConnected)
-        const { date, child_id, showQR, temperature, showDateTimeModal, present, showTimeModal } = this.state
-        // console.log('parenthome: ', date)
+        const { date, child_id, showQR, temperature, showDateTimeModal, present, showTimeModal, showMainMenu } = this.state
+        console.log('parenthome: ', date)
         if (child_id === '') {
             return (
                 <Reloading />
@@ -307,9 +354,12 @@ class ParentHome extends React.Component {
                 />
                 {showQR ? 
                     <QRPage
-                        hideQRCode={() => this.setState({
-                            showQR: false
-                        })}
+                        hideQRCode={() => {
+                            this.setState({
+                                showQR: false
+                            })
+                            this.checkStudentAttendance(this.state.child_id)
+                        }}
                         parent_id={parent_id}
                     />
                     : null
@@ -321,7 +371,7 @@ class ParentHome extends React.Component {
                         datetime_type={'date'}
                         hideModal={() => this.setState({ showDateTimeModal: false })}
                         selectDatetimeConfirm={(datetime) => this.selectDatetimeConfirm(datetime)}
-                        minDatetime={(new Date()).setDate((new Date()).getDate() - 7)}
+                        minDatetime={(new Date()).setDate((new Date()).getDate() - 30)}
                         maxDatetime={(new Date()).setDate((new Date()).getDate() + 1)}
                         paddingVertical={100}
                     />
@@ -342,6 +392,13 @@ class ParentHome extends React.Component {
                     />
                 }
 
+                {showMainMenu && 
+                    <MainMenu
+                        onItemClick={(item) => this.onMenuItemClick(item)}
+                        onHide={() => this.setState({ showMainMenu: false})}
+                    />
+                }
+
                 {<ScrollView
                     contentContainerStyle={{ alignItems: 'center', justifyContent: 'center', paddingBottom: 30 }}
                     refreshControl={
@@ -359,7 +416,7 @@ class ParentHome extends React.Component {
                 >
                     <View style={{ width: '100%', flexDirection: 'row', backgroundColor: 'white' }}> 
                         <View style={{ width: '15%'}}>
-                            {day_difference < 7 ?
+                            {day_difference < 30 ?
                                 <TouchableOpacity
                                     style={{ flex: 1, justifyContent: 'center', alignItems: 'center'}}
                                     onClick={() => this.goBackADay()}
@@ -397,6 +454,7 @@ class ParentHome extends React.Component {
                         </View>
                     </View>
                     <ParentHomeTitle
+                        student_id={child_id}
                         student={selected_student}
                         students={this.props.parent.child_of_id}
                         student_name={this.props.parent.child_of_id[child_id].name}
@@ -436,6 +494,29 @@ class ParentHome extends React.Component {
                         </TouchableOpacity>
                     </View>
 
+                    <AnnouncementCard 
+                        child_id={child_id}
+                        date={date}
+                        parent_id={parent_id}
+                        ref="announcement"
+                        viewAnnouncement={(index, data) => this.props.navigation.push('AnnouncementPage', {
+                            onGoBack: () => this.refs['announcement'].fetchAnnouncement(),
+                            index,
+                            data,
+                            parent_id
+                        })}
+                        viewMore={(announcements) => this.props.navigation.push('AnnouncementListPage', {
+                            announcements,
+                            parent_id,
+                            viewAnnouncement: (index, data) => this.props.navigation.push('AnnouncementPage', {
+                                onGoBack: () => this.refs['announcement'].fetchAnnouncement(),
+                                index,
+                                data,
+                                parent_id
+                            })
+                        })}
+                    />
+
                     <MorningReminderCard
                         child_id={child_id}
                         date={date}
@@ -445,6 +526,12 @@ class ParentHome extends React.Component {
                         isConnected={isConnected}
                         parent_id={parent_id}
                         showTimeModal={() => this.setState({ showTimeModal: true })}
+                    />
+
+                    <AttendanceCard
+                        student_id={child_id}
+                        date={date}
+                        ref="attendance"
                     />
 
                     <MedicationRequestCard

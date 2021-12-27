@@ -36,12 +36,13 @@ export default function parent(state = {
         case 'INITIALIZE_CHILDREN':
             const { data } = action
             data.forEach((child) => {
-                const { id, name, class_id, profile_picture, school_id } = child
+                const { id, name, class_id, profile_picture, school_id, school_name } = child
                 state.child_of_id[id] = {
                     name,
                     class_id,
                     profile_picture,
-                    school_id
+                    school_id,
+                    school_name
                 }
             })
             return {
@@ -61,6 +62,20 @@ export default function parent(state = {
                 ...state,
                 med_requests
             }
+        
+        case 'EDIT_PROFILE_PICTURE': {
+            const { student_id, image_url } = action
+            return {
+                ...state,
+                child_of_id: {
+                    ...state.child_of_id,
+                    [student_id]: {
+                        ...state.child_of_id[student_id],
+                        profile_picture: image_url
+                    }
+                }
+            }
+        }
     
         case 'CLEAR_STATE': {
             return {

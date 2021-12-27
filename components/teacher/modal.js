@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Image, Text, TouchableHighlight, StyleSheet, KeyboardAvoidingView, Alert } from 'react-native'
+import { View, Image, Text, TouchableHighlight, StyleSheet, KeyboardAvoidingView, Alert, Dimensions } from 'react-native'
 import { Toast } from 'native-base'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
@@ -58,7 +58,7 @@ class Modal extends React.Component{
       <KeyboardAvoidingView
         style={{
           backgroundColor: 'transparent',
-          justifyContent: 'center',
+          justifyContent: 'flex-start',
           alignItems: 'center',
           zIndex: 2,
           position: 'absolute',

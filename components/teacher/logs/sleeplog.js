@@ -49,10 +49,10 @@ class TeacherSleepLog extends React.Component {
     componentDidMount() {
         const { newDataForCreate, oldDataForEdit } = this.props.sleep
         const { isConnected } = this.props.class
-        const { teacher_id } = this.props.route.params
+        const { teacher_id, date, teacher_name } = this.props.route.params
         this.setState({ teacher_id })
         if ((newDataForCreate.size + oldDataForEdit.size === 0) && isConnected) {
-            this.fetchClassData()
+            this.fetchClassData(date)
         }
         else {
             this.setState({
@@ -69,10 +69,19 @@ class TeacherSleepLog extends React.Component {
                 duration: 2000
             })
         }
+
+        this.props.navigation.setOptions({ 
+            title: `睡眠 - ${teacher_name}`
+        })
     }
 
-    async fetchClassData() {
-        const date = new Date()
+    async fetchClassData(propsDate) {
+        this.props.navigation.setOptions({ 
+            headerRight: () => (
+                <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#f4d41f', marginRight: 20 }} />
+            )
+        })
+        const date = new Date(propsDate)
         const start_date = formatDate(date)
         date.setDate(date.getDate() + 1)
         const end_date = formatDate(date)
@@ -81,6 +90,11 @@ class TeacherSleepLog extends React.Component {
         this.props.fetchClassSleepData(sleepData.data)
         this.setState({
             isLoading: false
+        })
+        this.props.navigation.setOptions({ 
+            headerRight: () => (
+                <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#00c07f', marginRight: 20 }} />
+            )
         })
     }
 
@@ -98,7 +112,7 @@ class TeacherSleepLog extends React.Component {
 
     hasUnsentRecord(student_id) {
         const { newDataForCreate, oldDataForEdit, by_student_id } = this.props.sleep
-        record_id_array = by_student_id[student_id]
+        let record_id_array = by_student_id[student_id]
         var hasUnsentRecord = false
         for (var i = 0; i < record_id_array.length; i++) {
             if (newDataForCreate.has(record_id_array[i]) || oldDataForEdit.has(record_id_array[i])) {

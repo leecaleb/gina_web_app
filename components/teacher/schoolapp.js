@@ -16,6 +16,7 @@ import TeacherSleepLog from './logs/sleeplog';
 import TeacherMilkLog from './logs/milklog';
 import DiaperLog from './logs/diaperlog';
 import AdminHome from './admin/adminhome'
+import Announcement from './admin/announcement'
 import Registration from './admin/registration'
 import Students from './admin/students'
 import Teachers from './admin/teachers'
@@ -25,6 +26,8 @@ import PickupAlert from './pickupalert'
 import Inbox from './inbox'
 import DownloadPage from './admin/downloadpage'
 import DownloadTeacherAttendance from './admin/downloadteacherattendance'
+import AnnouncementHome from './admin/announcementhome'
+import AddAnnouncementPage from './admin/addannouncementpage'
 
 const store = createStore(reducer)
 const Stack = createStackNavigator()
@@ -41,7 +44,8 @@ export default class SchoolApp extends React.Component {
                             gestureEnabled: false,
                             headerTitleStyle: {
                                 fontWeight: 'bold',
-                                fontSize: 30
+                                fontSize: 30,
+                                alignSelf: 'center'
                             },
                             // cardStyle: { backgroundColor: 'transparent' },
                             // cardOverlayEnabled: true,
@@ -86,6 +90,21 @@ export default class SchoolApp extends React.Component {
                             name="AdminHome"
                             component={AdminHome}
                             options={{ gestureEnabled: true, title: '' }}
+                        />
+                        <Stack.Screen 
+                            name="Announcement"
+                            component={Announcement}
+                            options={{ gestureEnabled: true, title: '公告' }}
+                        />
+                        <Stack.Screen
+                            name="AnnouncementHome"
+                            component={AnnouncementHome}
+                            options={{ gestureEnabled: true, title: '公告首頁' }}
+                        />
+                        <Stack.Screen
+                            name="AddAnnouncementPage"
+                            component={AddAnnouncementPage}
+                            options={{ gestureEnabled: true, title: '新增公告' }}
                         />
                         <Stack.Screen 
                             name="Registration"
@@ -151,32 +170,32 @@ export default class SchoolApp extends React.Component {
                         <Stack.Screen 
                             name="WellnessLog"
                             component={WellnessLog}
-                            options={{ gestureEnabled: true, title: '健康', headerLeft: null }}
+                            options={{ gestureEnabled: true, title: '健康' }}
                         />
                         <Stack.Screen 
                             name="MessageForParents"
                             component={MessageForParents}
-                            options={{ gestureEnabled: true, title: '老師留⾔', headerLeft: null }}
+                            options={{ gestureEnabled: true, title: '老師留⾔' }}
                         />
                         <Stack.Screen 
                             name="TeacherAppetiteLog"   
                             component={TeacherAppetiteLog}
-                            options={{ gestureEnabled: true, title: '飲食', headerLeft: null }}
+                            options={{ gestureEnabled: true, title: '飲食' }}
                         />
                         <Stack.Screen 
                             name="TeacherSleepLog"
                             component={TeacherSleepLog}
-                            options={{ gestureEnabled: true, title: '睡眠', headerLeft: null }}
+                            options={{ gestureEnabled: true, title: '睡眠' }}
                         />
                         <Stack.Screen 
                             name="TeacherMilkLog"
                             component={TeacherMilkLog}
-                            options={{ gestureEnabled: true, title: '餵奶', headerLeft: null }}
+                            options={{ gestureEnabled: true, title: '餵奶' }}
                         />
                         <Stack.Screen 
                             name="DiaperLog"
                             component={DiaperLog}
-                            options={{ gestureEnabled: true, title: '如廁', headerLeft: null }}
+                            options={{ gestureEnabled: true, title: '如廁' }}
                         />
                         
                     </Stack.Navigator>

@@ -11,7 +11,20 @@ const initial_state = {
     //   teacher_id: ''
     // }
   },
-  student_id_for_update: new Set()
+  for_all: {
+    text: '',
+    // things_to_bring: [0,0,1,1,0,0,0],
+    // other_item: '',
+    // activities: [1,1,0,0,0,0,1],
+    // other_activity: '',
+  },
+  student_id_for_update: new Set(),
+  data_dispatched: true,
+  parent_messages: {
+    /*
+      {studeny_id}: message_for_teacher
+    */
+  }
 }
 
 export default function message(state = initial_state, action) {
@@ -42,22 +55,30 @@ export default function message(state = initial_state, action) {
         message_by_student_id: {
           ...state.message_by_student_id,
           ...message_data
+        },
+        for_all: {
+          text: ''
         }
       }
     }
 
     case 'WRITE_TO_ALL': {
       const { text, teacher_id } = action
-      const message_by_student_id = { ...state.message_by_student_id }
+      let message_by_student_id = { ...state.message_by_student_id }
       Object.keys(message_by_student_id).forEach(student_id => {
-        message_by_student_id[student_id].text = text
+        // message_by_student_id[student_id].text = text
         message_by_student_id[student_id].teacher_id = teacher_id
       })
 
       return {
         ...state,
-        ...message_by_student_id,
-        student_id_for_update: new Set(Object.keys(message_by_student_id))
+        for_all: {
+          ...state.for_all,
+          text
+        },
+        message_by_student_id,
+        student_id_for_update: new Set(Object.keys(state.message_by_student_id)),
+        data_dispatched: false
       }
     }
 
@@ -74,7 +95,8 @@ export default function message(state = initial_state, action) {
             teacher_id
           }
         },
-        student_id_for_update
+        student_id_for_update,
+        data_dispatched: false
       }
     }
 
@@ -88,7 +110,8 @@ export default function message(state = initial_state, action) {
       return {
         ...state,
         message_by_student_id,
-        student_id_for_update: new Set(Object.keys(message_by_student_id))
+        student_id_for_update: new Set(Object.keys(message_by_student_id)),
+        data_dispatched: false
       }
     }
 
@@ -100,7 +123,8 @@ export default function message(state = initial_state, action) {
       return {
         ...state,
         message_by_student_id,
-        student_id_for_update: new Set([...state.student_id_for_update, student_id])
+        student_id_for_update: new Set([...state.student_id_for_update, student_id]),
+        data_dispatched: false
       }
     }
       
@@ -114,7 +138,8 @@ export default function message(state = initial_state, action) {
       return {
         ...state,
         message_by_student_id,
-        student_id_for_update: new Set(Object.keys(message_by_student_id))
+        student_id_for_update: new Set(Object.keys(message_by_student_id)),
+        data_dispatched: false
       }
     }
       
@@ -130,7 +155,8 @@ export default function message(state = initial_state, action) {
             teacher_id
           }
         },
-        student_id_for_update: new Set([...state.student_id_for_update, student_id])
+        student_id_for_update: new Set([...state.student_id_for_update, student_id]),
+        data_dispatched: false
       }
     }
 
@@ -144,7 +170,8 @@ export default function message(state = initial_state, action) {
       return {
         ...state,
         message_by_student_id,
-        student_id_for_update: new Set(Object.keys(message_by_student_id))
+        student_id_for_update: new Set(Object.keys(message_by_student_id)),
+        data_dispatched: false
       }
     }
 
@@ -156,7 +183,8 @@ export default function message(state = initial_state, action) {
       return {
         ...state,
         message_by_student_id,
-        student_id_for_update: new Set([...state.student_id_for_update, student_id])
+        student_id_for_update: new Set([...state.student_id_for_update, student_id]),
+        data_dispatched: false
       }
     }
 
@@ -170,7 +198,8 @@ export default function message(state = initial_state, action) {
       return {
         ...state,
         message_by_student_id,
-        student_id_for_update: new Set(Object.keys(message_by_student_id))
+        student_id_for_update: new Set(Object.keys(message_by_student_id)),
+        data_dispatched: false
       }
     }
 
@@ -186,21 +215,40 @@ export default function message(state = initial_state, action) {
             teacher_id
           }
         },
-        student_id_for_update: new Set([...state.student_id_for_update, student_id])
+        student_id_for_update: new Set([...state.student_id_for_update, student_id]),
+        data_dispatched: false
       }
     }
 
     case 'SEND_MESSAGE_ON_SUCCESS': {
       return {
         ...state,
-        student_id_for_update: new Set()
+        student_id_for_update: new Set(),
+        data_dispatched: true
+      }
+    }
+
+    case 'GET_PARENT_MESSAGE_SUCCESS': {
+      const { messages } = action
+      return {
+        ...state,
+        parent_messages: messages
       }
     }
 
     case 'CLEAR_STATE': {
       return {
         message_by_student_id: {},
-        student_id_for_update: new Set()
+        student_id_for_update: new Set(),
+        for_all: {
+          text: '',
+          // things_to_bring: [0,0,1,1,0,0,0],
+          // other_item: '',
+          // activities: [1,1,0,0,0,0,1],
+          // other_activity: '',
+        },
+        data_dispatched: true,
+        parent_messages: {}
       }
     }
 

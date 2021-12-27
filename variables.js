@@ -15,7 +15,7 @@ import Constants from 'expo-constants';
 // };
 
 function getEnvVars(env = "") {
-  if (env === null || env === undefined || env === "") return "prod";
+  if (env === null || env === undefined || env === "") return "dev";
   if (env.indexOf("dev") !== -1) return "prod";
   if (env.indexOf("staging") !== -1) return "staging";
   if (env.indexOf("prod") !== -1) return "prod";

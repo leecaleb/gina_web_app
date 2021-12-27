@@ -72,7 +72,7 @@ export default class TimeModal extends React.Component {
     }
     
     isWeekday = date => {
-        const special_date = new Date('June 20, 2020')
+        const special_date = new Date('September 26, 2020')
         const day = date.getDay()
         return (day !== 0 && day !== 6) || date.toDateString() === special_date.toDateString();
     };

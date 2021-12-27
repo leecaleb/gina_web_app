@@ -17,7 +17,8 @@ var initial_state = {
     record_id_for_update: new Set(),
     // record_id_for_edit: new Set()
     errMessage: '',
-    records_with_error: new Set()
+    records_with_error: new Set(),
+    data_dispatched: true
 }
 
 export default function healthstatus(state = initial_state, action) {
@@ -74,8 +75,7 @@ export default function healthstatus(state = initial_state, action) {
                 records: {
                     ...state.records,
                     ...records
-                },
-                // record_id_for_update: new Set()
+                }
             }
         }
 
@@ -117,7 +117,8 @@ export default function healthstatus(state = initial_state, action) {
             return {
                 ...state,
                 records,
-                record_id_for_update
+                record_id_for_update,
+                data_dispatched: false
             }
         }
         case 'ADD_TEMPERATURE': {
@@ -136,7 +137,8 @@ export default function healthstatus(state = initial_state, action) {
             return {
                 ...state,
                 records,
-                record_id_for_update
+                record_id_for_update,
+                data_dispatched: false
             }
         }
             
@@ -152,7 +154,8 @@ export default function healthstatus(state = initial_state, action) {
         case 'SEND_WELLNESS_DATA_SUCCESS': {
             return {
                 ...state,
-                record_id_for_update: new Set()
+                record_id_for_update: new Set(),
+                data_dispatched: true
             }
         }
             
@@ -163,15 +166,15 @@ export default function healthstatus(state = initial_state, action) {
             }
         }
 
-        case 'CLEAR_STATE': {
-            return {
-                by_student_id: {},
-                records: {},
-                record_id_for_update: new Set(),
-                errMessage: '',
-                records_with_error: new Set()
-            }
-        }
+        // case 'CLEAR_STATE': {
+        //     return {
+        //         by_student_id: {},
+        //         records: {},
+        //         record_id_for_update: new Set(),
+        //         errMessage: '',
+        //         records_with_error: new Set()
+        //     }
+        // }
         
         default:
             return state

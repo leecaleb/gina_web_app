@@ -18,13 +18,14 @@ var initial_state = {
     errorMessage: '',
     newDataForCreate: new Set(),
     oldDataForEdit: new Set(),
-    records_with_error: new Set()
+    records_with_error: new Set(),
+    data_dispatched: true
 }
 
 export default function sleep(state = initial_state, action) {
     switch (action.type) {
         case 'INITIALIZE_CLASS':
-            by_student_id = {}
+            let by_student_id = {}
             action.students.forEach(student => {
                 const { id } = student
                 by_student_id[id] = []
@@ -34,21 +35,21 @@ export default function sleep(state = initial_state, action) {
                 by_student_id
             }
 
-        case 'FETCH_CLASS_SLEEP_DATA': {
+        case 'FETCH_CLASS_SLEEP_DATA': { // TODO
             const { by_student_id, records } = action.sleepData
             return {
                 ...state,
                 by_student_id: {
-                    ...state.by_student_id,
+                    // ...state.by_student_id,
                     ...by_student_id
                 },
                 records: {
                     by_id: {
-                        ...state.records.by_id,
+                        // ...state.records.by_id,
                         ...records.by_id
                     },
                     all_id: new Set([
-                        ...state.records.all_id,
+                        // ...state.records.all_id,
                         ...records.all_id
                     ])
                 }
@@ -105,6 +106,8 @@ export default function sleep(state = initial_state, action) {
                 // }
 
             }
+
+            newState.data_dispatched = false
             return newState
         }
 
@@ -125,6 +128,7 @@ export default function sleep(state = initial_state, action) {
                 newState.oldDataForEdit.add(record_id)
             }
 
+            newState.data_dispatched = false
             return newState
         }
             
@@ -139,13 +143,16 @@ export default function sleep(state = initial_state, action) {
             if (!newState.newDataForCreate.has(record_id)) {
                 newState.oldDataForEdit.add(record_id)
             }
+
+            newState.data_dispatched = false
             return newState
         }
         
         case 'CREATE_SLEEP_RECORD_SUCCESS': {
             return {
                 ...state,
-                newDataForCreate: new Set()
+                newDataForCreate: new Set(),
+                data_dispatched: true
             }
         }
 
@@ -159,7 +166,8 @@ export default function sleep(state = initial_state, action) {
         case 'EDIT_SLEEP_RECORD_SUCCESS': {
             return {
                 ...state,
-                oldDataForEdit: new Set()
+                oldDataForEdit: new Set(),
+                data_dispatched: true
             }
         }
 
@@ -190,7 +198,8 @@ export default function sleep(state = initial_state, action) {
                     ]
                 },
                 newDataForCreate,
-                oldDataForEdit
+                oldDataForEdit,
+                data_dispatched: (newDataForCreate.size + oldDataForEdit.size) === 0
             }
         }
 
@@ -245,7 +254,8 @@ export default function sleep(state = initial_state, action) {
                 errorMessage: '',
                 newDataForCreate: new Set(),
                 oldDataForEdit: new Set(),
-                records_with_error: new Set()
+                records_with_error: new Set(),
+                data_dispatched: true
             }
         
         default:

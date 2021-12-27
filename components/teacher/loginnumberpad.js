@@ -35,7 +35,7 @@ class LoginNumberPad extends React.Component{
                     height: '100%',
                     // // opacity: 0.5,
                     flex: 1,
-                    justifyContent: 'center',
+                    justifyContent: 'flex-start',
                     alignItems: 'center',
                     zIndex: 2,
                     position: 'absolute',

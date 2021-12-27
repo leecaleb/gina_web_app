@@ -1,11 +1,13 @@
 import React from 'react'
-import { View, Image, Text, TouchableHighlight, StyleSheet, KeyboardAvoidingView, Alert } from 'react-native'
+import { View, Image, Text, TouchableHighlight, StyleSheet, KeyboardAvoidingView, Alert, Dimensions } from 'react-native'
 import { Toast } from 'native-base'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
 import WellnessForm from './wellnessform'
 import { sendWellnessData, formatDate, post } from '../util'
 import { sendWellnessDataFail, sendWellnessDataSuccess } from '../../redux/school/actions/index'
+
+const { width, height } = Dimensions.get('window');
 
 class StudentModal extends React.Component{
   constructor(props) {
@@ -112,7 +114,7 @@ class StudentModal extends React.Component{
           style={{
             flex: 1,
             width: '80%',
-            height: '70%',
+            height: height * 0.7,
             backgroundColor:
                 student_absent.has(student_id) ? '#ffe1d0'
                 : student_unmarked.has(student_id) ? '#fff1b5'

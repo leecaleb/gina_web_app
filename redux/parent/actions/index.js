@@ -55,3 +55,11 @@ export const setConnectState = (isConnected) => {
         isConnected
     }
 }
+
+export const editProfilePicture = (student_id, image_url) => {
+    return {
+        type: 'EDIT_PROFILE_PICTURE',
+        student_id,
+        image_url
+    }
+}

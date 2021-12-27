@@ -165,7 +165,7 @@ class SchoolHome extends React.Component {
     }
 
     fetchPickupRequest(school_id) {
-        const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/dev/attendance/pickup-request?school_id=${school_id}`
+        const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/attendance/pickup-request?school_id=${school_id}`
         fetch(query, {
             method: 'GET',
             headers: {
@@ -279,15 +279,16 @@ class SchoolHome extends React.Component {
                     >
                         <Text style={{ fontSize: 50, textAlign: 'center' }}>行政管理</Text>
                     </TouchableHighlight>
-                    {/* <TouchableHighlight
+                    <TouchableHighlight
                         key='child_dismissal'
                         style={{ flex: 1, backgroundColor: '#74b987', margin: 10, justifyContent: 'center' }}
                         onPress={() => {
+                            this.props.updateViewingStatus('dismissal')
                             this.props.navigation.push('DismissChildQRScan', {})
                         }}
                     >
                         <Text style={{ fontSize: 50, textAlign: 'center' }}>放學</Text>
-                    </TouchableHighlight> */}
+                    </TouchableHighlight>
                 </View>
                 <TouchableHighlight
                     key='attendance_page'

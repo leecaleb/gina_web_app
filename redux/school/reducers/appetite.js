@@ -5,15 +5,16 @@ var initialState = {
         /*
         {student_id}: { 
             Breakfast: 'Awesome0'
-            Fruit: '0'
-            Lunch: 'Good1',
-            Snack: 'Ok1',
+            Fruit: 'Good0'
+            Lunch: 'Ok1',
+            Snack: 'Poor1',
             teacher_id: ''
         }, {...}
         */
     },
     updatedStudents: new Set(),
-    err_message: ''
+    err_message: '',
+    data_dispatched: true
 }
 
 export default function appetite(state = initialState, action) {
@@ -52,8 +53,7 @@ export default function appetite(state = initialState, action) {
             const { fruit_name } = action
             return {
                 ...state,
-                fruit_name,
-                // loaded: false
+                fruit_name
             }
         }
 
@@ -74,7 +74,8 @@ export default function appetite(state = initialState, action) {
                         teacher_id
                     }
                 },
-                updatedStudents
+                updatedStudents,
+                data_dispatched: false
             }
         }
         
@@ -94,25 +95,28 @@ export default function appetite(state = initialState, action) {
                 }
             }
             newState.updatedStudents = updatedStudents
+            newState.data_dispatched = false
 
             return newState
         }
         case 'SET_ALL_RATINGS_TO_GREAT':{
-            var newRatingObj = {}
-            var student_id_array = []
-            Object.keys(state.ratings).map((student_id) => {
-                student_id_array.push(student_id)
-                const water_drank = state.ratings[student_id][action.mealType].slice(-1) === '1'
+            const { students_to_display, mealType, teacher_id } = action
+            let updatedStudents = new Set([...state.updatedStudents])
+            var newRatingObj = {...state.ratings}
+            students_to_display.map((student_id) => {
+                updatedStudents.add(student_id)
+                const water_drank = state.ratings[student_id][mealType].slice(-1) === '1'
                 newRatingObj[student_id] = {
                     ...state.ratings[student_id],
-                    [action.mealType]: water_drank ? 'Awesome1' : 'Awesome0',
-                    teacher_id: action.teacher_id
+                    [mealType]: water_drank ? '胃口佳1' : '胃口佳0',
+                    teacher_id
                 }
             })
             return {
                 ...state,
                 ratings: newRatingObj,
-                updatedStudents: new Set(student_id_array)
+                updatedStudents,
+                data_dispatched: false
             }
         }
         
@@ -131,10 +135,33 @@ export default function appetite(state = initialState, action) {
                         teacher_id
                     }
                 },
-                updatedStudents
+                updatedStudents,
+                data_dispatched: false
             }
         }
-        case 'CLEAR_UPDATED_STUDENTS':{
+
+        case 'SET_ALL_DRINK_WATER': {
+            const { mealType, students_to_display, teacher_id } = action
+            const updatedStudents = new Set([...students_to_display])
+            var newRatingObj = {...state.ratings}
+            students_to_display.forEach(student_id => {
+                let rating = state.ratings[student_id][mealType].slice(0, -1)
+                rating = rating + '1'
+                newRatingObj[student_id] = {
+                    ...state.ratings[student_id],
+                    [mealType]: rating,
+                    teacher_id
+                }
+            })
+            return {
+                ...state,
+                ratings: newRatingObj,
+                updatedStudents,
+                data_dispatched: false
+            }
+        }
+
+        case 'CLEAR_UPDATED_STUDENTS':{ //NOT USED
             return {
                 ...state,
                 updatedStudents: new Set()
@@ -143,7 +170,8 @@ export default function appetite(state = initialState, action) {
         case 'ON_SEND_APPETITE_SUCCESS':{
             return {
                 ...state,
-                updatedStudents: new Set()
+                updatedStudents: new Set(),
+                data_dispatched: true
             }
         }    
         case 'ALERT_ERR_MESSAGE': {
@@ -165,7 +193,8 @@ export default function appetite(state = initialState, action) {
             const { student_id_array } = action
             return {
                 ...state,
-                updatedStudents: new Set([...state.updatedStudents, ...student_id_array])
+                updatedStudents: new Set([...state.updatedStudents, ...student_id_array]),
+                data_dispatched: false
             }
         }
         
@@ -175,7 +204,8 @@ export default function appetite(state = initialState, action) {
                 fruit_name: '水果',
                 ratings: {},
                 updatedStudents: new Set(),
-                err_message: ''
+                err_message: '',
+                data_dispatched: true
             }
         }
         default:

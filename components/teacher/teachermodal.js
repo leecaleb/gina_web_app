@@ -1,11 +1,13 @@
 import React from 'react'
-import { View, Image, Text, TouchableHighlight, StyleSheet, KeyboardAvoidingView, Alert, TextInput } from 'react-native'
+import { View, Image, Text, TouchableHighlight, StyleSheet, KeyboardAvoidingView, Alert, TextInput, Dimensions } from 'react-native'
 import { Toast } from 'native-base'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
 import WellnessForm from './wellnessform'
 import { sendWellnessData, formatDate, post, formatTime, put } from '../util'
 import { markPresent, sendWellnessDataFail, editTeacherOnDuty } from '../../redux/school/actions/index'
+
+const { width, height } = Dimensions.get('window');
 
 class TeacherModal extends React.Component{
   constructor(props) {
@@ -142,7 +144,7 @@ class TeacherModal extends React.Component{
           style={{
             flex: 1,
             width: '80%',
-            height: '70%',
+            height: height * 0.9,
             backgroundColor:
               absent.has(teacher_id) ? '#ffe1d0'
                 : unmarked.has(teacher_id) ? '#fff1b5'
@@ -151,23 +153,16 @@ class TeacherModal extends React.Component{
             position: 'absolute'
           }}
         >
-          <View style={{ flex: 3, flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'center' }}>
+          <View style={{ flex: 2, flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'center', backgroundColor: 'red' }}>
             <View style={{ flex: 1, alignItems: 'center' }}>
               <Image
                 source={
                     teacher.profile_picture === '' ?
                       require('../../assets/icon-teacher-thumbnail.png')
                       : {uri: teacher.profile_picture }
-              }
+                }
                 style={styles.thumbnailImage}
               />
-              <TextInput
-              style={{ fontSize: 60 }}
-              keyboardType='decimal-pad'
-              placeholder='體溫'
-              value={'' + temperature}
-              onChangeText={(temperature) => this.editTemperature(temperature)}
-          />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 60 }}>{teacher.name}</Text>
@@ -180,15 +175,29 @@ class TeacherModal extends React.Component{
                     source={teacherOnDuty === teacher_id ? 
                       require('../../assets/icon-checked-box.png')
                     : require('../../assets/icon-unchecked-box.png')}
-                    style={{ width: 80, aspectRatio: 1 }}
+                    style={{ width: 80, height: 80 }}
                   />
                   <Text style={{ fontSize: 40 }}>值班老師</Text>
                 </View>
               </TouchableHighlight>
             </View>
           </View>
+
+          <View style={{ flex: 1, paddingHorizontal: 30, flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'center' }}>
+            <View style={{ flex: 1, backgroundColor: 'lightgrey' }}>
+              <TextInput
+                style={{ fontSize: 50, textAlign: 'center' }}
+                keyboardType='decimal-pad'
+                placeholder='體溫'
+                value={'' + temperature}
+                onChangeText={(temperature) => this.editTemperature(temperature)}
+              />
+            </View>
+            <View style={{ flex: 1, backgroundColor: 'lightblue' }}>
+            </View>
+          </View>
           
-          <View style={{ flex: 2, paddingHorizontal: 30, justifyContent: 'space-evenly', alignItems: 'center' }}>
+          <View style={{ flex: 1, paddingHorizontal: 30, justifyContent: 'space-evenly', alignItems: 'center' }}>
             {teacher.attendance && teacher.attendance.map((attendance_id) => {
               const record = attendance[attendance_id]
               return (
@@ -203,12 +212,6 @@ class TeacherModal extends React.Component{
               )
             })}
 
-            {/* <TouchableHighlight
-              style={{ backgroundColor: 'red', flex: 1, height: 60, justifyContent: 'center', alignItems: 'center', margin: 8 }}
-              onPress={() => this.clock()}
-            >
-              <Text style={{ fontSize: 30 }}>打卡</Text>
-            </TouchableHighlight> */}
             <View style={{ flexDirection: 'row', alignSelf: 'flex-end',  backgroundColor: 'white', padding: 10 }}>
               <Text style={{ fontSize: 25}}>今日總計: {Math.round(teacher.total_minutes*100) / 100}</Text>
             </View>

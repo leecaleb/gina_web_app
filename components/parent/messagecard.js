@@ -73,23 +73,6 @@ export default class MessageCard extends React.Component {
     this.denormalize(messageData.data[start_date])
   }
 
-  // async fetchDiaperAmount(student_id) {
-  //   const response = await get(`/diaper/amount?student_id=${student_id}`)
-  //   const { success, statusCode, message, data } = response
-  //   if(!success) {
-  //     alert('Sorry 讀取尿布量時電腦出狀況了！請截圖和與工程師聯繫' + message)
-  //     return
-  //   }
-  //   console.log(response)
-  //   if (data <= 3) {
-  //     console.log('here')
-  //     this.setState({
-  //       data_available: true,
-  //       items_to_bring: [`尿布剩${data}片`]
-  //     })
-  //   }
-  // }
-
   denormalize(message_data) {
     const items_list = ['母奶粉', '尿布', '水壺', '衣物']
     const activities_list = ['嬰兒按摩', '音樂律動', '教具操作', '繪本欣賞', '認知圖片', '體能活動', '藝術創作', '多元語言']

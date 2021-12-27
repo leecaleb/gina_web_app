@@ -16,6 +16,7 @@ var initial_state = {
                 student_id,
                 time,
                 amount,
+                milk_type,
                 teacher_id
             }*/
         },
@@ -25,7 +26,8 @@ var initial_state = {
     newDataForCreate: new Set(),
     oldDataForEdit: new Set(),
     dataForRemoval: new Set(),
-    errMessage: ''
+    errMessage: '',
+    data_dispatched: true
 }
 
 export default function milk(state = initial_state, action) {
@@ -52,16 +54,16 @@ export default function milk(state = initial_state, action) {
             return {
                 ...state,
                 by_student_id: {
-                    ...state.by_student_id,
+                    // ...state.by_student_id,
                     ...by_student_id
                 },
                 records: {
                     by_id: {
-                        ...state.records.by_id,
+                        // ...state.records.by_id,
                         ...records.by_id
                     },
                     all_id: new Set([
-                        ...state.records.all_id,
+                        // ...state.records.all_id,
                         ...records.all_id
                     ])
                 }
@@ -80,10 +82,13 @@ export default function milk(state = initial_state, action) {
                 student_id,
                 time: new Date,
                 amount: '',
+                milk_type: '配方奶',
                 teacher_id: ''
             }
             newState.by_student_id[student_id].push(record_id)
             newState.newDataForCreate.add(record_id)
+
+            newState.data_dispatched = false
             return newState
         }
 
@@ -95,8 +100,31 @@ export default function milk(state = initial_state, action) {
             if (!newState.newDataForCreate.has(record_id)) {
                 newState.oldDataForEdit.add(record_id)
             }
+
+            newState.data_dispatched = false
             return newState
         }
+
+        case 'EDIT_MILK_TYPE': {
+            const newState = {...state}
+            const { record_id, teacher_id } = action
+            const { milk_type } = state.records.by_id[record_id]
+            newState.records.by_id[record_id].milk_type = milk_type === '配方奶' ? '母奶' : '配方奶'
+            newState.records.by_id[record_id].teacher_id = teacher_id
+            if (!newState.newDataForCreate.has(record_id)) {
+                newState.oldDataForEdit.add(record_id)
+            }
+
+            newState.data_dispatched = false
+            return newState
+        }
+
+        // case 'EDIT_ASSIST_TYPE': { TODO: IS THIS IMPORTANT?
+        //     const newState = {...state}
+        //     const { record_id, teacher_id } = action
+        //     const { teacher_id } = state.records.by_id[record_id]
+        //     newState.records.by_id[record_id].teacher_id = 
+        // }
 
         case 'EDIT_MILK_TIME': {
             const newState = { ...state }
@@ -106,13 +134,16 @@ export default function milk(state = initial_state, action) {
             if (!newState.newDataForCreate.has(record_id)) {
                 newState.oldDataForEdit.add(record_id)
             }
+
+            newState.data_dispatched = false
             return newState
         }
             
         case 'CREATE_DATA_SUCCESS': {
             return {
                 ...state,
-                newDataForCreate: new Set()
+                newDataForCreate: new Set(),
+                data_dispatched: state.oldDataForEdit.size === 0
             }
         }
             
@@ -126,7 +157,8 @@ export default function milk(state = initial_state, action) {
         case 'EDIT_DATA_SUCCESS': {
             return {
                 ...state,
-                oldDataForEdit: new Set()
+                oldDataForEdit: new Set(),
+                data_dispatched: state.newDataForCreate.size === 0
             }
         }
             
@@ -155,13 +187,15 @@ export default function milk(state = initial_state, action) {
                 newState.dataForRemoval.add(record_id)
             }
 
+            newState.data_dispatched = (newState.newDataForCreate.size + newState.oldDataForEdit.size) === 0
             return newState
         }
             
         case 'REMOVE_MILK_RECORD_SUCCESS':
             return {
                 ...state,
-                dataForRemoval: new Set()
+                dataForRemoval: new Set(),
+                data_dispatched: (state.newDataForCreate.size + state.oldDataForEdit.size) === 0
             }
         
         case 'REMOVE_MILK_RECORD_FAIL':
@@ -181,7 +215,8 @@ export default function milk(state = initial_state, action) {
                 newDataForCreate: new Set(),
                 oldDataForEdit: new Set(),
                 dataForRemoval: new Set(),
-                errMessage: ''
+                errMessage: '',
+                data_dispatched: true
             }
 
         default:

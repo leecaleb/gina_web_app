@@ -130,7 +130,7 @@ export default class MorningReminderCard extends React.Component {
   editable() {
     const { date } = this.props
     const threshold = new Date()
-    threshold.setHours(10, 0, 0)
+    threshold.setHours(17, 0, 0)
     return (date.toDateString() === (new Date).toDateString() && new Date() < threshold) || (date.toDateString() !== (new Date).toDateString() && date > (new Date()))
     // return true
   }

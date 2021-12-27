@@ -88,10 +88,20 @@ export const clearRatings = (meal_type) => {
     }
 }
 
-export const setAllRatingsToGreat = (mealType, teacher_id) => {
+export const setAllRatingsToGreat = (mealType, students_to_display, teacher_id) => {
     return {
         type: 'SET_ALL_RATINGS_TO_GREAT',
         mealType,
+        students_to_display,
+        teacher_id
+    }
+}
+
+export const setAllDrinkWater = (mealType, students_to_display, teacher_id) => {
+    return {
+        type: 'SET_ALL_DRINK_WATER',
+        mealType,
+        students_to_display,
         teacher_id
     }
 }
@@ -212,6 +222,22 @@ export const editMilkAmount = (record_id, milk_amount, teacher_id) => {
     }
 }
 
+export const editMilkType = (record_id, teacher_id) => {
+    return {
+        type: 'EDIT_MILK_TYPE',
+        record_id,
+        teacher_id
+    }
+}
+
+export const editAssistType = (record_id, teacher_id) => {
+    return {
+        type: 'EDIT_ASSIST_TYPE',
+        record_id,
+        teacher_id
+    }
+}
+
 export const editMilkTime = (record_id, date_time, teacher_id) => {
     return {
         type: 'EDIT_MILK_TIME',
@@ -256,12 +282,36 @@ export const switchPeeOrPoo = (record_id, teacher_id) => {
     }
 }
 
+export const editClothDiaperCondition = (record_id, teacher_id) => {
+    return { 
+        type: 'EDIT_CLOTH_DIAPER_CONDITION',
+        record_id,
+        teacher_id
+    }
+}
+
+export const editDiaperPeeCondition = (record_id, teacher_id, student_id) => {
+    return {
+        type: 'EDIT_DIAPER_PEE_CONDITION',
+        record_id,
+        teacher_id,
+        student_id
+    }
+}
+
 export const editPooCondition = (record_id, condition, teacher_id) => {
     return {
         type: 'EDIT_POO_CONDITION',
         record_id,
         condition,
         teacher_id
+    }
+}
+
+export const editShowerCondition = (record_id) => {
+    return {
+        type: 'EDIT_SHOWER_CONDITION',
+        record_id
     }
 }
 
@@ -652,11 +702,12 @@ export const editFruitName = (fruit_name) => {
     }
 }
 
-export const fetchClassesSuccess = (classes, admin_passcode) => {
+export const fetchClassesSuccess = (classes, admin_passcode, email) => {
     return {
         type: 'FETCH_CLASSES_SUCCESS',
         classes,
-        admin_passcode
+        admin_passcode,
+        email
     }
 }
 
@@ -779,5 +830,12 @@ export const markRecordCorrect = (record_id) => {
     return {
         type: 'MARK_RECORD_CORRECT',
         record_id
+    }
+}
+
+export const getParentMessageSuccess = (messages) => {
+    return {
+        type: 'GET_PARENT_MESSAGE_SUCCESS',
+        messages
     }
 }

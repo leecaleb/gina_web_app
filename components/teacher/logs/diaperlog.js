@@ -42,10 +42,11 @@ class DiaperLog extends React.Component {
     }
 
     componentDidMount() {
+        const { date, teacher_name } = this.props.route.params
         const { new_data_for_create, old_data_for_edit } = this.props.diaper_records
         const { isConnected } = this.props.class
         if ((new_data_for_create.size + old_data_for_edit.size === 0) && isConnected) {
-            this.fetchClassData()
+            this.fetchClassData(date)
         } else {
             this.setState({
                 isLoading: false
@@ -60,15 +61,18 @@ class DiaperLog extends React.Component {
                 duration: 2000
             })
         }
+        this.props.navigation.setOptions({ 
+            title: `如廁 - ${teacher_name}`
+        })
     }
 
     checkUnsent(student_id) {
-        const { new_data_for_create, old_data_for_edit, by_student_id, students_pending_amount_update } = this.props.diaper_records
+        const { new_data_for_create, old_data_for_edit, by_student_id } = this.props.diaper_records
         const { records } = by_student_id[student_id]
         var found = false
-        if (students_pending_amount_update.has(student_id)) {
-            return true
-        }
+        // if (students_pending_amount_update.has(student_id)) {
+        //     return true
+        // }
         for (var i = 0; i < records.length; i++) {
             if (new_data_for_create.has(records[i]) || old_data_for_edit.has(records[i])) {
                 found = true
@@ -78,7 +82,7 @@ class DiaperLog extends React.Component {
         return found
     }
 
-    async fetchClassData() {
+    async fetchClassData(propsDate) {
         const { isConnected } = this.props.class
         if (!isConnected) {
             Toast.show({
@@ -90,18 +94,26 @@ class DiaperLog extends React.Component {
             })
             return
         }
-        const date = new Date()
+        this.props.navigation.setOptions({ 
+            headerRight: () => (
+                <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#f4d41f', marginRight: 20 }} />
+            )
+        })
+        const date = new Date(propsDate)
         const start_date = formatDate(date)
         date.setDate(date.getDate() + 1)
         const end_date = formatDate(date)
         const diaperData = await fetchClassData('diaper', this.props.class.class_id, start_date, end_date)
         this.denormalize(diaperData)
-        // console.log('diaperData: ', diaperData)
         this.props.fetchClassDiaperData(diaperData.data)
         this.setState({
             isLoading: false
         })
-        // console.log('this.props.diaper_records: ', this.props.diaper_records)
+        this.props.navigation.setOptions({ 
+            headerRight: () => (
+                <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#00c07f', marginRight: 20 }} />
+            )
+        })
     }
 
     denormalize(diaperData) {
@@ -218,7 +230,7 @@ class DiaperLog extends React.Component {
     }
 
     async handleSend() { // TODO: test function
-        const { new_data_for_create, old_data_for_edit, students_pending_amount_update } = this.props.diaper_records
+        const { new_data_for_create, old_data_for_edit } = this.props.diaper_records
         const { isConnected } = this.props.class
         if (!isConnected) {
             Toast.show({
@@ -242,15 +254,15 @@ class DiaperLog extends React.Component {
             }
         }
 
-        if (students_pending_amount_update.size) {
-            const sendDiaperAmountDataResult = await this.sendDiaperAmountData()
-            if (sendDiaperAmountDataResult.success) {
-                this.props.editDiaperAmountSuccess()
-            } else {
-                this.props.editDiaperAmountFail(sendDiaperAmountDataResult.err_message)
-                return
-            }
-        }
+        // if (students_pending_amount_update.size) {
+        //     const sendDiaperAmountDataResult = await this.sendDiaperAmountData()
+        //     if (sendDiaperAmountDataResult.success) {
+        //         this.props.editDiaperAmountSuccess()
+        //     } else {
+        //         this.props.editDiaperAmountFail(sendDiaperAmountDataResult.err_message)
+        //         return
+        //     }
+        // }
         
         this.props.navigation.goBack()
     }
@@ -464,20 +476,6 @@ class DiaperLog extends React.Component {
                                                     {this.checkUnsent(student_id) ? 
                                                         <Text style={{ fontSize: 15, color: 'red', marginLeft: 15}}>未送出</Text>
                                                         : null
-                                                    }
-                                                </View>
-                                                <View style={{ flex: 1, alignItems: 'flex-end', paddingRight: 15 }}>
-                                                    {cloth_diaper ? 
-                                                        null
-                                                        :
-                                                        <View style={{ width: '33%', aspectRatio: 1, backgroundColor: '#b5e9e9', alignItems: 'center', padding: 5 }}>
-                                                            <Text>尿布量</Text>
-                                                            <TextInput
-                                                                style={{ flex:1, fontSize: 37 }}
-                                                                value={"" + by_student_id[student_id].amount}
-                                                                onChangeText={amount => this.handleUpdateDiaperAmount(student_id, amount)}
-                                                            />
-                                                        </View>
                                                     }
                                                 </View>
                                             </View>

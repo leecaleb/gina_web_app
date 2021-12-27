@@ -8,6 +8,7 @@ import {
     rateAppetite,
     clearRatings,
     setAllRatingsToGreat,
+    setAllDrinkWater,
     fetchClassAppetiteData,
     onSendAppetiteSuccess,
     alertErrMessage,
@@ -16,54 +17,78 @@ import {
     clearAppetiteErrorMessage,
     addStudentIdForUpdate
 } from '../../../redux/school/actions/index'
-import { formatDate, fetchClassData } from '../../util'
+import { formatDate, fetchClassData, beautifyDate } from '../../util'
+import TimeModal from '../../parent/timemodal'
 
 class TeacherAppetiteLog extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
+            date: new Date(),
             isLoading: true,
             mealType: '',
             selectedForCustomize: new Set(),
             editingFruitType: false,
             students_with_records: [],
+            showDateTimeModal: false,
+            display_all_students: true,
+            students_to_display: new Set()
         }
         this.handleRateFoodWellness = this.handleRateFoodWellness.bind(this)
         this.handleSend = this.handleSend.bind(this)
         this.handleClearAll = this.handleClearAll.bind(this)
         this.handleSetAll = this.handleSetAll.bind(this)
+        this.handleAllDrank = this.handleAllDrank.bind(this)
     }
 
     componentDidMount() {
+        const { date, teacher_name } = this.props.route.params
         const { updatedStudents } = this.props.appetite
-        const { isConnected } = this.props.class
+        const { isConnected, students } = this.props.class
+        this.setState({
+            students_to_display: new Set(Object.keys(students))
+        })
         if (updatedStudents.size > 0 || !isConnected) {
             this.setState({
                 isLoading: false
             })
         } else {
-            this.fetchClassData()
+            this.setState({ date })
+            this.fetchClassData(date)
         }
 
         if (!isConnected) {
             Toast.show({
-                text: '拍謝 網路連不到! 等一下再試試看',
+                text: '網路連線連不到! 等一下再試試看',
                 buttonText: 'Okay',
                 position: "top",
-                type: "warning",
-                duration: 2000
+                type: "danger",
+                duration: 4000
             })
         }
-        // this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', console.log('keyboard hid'))
+        
+        this.props.navigation.setOptions({ 
+            title: `飲食 - ${teacher_name}`
+        })
     }
 
-    async fetchClassData() {
-        const date = new Date()
+    async fetchClassData(propsDate) {
+        this.props.navigation.setOptions({ 
+            headerRight: () => (
+                <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#f4d41f', marginRight: 20 }} />
+            )
+        })
+        const date = new Date(propsDate)
         const start_date = formatDate(date)
         date.setDate(date.getDate() + 1)
         const end_date = formatDate(date)
         const appetiteData = await fetchClassData('appetite', this.props.class.class_id, start_date, end_date)
         if (appetiteData.data[start_date] === undefined) {
+            this.props.navigation.setOptions({ 
+                headerRight: () => (
+                    <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#00c07f', marginRight: 20 }} />
+                )
+            })
             return 
         }
         const { fruit_name, ratings } = appetiteData.data[start_date]
@@ -71,6 +96,11 @@ class TeacherAppetiteLog extends React.Component {
         this.setState({
             isLoading: false,
             students_with_records: Object.keys(ratings)
+        })
+        this.props.navigation.setOptions({ 
+            headerRight: () => (
+                <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#00c07f', marginRight: 20 }} />
+            )
         })
     }
 
@@ -131,7 +161,7 @@ class TeacherAppetiteLog extends React.Component {
         const { mealType } = this.state
         if (mealType === '') {
             return false
-        } else if (rating === 'Awesome' || rating === 'Good' || rating === 'Ok' || rating === '') {
+        } else if (rating === '胃口佳' || rating === '滿滿一碗' || rating === '７/8分滿' || rating === '半碗' || rating === '胃口不佳' || rating === '') {
             return false
         }
         return true
@@ -165,7 +195,8 @@ class TeacherAppetiteLog extends React.Component {
     }
 
     handleSetAll() {
-        const {teacher_id } = this.props.route.params
+        const { teacher_id } = this.props.route.params
+        const { students_to_display } = this.state
         if (this.state.mealType === '') {
             Toast.show({
                 text: '請選擇餐時',
@@ -174,7 +205,7 @@ class TeacherAppetiteLog extends React.Component {
                 duration: 3000
             })
         } else {
-            this.props.setAllRatingsToGreat(this.state.mealType, teacher_id)
+            this.props.setAllRatingsToGreat(this.state.mealType, [...students_to_display], teacher_id)
         }
     }
 
@@ -191,6 +222,21 @@ class TeacherAppetiteLog extends React.Component {
         }
     }
 
+    handleAllDrank() {
+        const {teacher_id } = this.props.route.params
+        const { students_to_display } = this.state
+        if (this.state.mealType === '') {
+            Toast.show({
+                text: '請選擇餐時',
+                buttonText: 'Okay',
+                position: 'top',
+                duration: 3000
+            })
+        } else {
+            this.props.setAllDrinkWater(this.state.mealType, [...students_to_display], teacher_id)
+        }
+    }
+
     handleSend() {
         const { isConnected } = this.props.class
         const {updatedStudents, fruit_name} = this.props.appetite
@@ -203,11 +249,11 @@ class TeacherAppetiteLog extends React.Component {
 
         if (!isConnected) {
             Toast.show({
-                text: '拍謝 網路連不到! 等一下再試試看',
+                text: '網路連線連不到! 等一下再試試看',
                 buttonText: 'Okay',
                 position: "top",
-                type: "warning",
-                duration: 2000
+                type: "danger",
+                duration: 4000
             })
             return
         }
@@ -254,6 +300,33 @@ class TeacherAppetiteLog extends React.Component {
             })
     }
 
+    selectDatetimeConfirm(date) {
+        this.setState({
+            date,
+            showDateTimeModal: false
+        })
+        this.fetchClassData(date)
+    }
+
+    addStudentToDisplayList(student_id) {
+        const { display_all_students, students_to_display } = this.state
+        if (display_all_students) {
+            this.setState({
+                students_to_display: new Set([student_id]),
+                display_all_students: false
+            })
+        } else if (students_to_display.has(student_id)) {
+            let new_students_to_display = new Set([...students_to_display])
+            new_students_to_display.delete(student_id)
+            this.setState({ students_to_display: new_students_to_display })
+        } else {
+            let new_students_to_display = new Set([...students_to_display])
+            new_students_to_display.add(student_id)
+            this.setState({ students_to_display: new_students_to_display })
+        }
+
+    }
+
     // keyboardDidHide = () => {
     //     Keyboard.dismiss();
     // }
@@ -270,9 +343,12 @@ class TeacherAppetiteLog extends React.Component {
                 [{text: 'OK', onPress: () => this.props.clearAppetiteErrorMessage()}]
             )
         }
-        const { mealType, selectedForCustomize, editingFruitType } = this.state
-        var date = new Date()
-        // console.log(this.props.appetite)
+        const { isAdmin } = this.props.route.params
+        const { mealType, selectedForCustomize, editingFruitType, date, showDateTimeModal, display_all_students, students_to_display } = this.state
+        const { students } = this.props.class
+        // console.log('this.props.appetite: ', this.props.appetite)
+        // console.log('students_to_display: ', students_to_display)
+        // console.log('this.props.appetite.updatedStudents', this.props.appetite.updatedStudents)
         return (
             <KeyboardAvoidingView
                 style={{
@@ -280,24 +356,46 @@ class TeacherAppetiteLog extends React.Component {
                     backgroundColor: mealType === 'Breakfast' ? '#ffe1d0'
                                     : mealType === 'Fruit' ? '#ffddb7'
                                     : mealType === 'Lunch' ? '#fff1b5'
-                                        : mealType === 'Snack' ? '#dcf3d0'
+                                    : mealType === 'Snack' ? '#dcf3d0'
                                     : 'transparent'
                 }}
-                // behavior='padding'
-                // keyboardVerticalOffset={120}
+                behavior='height'
+                keyboardVerticalOffset={80}
                 enabled
             >
+                {showDateTimeModal && <TimeModal
+                    start_date={date}
+                    datetime_type={'date'}
+                    hideModal={() => this.setState({ showDateTimeModal: false })}
+                    selectDatetimeConfirm={(datetime) => this.selectDatetimeConfirm(datetime)}
+                    minDatetime={null}
+                    maxDatetime={new Date()}
+                />}
                 <View style={styles.subHeading}>
-                    <Text style={{ fontSize: 40 }}>{date.getFullYear() + '.' + (date.getMonth()+1) + '.' + date.getDate()}</Text>
+                    <TouchableHighlight
+                        onPress={() => {
+                            const { data_dispatched } = this.props.appetite
+                            if (!data_dispatched || !isAdmin) return
+                            this.setState({ showDateTimeModal: true })
+                        }}
+                    >
+                        <Text style={{ fontSize: 40 }}>{beautifyDate(date)}</Text>
+                    </TouchableHighlight>
                     <TouchableHighlight
                         style={{ backgroundColor: '#b5e9e9', padding: 10 }}
                         onPress={this.handleSetAll}>
-                        <Text style={{ color: 'grey', fontSize: 40 }}>全讚</Text>
+                        <Text style={{ color: 'grey', fontSize: 40 }}>全胃口佳</Text>
                     </TouchableHighlight>
-                    <TouchableHighlight
+                    {/* <TouchableHighlight
                         style={{ backgroundColor: '#ffe1d0', padding: 10  }}
                         onPress={this.handleClearAll}>
                         <Text style={{ color: 'grey', fontSize: 40 }}>全部清除</Text>
+                    </TouchableHighlight> */}
+                    <TouchableHighlight
+                        style={{ backgroundColor: '#b5e9e9', padding: 10  }}
+                        onPress={this.handleAllDrank}
+                    >
+                        <Text style={{ color: 'grey', fontSize: 40 }}>全喝水</Text>
                     </TouchableHighlight>
                     <TouchableHighlight
                         style={{ backgroundColor: '#dcf3d0', padding: 10  }}
@@ -305,81 +403,115 @@ class TeacherAppetiteLog extends React.Component {
                         <Text style={{ color: 'grey', fontSize: 40 }}>送出</Text>
                     </TouchableHighlight>
                 </View>
+
+                <View style={styles.mealButtons}>
+                    <TouchableHighlight
+                        style={{
+                            backgroundColor: mealType === 'Breakfast' ? '#fa625f' : '#ffe1d0',
+                            width: '23%',
+                            height: 60,
+                            justifyContent: 'center',
+                            marginHorizontal: '1%',
+                            padding: 10
+                        }}
+                        underlayColor='#fa625f'
+                        onPress={() => this.setState({ mealType: 'Breakfast', editingFruitType: false })}
+                    >
+                        <Text style={styles.mealButtonText}>早餐</Text>
+                    </TouchableHighlight>
+                    <TouchableHighlight
+                        style={{
+                            backgroundColor: mealType === 'Fruit' ? '#ff8944' : '#ffddb7',
+                            width: '23%',
+                            height: 60,
+                            justifyContent: 'center',
+                            marginHorizontal: '1%',
+                            // padding: 10
+                        }}
+                        underlayColor='#ff8944'
+                        onPress={() => this.setState({ mealType: 'Fruit' })}
+                        onLongPress={() => this.setState({ mealType: 'Fruit', editingFruitType: true })}
+                    >
+                        {editingFruitType ?
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ paddingLeft: 5 }}>水果:</Text>
+                                <TextInput
+                                    autoFocus={true}
+                                    selectTextOnFocus={true}
+                                    style={{ width: '95%', alignSelf: 'center', fontSize: 25, textAlign: 'center', color: 'grey', borderWidth: 1 }}
+                                    onChangeText={fruit_name => this.editFruitName(fruit_name)}
+                                    value={this.props.appetite.fruit_name}
+                                    onBlur={() => this.fruitNameEditorOnBlur()}
+                                />
+                            </View>
+                        :   <Text style={styles.mealButtonText}>{this.props.appetite.fruit_name}</Text>
+                        }
+                    </TouchableHighlight>
+                    <TouchableHighlight
+                        style={{
+                            backgroundColor: mealType === 'Lunch' ? '#f4d41f' : '#fff1b5',
+                            width: '23%',
+                            height: 60,
+                            justifyContent: 'center',
+                            marginHorizontal: '1%',
+                            padding: 10
+                        }}
+                        underlayColor='#f4d41f'
+                        onPress={() => this.setState({ mealType: 'Lunch', editingFruitType: false })}
+                    >
+                        <Text style={styles.mealButtonText}>午餐</Text>
+                    </TouchableHighlight>
+                    <TouchableHighlight
+                        style={{
+                            backgroundColor: mealType === 'Snack' ? '#00c07f' : '#dcf3d0',
+                            width: '23%',
+                            height: 60,
+                            justifyContent: 'center',
+                            marginHorizontal: '1%',
+                            padding: 10
+                        }}
+                        underlayColor='#00c07f'
+                        onPress={() => this.setState({ mealType: 'Snack', editingFruitType: false })}
+                    >
+                        <Text style={styles.mealButtonText}>點心</Text>
+                    </TouchableHighlight>
+                </View>
+
+                <View style={{ width: '98%', flexDirection: 'row', flexWrap: 'wrap', alignSelf: 'center', justifyContent: 'space-evenly' }}>
+                    <TouchableHighlight
+                        style={{
+                            padding: 5,
+                            backgroundColor: display_all_students ? '#b5e9e9' : 'rgba(255,255,255,0.8)',
+                            marginRight: 3
+                        }}
+                        onPress={() => {
+                            this.setState({
+                                display_all_students: true,
+                                students_to_display: new Set(Object.keys(students))
+                            })
+                        }}
+                    >
+                        <Text style={{ fontSize: 25 }}>全班</Text>
+                    </TouchableHighlight>
+                    {Object.keys(students).map((student_id) => {
+                        return (
+                            <TouchableHighlight
+                                key={student_id}
+                                style={{
+                                    padding: 5,
+                                    backgroundColor: students_to_display.has(student_id) && !display_all_students ? '#b5e9e9' : 'rgba(255,255,255,0.8)',
+                                    marginRight: 3
+                                }}
+                                onPress={() => this.addStudentToDisplayList(student_id)}
+                            >
+                                <Text style={{ fontSize: 25 }}>{students[student_id].name}</Text>
+                            </TouchableHighlight>
+                        )
+                    })}
+                </View>
+                
                 <Content contentContainerStyle={{ alignItems: 'center' }}>
-                    <View style={styles.mealButtons}>
-                        <TouchableHighlight
-                            style={{
-                                backgroundColor: mealType === 'Breakfast' ? '#fa625f' : '#ffe1d0',
-                                width: '23%',
-                                height: 60,
-                                justifyContent: 'center',
-                                marginHorizontal: '1%',
-                                padding: 10
-                            }}
-                            underlayColor='#fa625f'
-                            onPress={() => this.setState({ mealType: 'Breakfast', editingFruitType: false })}
-                        >
-                            <Text style={styles.mealButtonText}>早餐</Text>
-                        </TouchableHighlight>
-                        <TouchableHighlight
-                            style={{
-                                backgroundColor: mealType === 'Fruit' ? '#ff8944' : '#ffddb7',
-                                width: '23%',
-                                height: 60,
-                                justifyContent: 'center',
-                                marginHorizontal: '1%',
-                                // padding: 10
-                            }}
-                            underlayColor='#ff8944'
-                            onPress={() => this.setState({ mealType: 'Fruit' })}
-                            onLongPress={() => this.setState({ mealType: 'Fruit', editingFruitType: true })}
-                        >
-                            {editingFruitType ?
-                                <View style={{ flex: 1 }}>
-                                    <Text style={{ paddingLeft: 5 }}>水果:</Text>
-                                    <TextInput
-                                        autoFocus={true}
-                                        selectTextOnFocus={true}
-                                        style={{ width: '95%', alignSelf: 'center', fontSize: 25, textAlign: 'center', color: 'grey', borderWidth: 1 }}
-                                        onChangeText={fruit_name => this.editFruitName(fruit_name)}
-                                        value={this.props.appetite.fruit_name}
-                                        onBlur={() => this.fruitNameEditorOnBlur()}
-                                    />
-                                </View>
-                            :   <Text style={styles.mealButtonText}>{this.props.appetite.fruit_name}</Text>
-                            }
-                        </TouchableHighlight>
-                        <TouchableHighlight
-                            style={{
-                                backgroundColor: mealType === 'Lunch' ? '#f4d41f' : '#fff1b5',
-                                width: '23%',
-                                height: 60,
-                                justifyContent: 'center',
-                                marginHorizontal: '1%',
-                                padding: 10
-                            }}
-                            underlayColor='#f4d41f'
-                            onPress={() => this.setState({ mealType: 'Lunch', editingFruitType: false })}
-                        >
-                            <Text style={styles.mealButtonText}>午餐</Text>
-                        </TouchableHighlight>
-                        <TouchableHighlight
-                            style={{
-                                backgroundColor: mealType === 'Snack' ? '#00c07f' : '#dcf3d0',
-                                width: '23%',
-                                height: 60,
-                                justifyContent: 'center',
-                                marginHorizontal: '1%',
-                                padding: 10
-                            }}
-                            underlayColor='#00c07f'
-                            onPress={() => this.setState({ mealType: 'Snack', editingFruitType: false })}
-                        >
-                            <Text style={styles.mealButtonText}>點心</Text>
-                        </TouchableHighlight>
-                    </View>
-                    
-                    {Object.keys(this.props.class.students).map((student_id) => {
+                    {[...students_to_display].reverse().map((student_id) => {
                         const meal_rating = mealType === '' ? '' : this.props.appetite.ratings[student_id][mealType].slice(0,-1)
                         const water_drank = mealType === '' ? false : this.props.appetite.ratings[student_id][mealType].slice(-1) === '1'
                         return (
@@ -398,7 +530,7 @@ class TeacherAppetiteLog extends React.Component {
                                                 }
                                                 style={styles.thumbnailImage}/>
                                         </View>
-                                        <View style={{ width: '75%' }}>
+                                        <View style={{ width: '80%' }}>
                                             <View style={{ flex: 1 }}>
                                                 <View style={{ flex: 1, flexDirection: 'row' }}>
                                                     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -432,81 +564,125 @@ class TeacherAppetiteLog extends React.Component {
                                                         }
                                                     </View>
                                                 </View>
+                                                <View style={{...styles.cardBody, marginVertical: 15}}>
+                                                    <TouchableHighlight
+                                                        style={{
+                                                            width: '30%',
+                                                            height: '100%',
+                                                            // marginRight: '3%',
+                                                            justifyContent: 'center',
+                                                            backgroundColor: meal_rating === '胃口佳' ? '#368cbf' : '#b5e9e9',
+                                                            padding: 15
+                                                        }}
+                                                        onPress={() => this.handleRateFoodWellness(student_id, '胃口佳')}
+                                                    >
+                                                        <Text
+                                                            style={{
+                                                                textAlign: 'center',
+                                                                color: meal_rating === '胃口佳' ? '#D3D3D3' : 'grey',
+                                                                fontSize: 20
+                                                            }}
+                                                        >
+                                                            胃口佳
+                                                        </Text>
+                                                    </TouchableHighlight>
+                                                    <TouchableHighlight
+                                                        style={{
+                                                            width: '30%',
+                                                            height: '100%',
+                                                            // marginRight: '3%',
+                                                            justifyContent: 'center',
+                                                            backgroundColor: meal_rating === '滿滿一碗' ? '#368cbf' : '#b5e9e9',
+                                                            padding: 15
+                                                        }}
+                                                        onPress={() => this.handleRateFoodWellness(student_id, '滿滿一碗')}
+                                                    >
+                                                        <Text
+                                                            style={{
+                                                                textAlign: 'center',
+                                                                color: meal_rating === '滿滿一碗' ? '#D3D3D3' : 'grey',
+                                                                fontSize: 20
+                                                            }}
+                                                        >
+                                                            滿滿一碗
+                                                        </Text>
+                                                    </TouchableHighlight>
+                                                    <TouchableHighlight
+                                                        style={{
+                                                            width: '30%',
+                                                            height: '100%',
+                                                            // marginRight: '3%',
+                                                            justifyContent: 'center',
+                                                            backgroundColor: meal_rating === '７/8分滿' ? '#368cbf' : '#b5e9e9',
+                                                            padding: 15
+                                                        }}
+                                                        onPress={() => this.handleRateFoodWellness(student_id, '７/8分滿')}
+                                                    >
+                                                        <Text
+                                                            style={{
+                                                                textAlign: 'center',
+                                                                color: meal_rating === '７/8分滿' ? '#D3D3D3' : 'grey',
+                                                                fontSize: 20
+                                                            }}
+                                                        >
+                                                            ７/8分滿
+                                                        </Text>
+                                                    </TouchableHighlight>
+                                                </View>
                                                 <View style={styles.cardBody}>
                                                     <TouchableHighlight
                                                         style={{
-                                                            width: '22%',
+                                                            width: '30%',
                                                             height: '100%',
-                                                            margin: 5,
+                                                            // margin: 5,
                                                             justifyContent: 'center',
-                                                            backgroundColor: meal_rating === 'Awesome' ? '#368cbf' : '#b5e9e9',
-                                                            padding: 10
+                                                            backgroundColor: meal_rating === '半碗' ? '#368cbf' : '#b5e9e9',
+                                                            padding: 15
                                                         }}
-                                                        onPress={() => this.handleRateFoodWellness(student_id, 'Awesome')}
+                                                        onPress={() => this.handleRateFoodWellness(student_id, '半碗')}
                                                     >
                                                         <Text
                                                             style={{
                                                                 textAlign: 'center',
-                                                                color: meal_rating === 'Awesome' ? '#D3D3D3' : 'grey',
+                                                                color: meal_rating === '半碗' ? '#D3D3D3' : 'grey',
                                                                 fontSize: 20
                                                             }}
                                                         >
-                                                            非常好
+                                                            半碗
                                                         </Text>
                                                     </TouchableHighlight>
                                                     <TouchableHighlight
                                                         style={{
-                                                            width: '22%',
+                                                            width: '30%',
                                                             height: '100%',
-                                                            margin: 5,
+                                                            // margin: 5,
                                                             justifyContent: 'center',
-                                                            backgroundColor: meal_rating === 'Good' ? '#368cbf' : '#b5e9e9',
-                                                            padding: 10
+                                                            backgroundColor: meal_rating === '胃口不佳' ? '#368cbf' : '#b5e9e9',
+                                                            padding: 15
                                                         }}
-                                                        onPress={() => this.handleRateFoodWellness(student_id, 'Good')}
+                                                        onPress={() => this.handleRateFoodWellness(student_id, '胃口不佳')}
                                                     >
                                                         <Text
                                                             style={{
                                                                 textAlign: 'center',
-                                                                color: meal_rating === 'Good' ? '#D3D3D3' : 'grey',
+                                                                color: meal_rating === '胃口不佳' ? '#D3D3D3' : 'grey',
                                                                 fontSize: 20
                                                             }}
                                                         >
-                                                            還不錯
+                                                            胃口不佳
                                                         </Text>
                                                     </TouchableHighlight>
                                                     <TouchableHighlight
                                                         style={{
-                                                            width: '22%',
+                                                            width: '30%',
                                                             height: '100%',
-                                                            margin: 5,
-                                                            justifyContent: 'center',
-                                                            backgroundColor: meal_rating === 'Ok' ? '#368cbf' : '#b5e9e9',
-                                                            padding: 10
-                                                        }}
-                                                        onPress={() => this.handleRateFoodWellness(student_id, 'Ok')}
-                                                    >
-                                                        <Text
-                                                            style={{
-                                                                textAlign: 'center',
-                                                                color: meal_rating === 'Ok' ? '#D3D3D3' : 'grey',
-                                                                fontSize: 20
-                                                            }}
-                                                        >
-                                                            吃不多
-                                                        </Text>
-                                                    </TouchableHighlight>
-                                                    <TouchableHighlight
-                                                        style={{
-                                                            width: '22%',
-                                                            height: '100%',
-                                                            margin: 5,
+                                                            // margin: 5,
                                                             justifyContent: 'center',
                                                             backgroundColor:
                                                                 this.isRatingCustomized(meal_rating) || selectedForCustomize.has(student_id) ?
                                                                     '#368cbf'
                                                                     : '#b5e9e9',
-                                                            padding: 10
+                                                            padding: 15
                                                         }}
                                                         onPress={() => this.onClickOther(student_id)}
                                                     >
@@ -517,6 +693,7 @@ class TeacherAppetiteLog extends React.Component {
                                                                     color: '#D3D3D3',
                                                                     fontSize: 20
                                                                 }}
+                                                                maxLength={6}
                                                                 autoFocus={meal_rating === '' ? true : false}
                                                                 onChangeText={customized_text => this.onCustomizeRating(student_id, customized_text)}
                                                                 value={meal_rating}
@@ -549,18 +726,21 @@ class TeacherAppetiteLog extends React.Component {
 
 const styles = StyleSheet.create({
     childThumbnail: {
-        width: '25%',
+        width: '20%',
         // width: 100,
         // height: '100%',
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
         // marginLeft: -7,
+        // backgroundColor: 'red'
     },
     cardBody: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
+        // marginBottom: 15
+        // backgroundColor: 'lightblue'
     },
     foodButton: {
         width: 70,
@@ -619,6 +799,7 @@ const mapDispatchToProps = (dispatch) => {
             rateAppetite,
             clearRatings,
             setAllRatingsToGreat,
+            setAllDrinkWater,
             fetchClassAppetiteData,
             onSendAppetiteSuccess,
             alertErrMessage,

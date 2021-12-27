@@ -35,8 +35,9 @@ class TeacherMilkLog extends React.Component {
 
     componentDidMount() {
         const { isConnected } = this.props.class
+        const { date, teacher_name } = this.props.route.params
         if (!this.props.milk.loaded && isConnected) {
-            this.fetchClassData()
+            this.fetchClassData(date)
         }
         else {
             this.setState({
@@ -53,6 +54,10 @@ class TeacherMilkLog extends React.Component {
                 duration: 2000
             })
         }
+
+        this.props.navigation.setOptions({ 
+            title: `餵奶 - ${teacher_name}`
+        })
     }
 
     checkUnsent(student_id) {
@@ -69,7 +74,7 @@ class TeacherMilkLog extends React.Component {
         return found
     }
 
-    async fetchClassData() {
+    async fetchClassData(propsDate) {
         const { isConnected } = this.props.class
         if (!isConnected) {
             Toast.show({
@@ -81,7 +86,12 @@ class TeacherMilkLog extends React.Component {
             })
             return
         }
-        const date = new Date()
+        this.props.navigation.setOptions({ 
+            headerRight: () => (
+                <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#f4d41f', marginRight: 20 }} />
+            )
+        })
+        const date = new Date(propsDate)
         const start_date = formatDate(date)
         date.setDate(date.getDate() + 1)
         const end_date = formatDate(date)
@@ -90,6 +100,11 @@ class TeacherMilkLog extends React.Component {
         this.props.fetchClassMilkData(milkData.data)
         this.setState({
             isLoading: false
+        })
+        this.props.navigation.setOptions({ 
+            headerRight: () => (
+                <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#00c07f', marginRight: 20 }} />
+            )
         })
     }
 

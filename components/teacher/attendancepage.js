@@ -224,12 +224,7 @@ class AttendancePage extends React.Component {
             teacher_id,
             showLoginNumberPad
         } = this.state
-        // console.log('school: ', school)
-        // console.log('attendance: ', school.attendance)
-        // console.log('student_present: ', student_present)
-        // console.log('student_absent: ', student_absent)
-        // console.log('teacherOnDuty: ', teacherOnDuty)
-        // console.log('teacher_id: ', teacher_id)
+
         return (
             <View style={{ flex: 1 }}>
                 {showLoginNumberPad ? 
