@@ -61,7 +61,7 @@ class WellnessForm extends React.Component {
           }}
         >
           <TextInput
-            style={{ fontSize: 40 }}
+            style={{ fontSize: 40, width: 100, outline: 'none' }}
             autoFocus={autoFocus}
             keyboardType='decimal-pad'
             placeholder='體溫'

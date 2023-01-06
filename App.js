@@ -36,7 +36,7 @@ export default class App extends React.Component {
       isSplashReady: false,
       isAppReady: false
     }
-    SplashScreen.preventAutoHide()
+    // SplashScreen.preventAutoHide()
   }
   
 
@@ -46,7 +46,7 @@ export default class App extends React.Component {
   };
 
   _cacheResourcesAsync = async () => {
-    SplashScreen.hide();
+    // SplashScreen.hide();
     const images = [
       require('./assets/app_logo.png')
     ];

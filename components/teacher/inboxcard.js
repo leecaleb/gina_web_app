@@ -1,4 +1,5 @@
-import React from 'react'
+import React, {useState, useEffect} from 'react'
+import { useNavigate } from 'react-router-dom'
 import { View, Text, StyleSheet, Image, TouchableHighlight, ScrollView, Alert } from 'react-native'
 import { Card, CardItem, Button, Toast } from 'native-base'
 import { connect } from 'react-redux'
@@ -6,33 +7,31 @@ import { bindActionCreators } from 'redux'
 import { getParentMessageSuccess } from '../../redux/school/actions/index'
 import { formatHourMinute, get, formatDate } from '../util'
 
-class InboxCard extends React.Component {
-    constructor(props) {
-        super(props)
-        this.state = {
+const InboxCard = React.forwardRef((props, ref) => {
+    const navigate = useNavigate()
+    const [state, setState] = useState({
             messages: []
-        }
-    }
+        })
 
-    componentDidMount() {
-        const { date } = this.props
-        this.fetchData(new Date(date))
-    }
+    useEffect(() => {
+        const { date } = props
+        fetchData(new Date(date))
+    })
 
-    componentDidUpdate(prevProps) {
-        if(prevProps.date !== this.props.date) {
-            const { date } = this.props
-            this.fetchData(new Date(date))
-        }
-    }
+    // componentDidUpdate(prevProps) {
+    //     if(prevProps.date !== props.date) {
+    //         const { date } = props
+    //         fetchData(new Date(date))
+    //     }
+    // }
 
-    async fetchData(date) {
-        const { class_id } = this.props
+    const fetchData = async(date) => {
+        const { class_id } = props
         // let yesterday = new Date()
         // yesterday.setDate(yesterday.getDate() - 1)
         // const date = new Date()
         // console.log('date: ', date)
-        const { isConnected } = this.props.class
+        const { isConnected } = props.class
         if (!isConnected) {
             // Toast.show({
             //     text: '網路連線連不到! 等一下再試試看',
@@ -55,103 +54,106 @@ class InboxCard extends React.Component {
             )
             return 
         }
-        this.setState({ messages: data })
-        this.denormalize(data)
+        setState({ messages: data })
+        denormalize(data)
     }
 
-    denormalize(messages) {
+    const denormalize = (messages) => {
         let denormalized = {}
         for(var i = 0; i < messages.length; i++) {
             denormalized[messages[i].student_id] = messages[i].message_for_teacher
         }
         // console.log('denormalized: ', denormalized)
-        this.props.getParentMessageSuccess(denormalized)
+        props.getParentMessageSuccess(denormalized)
     }
 
-    messageIsRead(message_read, morning_reminder_read) {
+    const messageIsRead = (message_read, morning_reminder_read) => {
         if (message_read !== null && !message_read) return false
         if (morning_reminder_read !== null && !morning_reminder_read) return false
         return true
     }
 
-    render() {
-        const { students, class_id, date } = this.props
-        const { messages } = this.state
-        // const { requests, unfinished } = this.props.medication_requests
-        const viewing_previous = date.toDateString() !== (new Date()).toDateString()
-        return (
-            <Card style={{ flex: 1, width: '90%'}}>
-                <View style={{ height: 80, justifyContent: 'center', marginTop: 5 }}>
-                    <Text style={{ fontSize: 30, alignSelf: 'center', position: 'absolute' }}>訊息</Text>
-                    <TouchableHighlight
-                        style={{
-                            width: '25%',
-                            alignSelf: 'flex-end',
-                            position: 'absolute',
-                            padding: 5,
-                            backgroundColor: '#b5e9e9'
-                        }}
-                        onPress={() => {
-                            this.props.navigation.push('Inbox', {
+    const { students, class_id, date } = props
+    const { messages } = state
+    // const { requests, unfinished } = props.medication_requests
+    const viewing_previous = date.toDateString() !== (new Date()).toDateString()
+    return (
+        <Card style={{ flex: 1, width: '90%'}}>
+            <View style={{ height: 80, justifyContent: 'center', marginTop: 5 }}>
+                <Text style={{ fontSize: 30, alignSelf: 'center', position: 'absolute' }}>訊息</Text>
+                <TouchableHighlight
+                    style={{
+                        width: '25%',
+                        alignSelf: 'flex-end',
+                        position: 'absolute',
+                        padding: 5,
+                        backgroundColor: '#b5e9e9'
+                    }}
+                    onPress={() => {
+                        navigate('/class/inbox', { 
+                            state: {
                                 messages,
                                 students,
                                 class_id,
                                 date,
-                                onGoBack: (date) => this.fetchData(date)
-                            })
-                        }}
-                    >
-                        <Text style={styles.button_text}>查看</Text>
-                    </TouchableHighlight>
-                </View>
-                <View style={{ }}>
-                    <ScrollView horizontal={true}>
-                        {messages.map((message, index) => {
-                            const { activities, items_to_bring, message_for_teacher, other_activity, other_item, 
-                                student_id, teacher_id, text, message_read, morning_reminder_read  } = message
-                            if (this.messageIsRead(message_read, morning_reminder_read) && !viewing_previous) return null
-                            return (
-                                <TouchableHighlight
-                                    key={index}
-                                    style={{ flex: 1, margin: 3 }}
-                                    onPress={() => {
-                                        this.props.navigation.push('Inbox', {
-                                            messages,
-                                            students,
-                                            class_id,
-                                            date,
-                                            onGoBack: (date) => this.fetchData(date)
-                                        })
-                                    }}
-                                >
-                                    <Card style={{ flex:1, alignItems: 'center', padding: 15 }}>
-                                        {/* <View style={{ justifyContent: 'center' }}>
-                                            <Text style={{ fontSize: 35 }}>{time}</Text>
-                                        </View> */}
-                                        <View style={{ justifyContent: 'center' }}>
-                                            <Image
-                                                source={
-                                                    students[student_id].profile_picture === '' ?
-                                                        require('../../assets/icon-thumbnail.png')
-                                                        : {uri: students[student_id].profile_picture} 
-                                                }
-                                                style={styles.thumbnailImage}/>
-                                        </View>
-                                        <View
-                                            style={{ justifyContent: 'center' }}
-                                        >
-                                            <Text style={{ fontSize: 25 }}>{students[student_id].name}</Text>
-                                        </View>
-                                    </Card>
-                                </TouchableHighlight>
-                            )
-                        })}
-                    </ScrollView>
-                </View>
-            </Card>
-        )
-    }
-}
+                                // onGoBack: (date) => fetchData(date)
+                            },
+                            data: {
+                                onGoBack: (date) => fetchData(date)
+                            }
+                        })
+                    }}
+                >
+                    <Text style={styles.button_text}>查看</Text>
+                </TouchableHighlight>
+            </View>
+            <View style={{ }}>
+                <ScrollView horizontal={true}>
+                    {messages.map((message, index) => {
+                        const { activities, items_to_bring, message_for_teacher, other_activity, other_item, 
+                            student_id, teacher_id, text, message_read, morning_reminder_read  } = message
+                        if (messageIsRead(message_read, morning_reminder_read) && !viewing_previous) return null
+                        return (
+                            <TouchableHighlight
+                                key={index}
+                                style={{ flex: 1, margin: 3 }}
+                                onPress={() => {
+                                    navigate('/class/inbox', { state: {
+                                        messages,
+                                        students,
+                                        class_id,
+                                        date,
+                                        onGoBack: (date) => fetchData(date)
+                                    }})
+                                }}
+                            >
+                                <Card style={{ flex:1, alignItems: 'center', padding: 15 }}>
+                                    {/* <View style={{ justifyContent: 'center' }}>
+                                        <Text style={{ fontSize: 35 }}>{time}</Text>
+                                    </View> */}
+                                    <View style={{ justifyContent: 'center' }}>
+                                        <Image
+                                            source={
+                                                students[student_id].profile_picture === '' ?
+                                                    require('../../assets/icon-thumbnail.png')
+                                                    : {uri: students[student_id].profile_picture} 
+                                            }
+                                            style={styles.thumbnailImage}/>
+                                    </View>
+                                    <View
+                                        style={{ justifyContent: 'center' }}
+                                    >
+                                        <Text style={{ fontSize: 25 }}>{students[student_id].name}</Text>
+                                    </View>
+                                </Card>
+                            </TouchableHighlight>
+                        )
+                    })}
+                </ScrollView>
+            </View>
+        </Card>
+    )
+})
 
 const styles = StyleSheet.create({
     card: {
@@ -187,4 +189,4 @@ const mapDispatchToProps = (dispatch) => {
     }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps, null, { forwardRef: true }) (InboxCard)
+export default connect(mapStateToProps, mapDispatchToProps) (InboxCard)

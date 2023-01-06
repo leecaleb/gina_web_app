@@ -68,6 +68,7 @@ export default function school(state = initial_state, action) {
     }
     case 'FETCH_CLASSES_SUCCESS':
       const { classes, admin_passcode } = action
+      // console.log('FETCH_CLASSES_SUCCESS / classes: ', classes)
       return {
         ...state,
         classes,
@@ -79,6 +80,7 @@ export default function school(state = initial_state, action) {
       const updated_classes = {...state.classes}
       const {passcodeAdminId, passcodeTeacherId} = state
 
+      // console.log('updated_classes: ', updated_classes)
       Object.keys(classes).forEach(class_id => {
         updated_classes[class_id].teachers = classes[class_id].teachers
       })

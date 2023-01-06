@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { Text, Button, Container, Content, Toast} from 'native-base'
 import { StyleSheet, View, AppState, Alert, TouchableHighlight, Image } from 'react-native'
 import { setConnectState, initializeClass, setClassId, fetchStudentAttendanceSuccess, clearState } from '../../redux/school/actions/index'
@@ -16,88 +16,99 @@ import { beautifyDate, formatDate, get } from '../util'
 import AbsenceCard from './absencecard'
 import TimeModal from '../parent/timemodal'
 import ENV from '../../variables'
+import { useNavigate, useLocation } from 'react-router-dom'
+
+
 
 // -api ping tai ying yung cheng shi jie mien
 
-class TeacherHome extends React.Component {
-    constructor (props) {
-        super(props)
-        this.state = {
-            date: new Date(),
-            isLoading: true,
-            showLoginNumberPad: false,
-            pageClicked: '',
-            alertForPickup: false,
-            pickupQueue: [],
-            showModal: false,
-            modalStudentId: '',
-            modalTeacherId: '',
-            isAdmin: false,
-            admin_id: '',
-            appState: '',
-            showDateTimeModal: false
+const TeacherHome = (props) => {
+    let navigate = useNavigate()
+    const location = useLocation();
+    const refs = {
+        messages: useRef(null),
+        med_request: useRef(null)
+    }
+    const [state, setState] = useState({
+        date: new Date(),
+        isLoading: true,
+        showLoginNumberPad: false,
+        pageClicked: '',
+        alertForPickup: false,
+        pickupQueue: [],
+        showModal: false,
+        modalStudentId: '',
+        modalTeacherId: '',
+        isAdmin: false,
+        admin_id: '',
+        appState: '',
+        showDateTimeModal: false
+    })
+
+    useEffect(() => {
+        console.log('teacher home / useEffect')
+        initializeConnectionStatus()
+        const { class_name, isAdmin, admin_id } = props
+        const { class_id } = location?.state || {}
+        setState({ ...state, isAdmin, admin_id })
+        props.setClassId(class_id)
+        initializeClass(class_id)
+        const timeoutId = timer(class_id)
+        // props.navigation.setOptions({ 
+        //     title: class_name
+        // })
+        fetchStudentAttendance()
+        // TODO: AppState.addEventListener("change", _handleAppStateChange);
+
+        return () => {
+            console.log('unmounting')
+            clearTimeout(timeoutId)
+            // TODO: AppState.removeEventListener("change", _handleAppStateChange);
+            window.removeEventListener('online', console.log('removing online listener'))
+            window.removeEventListener('offline', console.log('removing offline listener'))
+            // props.clearState()
         }
-        this.initializeClass = this.initializeClass.bind(this)
-        this.handleEnterPasscode = this.handleEnterPasscode.bind(this)
-        this.hideLoginPad = this.hideLoginPad.bind(this)
-        this.onConfirmPickup = this.onConfirmPickup.bind(this)
-        this.showModal = this.showModal.bind(this)
-        this.hideModal = this.hideModal.bind(this)
-    }
+    }, [])
 
-    componentDidMount() {
-        this.initializeConnectionStatus()
-        const { class_id, class_name, isAdmin, admin_id } = this.props.route.params
-        this.setState({ isAdmin, admin_id })
-        this.props.setClassId(class_id)
-        this.initializeClass(class_id)
-        this.timeoutId = this.timer(class_id)
-        this.props.navigation.setOptions({ 
-            title: class_name
-        })
-        this.fetchStudentAttendance()
-        AppState.addEventListener("change", this._handleAppStateChange);
-    }
-
-    initializeConnectionStatus() {
+    const initializeConnectionStatus = () => {
         if (window.navigator.onLine) {
-            this.setOnline()
+            setOnline()
             window.addEventListener('online', (e) => { 
                 console.log('online');
-                this.setOnline()
+                setOnline()
             });
             window.addEventListener('offline', (e) => {
                 console.log('offline'); 
-                this.setOffline()
+                setOffline()
             });
         } else {
-            this.setOffline()
+            setOffline()
         }
     }
 
-    setOnline() {
-        this.props.setConnectState(true)
-        this.props.navigation.setOptions({ 
-            headerRight: () => (
-                <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#00c07f', marginRight: 20 }} />
-            )
-        })
+    const setOnline = () => {
+        props.setConnectState(true)
+        // props.navigation.setOptions({ 
+        //     headerRight: () => (
+        //         <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#00c07f', marginRight: 20 }} />
+        //     )
+        // })
     }
 
-    setOffline() {
-        this.props.setConnectState(false)
-        this.props.navigation.setOptions({ 
-            headerRight: () => (
-                <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#fa625f', marginRight: 20 }} />
-            )
-        })
+    const setOffline = () => {
+        props.setConnectState(false)
+        // props.navigation.setOptions({ 
+        //     headerRight: () => (
+        //         <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#fa625f', marginRight: 20 }} />
+        //     )
+        // })
     }
 
-    timer = (class_id) => setTimeout(() => {
-        this.poll(class_id)
+    const timer = (class_id) => setTimeout(() => {
+        poll(class_id)
     }, 10000)
 
-    async poll(class_id) {
+    const poll = async(class_id) => {
         const query = `https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/class/${class_id}/updates`
         await fetch(query, {
             method: 'GET',
@@ -113,19 +124,20 @@ class TeacherHome extends React.Component {
                 update_types.forEach(type => {
                     // console.log('type: ', type)
                     if (type === 'attendance') {
-                        this.fetchStudentAttendance()
+                        fetchStudentAttendance()
                     } else {
-                        this.refs[type].fetchData(this.state.date)
+                        refs[type].fetchData(state.date)
                     }
                 })
             })
             .catch(err => {
                 console.log('teacherhome poll err: ', err)
             })
-        this.timeoutId = this.timer(class_id)
+        const timeoutId = timer(class_id)
     }
 
-    initializeClass(class_id) {
+    const initializeClass = (class_id) => {
+        console.log('initializeClass')
         fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/class/${class_id}`, {
             method: 'GET',
             headers: {
@@ -135,8 +147,9 @@ class TeacherHome extends React.Component {
         }).then((res) => res.json())
             .then((resJson) => {
                 // console.log('teacherHome/resJson: ', resJson)
-                this.props.initializeClass(resJson.teachers, resJson.students)
-                this.setState({
+                props.initializeClass(resJson.teachers, resJson.students)
+                setState({
+                    ...state,
                     isLoading: false
                 })
         }).catch(err => {
@@ -144,43 +157,43 @@ class TeacherHome extends React.Component {
         })
     }
 
-    _handleAppStateChange = nextAppState => {
+    const _handleAppStateChange = nextAppState => {
         if (
-            this.state.appState.match(/inactive|background/) &&
+            state.appState.match(/inactive|background/) &&
             nextAppState === "active"
         ) {
-            if (this.state.date.toDateString() !== (new Date).toDateString()) {
-                this.setState({ isLoading: true })
-                // console.log('this.state.date.toDateString() !== (new Date).toDateString()')
-                const { class_id } = this.props.route.params
-                this.props.clearState()
-                this.props.setClassId(class_id)
-                this.initializeClass(class_id)
-                this.unsubscribe = NetInfo.addEventListener(state => {
+            if (state.date.toDateString() !== (new Date).toDateString()) {
+                setState({ ...state, isLoading: true })
+                // console.log('state.date.toDateString() !== (new Date).toDateString()')
+                const { class_id } = location?.state || {}
+                props.clearState()
+                props.setClassId(class_id)
+                initializeClass(class_id)
+                unsubscribe = NetInfo.addEventListener(state => {
                     const {isConnected} = state
-                    this.props.setConnectState(isConnected)
-                    if (isConnected) {
-                        this.props.navigation.setOptions({ 
-                            headerRight: () => (
-                                <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#00c07f', marginRight: 20 }} />
-                            )
-                        })
-                    } else {
-                        this.props.navigation.setOptions({ 
-                            headerRight: () => (
-                                <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#fa625f', marginRight: 20 }} />
-                            )
-                        })
-                    }
+                    props.setConnectState(isConnected)
+                    // if (isConnected) {
+                    //     props.navigation.setOptions({ 
+                    //         headerRight: () => (
+                    //             <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#00c07f', marginRight: 20 }} />
+                    //         )
+                    //     })
+                    // } else {
+                    //     props.navigation.setOptions({ 
+                    //         headerRight: () => (
+                    //             <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#fa625f', marginRight: 20 }} />
+                    //         )
+                    //     })
+                    // }
                 });
             }
         }
-        this.setState({ appState: nextAppState, date: new Date() });
+        setState({ ...state, appState: nextAppState, date: new Date() });
     };
 
-    handleEnterPasscode(passcode) {
-        const { date } = this.state
-        const { passcodeAdminId, passcodeTeacherId, teachers } = this.props
+    const handleEnterPasscode = (passcode) => {
+        const { date } = state
+        const { passcodeAdminId, passcodeTeacherId, teachers } = props
         const teacher_id = passcodeTeacherId[passcode] || passcodeAdminId[passcode]
         const isAdmin = passcodeAdminId[passcode] !== undefined
 
@@ -192,62 +205,65 @@ class TeacherHome extends React.Component {
                 type: "danger",
                 duration: 3000
             })
-        } else if (this.state.pageClicked === 'attendance_modal') {
-            this.setState({
+        } else if (state.pageClicked === 'attendance_modal') {
+            setState({
+                ...state, 
                 showModal: true,
                 showLoginNumberPad: false,
                 modalTeacherId: teacher_id
             })
         } else {
-            this.props.navigation.navigate(this.state.pageClicked, {
+            navigate(`${state.pageClicked}`, { state: {
                 teacher_id: teacher_id,
-                class: this.props.class,
+                class: props.class,
                 date,
                 isAdmin,
                 teacher_name: teachers[teacher_id].name
-            })
-            this.setState({ showLoginNumberPad: false })
+            }})
+            setState({ ...state, showLoginNumberPad: false })
         }
     }
 
-    pageClicked(pageClicked) {
-        const { isAdmin, admin_id, date } = this.state
+    const pageClicked = (pageClicked) => {
+        const { isAdmin, admin_id, date } = state
         if (isAdmin) {
-            this.props.navigation.push(pageClicked, {
-                class: this.props.class,
+            navigate(`/${pageClicked}`, { state: {
+                class: props.class,
                 teacher_id: admin_id,
                 date,
                 isAdmin,
-                teacher_name: this.props.teachers[admin_id].name
-            })
+                teacher_name: props.teachers[admin_id].name
+            }})
         } else {
-            this.setState({ showLoginNumberPad: true, pageClicked})
+            setState({ ...state, showLoginNumberPad: true, pageClicked})
         }
     }
 
-    hideLoginPad() {
-        this.setState({ showLoginNumberPad: false })
+    const hideLoginPad = () => {
+        setState({ ...state, showLoginNumberPad: false })
     }
 
-    onConfirmPickup() {
-        var newPickupQueue = this.state.pickupQueue.slice(1, this.state.pickupQueue.length)
-        this.setState({
+    const onConfirmPickup = () => {
+        var newPickupQueue = state.pickupQueue.slice(1, state.pickupQueue.length)
+        setState({
+            ...state, 
             alertForPickup: newPickupQueue.length === 0 ? false : true,
             pickupQueue: newPickupQueue
         })
     }
 
-    showModal(student_id) {
-        this.setState({
+    const handleShowModal = (student_id) => {
+        setState({
+            ...state, 
             showLoginNumberPad: true,
             pageClicked: 'attendance_modal',
             modalStudentId: student_id
         })
     }
 
-    async fetchStudentAttendance() {
-        const { class_id } = this.props.route.params
-        const date = formatDate(this.state.date)
+    const fetchStudentAttendance = async() => {
+        const { class_id } = location?.state || {}
+        const date = formatDate(state.date)
         const response = await get(`/attendance/class?class_id=${class_id}&date=${date}`)
         const { success, statusCode, message, data } = response
         if (!success) {
@@ -258,48 +274,50 @@ class TeacherHome extends React.Component {
             )
             return 
         }
-
+        console.log('data: ', data)
         const { attendance, students, present, absent } = data
-        this.props.fetchStudentAttendanceSuccess(attendance, students, present, absent)
+        props.fetchStudentAttendanceSuccess(attendance, students, present, absent)
     }
 
-    hideModal() {
-        this.setState({
+    const hideModal = () => {
+        setState({
+            ...state, 
             showModal: false
         })
     }
 
-    selectDatetimeConfirm(date) {
-        const { isAdmin } = this.state
-        if (!isAdmin || this.hasUnsentRecords()) return
-        this.setState({
+    const selectDatetimeConfirm = (date) => {
+        const { isAdmin } = state
+        if (!isAdmin || hasUnsentRecords()) return
+        setState({
+            ...state, 
             date,
             showDateTimeModal: false
         })
     }
 
-    goBackADay() {
-        const date = new Date(this.state.date.getTime())
+    const goBackADay = () => {
+        const date = new Date(state.date.getTime())
         if (date.getDay() === 1) {
             date.setDate(date.getDate() - 3)
         } else {
             date.setDate(date.getDate() - 1)
         }
-        this.selectDatetimeConfirm(date)
+        selectDatetimeConfirm(date)
     }
 
-    goForwardADay() {
-        const date = new Date(this.state.date.getTime())
+    const goForwardADay = () => {
+        const date = new Date(state.date.getTime())
         if (date.getDay() === 5) {
             date.setDate(date.getDate() + 3)
         } else {
             date.setDate(date.getDate() + 1)
         }
-        this.selectDatetimeConfirm(date)
+        selectDatetimeConfirm(date)
     }
 
-    hasUnsentRecords() {
-        const { wellness_dispatched, message_dispatched, appetite_dispatched, sleep_dispatched, milk_dispatched, diaper_dispatched } = this.props
+    const hasUnsentRecords = () => {
+        const { wellness_dispatched, message_dispatched, appetite_dispatched, sleep_dispatched, milk_dispatched, diaper_dispatched } = props
         const all_data_dispatched = wellness_dispatched && message_dispatched && appetite_dispatched && sleep_dispatched && milk_dispatched && diaper_dispatched
         if (all_data_dispatched) {
             return false
@@ -307,286 +325,277 @@ class TeacherHome extends React.Component {
         return true
     }
 
-    componentWillUnmount() {
-        clearTimeout(this.timeoutId)
-        AppState.removeEventListener("change", this._handleAppStateChange);
-        window.removeEventListener('online', console.log('removing online listener'))
-        window.removeEventListener('offline', console.log('removing offline listener'))
-        this.props.clearState()
-        // this.unsubscribe()
-    }
-
-    render() {
-        const { school_id, class_id } = this.props.route.params
-        const { isLoading, date, showModal, modalStudentId, modalTeacherId, showDateTimeModal, isAdmin } = this.state
-        const { wellness_dispatched, message_dispatched, appetite_dispatched, sleep_dispatched, milk_dispatched, diaper_dispatched } = this.props
-        
-        if (isLoading) {
-            return (
-                <Reloading />
-            )
-        }
+    const { school_id } = props
+    const { class_id } = location?.state || {}
+    const { isLoading, date, showModal, modalStudentId, modalTeacherId, showDateTimeModal, isAdmin } = state
+    const { wellness_dispatched, message_dispatched, appetite_dispatched, sleep_dispatched, milk_dispatched, diaper_dispatched } = props
+    console.log('isLoading: ', isLoading)
+    if (isLoading) {
         return (
-            <Container style={{ flex: 1 }}>
-                {this.state.showLoginNumberPad ? 
-                    <LoginNumberPad
-                        handleEnterPasscode={(passcode) => this.handleEnterPasscode(passcode)}
-                        hideLoginPad={this.hideLoginPad}
-                    /> : null
-                }
-                
-                {showDateTimeModal && <TimeModal
-                    start_date={date}
-                    datetime_type={'date'}
-                    hideModal={() => this.setState({ showDateTimeModal: false })}
-                    selectDatetimeConfirm={(datetime) => this.selectDatetimeConfirm(datetime)}
-                    minDatetime={null}
-                    maxDatetime={new Date()}
-                />}
+            <Reloading />
+        )
+    }
+    return (
+        <Container style={{ flex: 1 }}>
+            {state.showLoginNumberPad ? 
+                <LoginNumberPad
+                    handleEnterPasscode={(passcode) => handleEnterPasscode(passcode)}
+                    hideLoginPad={hideLoginPad}
+                /> : null
+            }
+            
+            {showDateTimeModal && <TimeModal
+                start_date={date}
+                datetime_type={'date'}
+                hideModal={() => setState({ ...state, showDateTimeModal: false })}
+                selectDatetimeConfirm={(datetime) => selectDatetimeConfirm(datetime)}
+                minDatetime={null}
+                maxDatetime={new Date()}
+            />}
 
-                <Modal
-                    show={showModal}
-                    student_id={modalStudentId}
-                    teacher_id={null}
-                    teacherOnDuty={modalTeacherId}
-                    class_id={class_id}
-                    school_id={school_id}
-                    navigation={this.props.navigation}
-                    // unmarked={unmarked}
-                    // absent={absent}
-                    fetchStudentAttendance={() => this.fetchStudentAttendance()}
-                    fetchTeacherAttendance={() => {return null}}
-                    hideModal={() => this.hideModal()}
-                />
+            <Modal
+                show={showModal}
+                student_id={modalStudentId}
+                teacher_id={null}
+                teacherOnDuty={modalTeacherId}
+                class_id={class_id}
+                school_id={school_id}
+                navigation={navigate}
+                // unmarked={unmarked}
+                // absent={absent}
+                fetchStudentAttendance={() => fetchStudentAttendance()}
+                fetchTeacherAttendance={() => {return null}}
+                hideModal={() => hideModal()}
+            />
 
-                <Content contentContainerStyle={{
-                    marginTop: 30,
-                    paddingBottom: 50,
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                }}>
-                    {/* <Button
-                        style={styles.button}
-                        onPress={() => {this.props.navigation.push('TeacherClockInOut')}}>
-                        <Text style={styles.button_text}>打卡</Text>
-                    </Button> */}
+            <Content contentContainerStyle={{
+                marginTop: 30,
+                paddingBottom: 50,
+                alignItems: 'center',
+                justifyContent: 'center'
+            }}>
+                {/* <Button
+                    style={styles.button}
+                    onPress={() => {props.navigation.push('TeacherClockInOut')}}>
+                    <Text style={styles.button_text}>打卡</Text>
+                </Button> */}
 
-                    {/* <View style={styles.card}>
-                        {this.props.attendance.initialized ? 
-                            <AttendanceCard
-                                ref="attendance"
-                                navigator={this.props.navigation}
-                                showModal={(student_id) => this.showModal(student_id)}
+                {/* <View style={styles.card}>
+                    {props.attendance.initialized ? 
+                        <AttendanceCard
+                            ref="attendance"
+                            navigator={props.navigation}
+                            showModal={(student_id) => showModal(student_id)}
+                        />
+                    : <Reloading />
+                    }
+                </View> */}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between'}}>
+                    <View style={{ width: '15%'}}>
+                        <TouchableHighlight
+                            style={{ flex: 1, justifyContent: 'center', alignItems: 'center'}}
+                            onPress={() => goBackADay()}
+                        >
+                            <Image
+                                source={require('../../assets/icon-back.png')}
+                                style={{ width: 40, height: 40 }}
                             />
-                        : <Reloading />
-                        }
-                    </View> */}
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between'}}>
-                        <View style={{ width: '15%'}}>
+                        </TouchableHighlight>
+                    </View>
+
+                    <TouchableHighlight
+                        onPress={() => {
+                            if (!isAdmin || hasUnsentRecords()) return
+                            setState({ ...state, showDateTimeModal: true })
+                        }}
+                    >
+                        <Text style={{ fontSize: 50 }}>{beautifyDate(date)}</Text>
+                    </TouchableHighlight>
+
+                    <View style={{ width: '15%'}}>
+                        {date.toDateString() !== (new Date).toDateString() &&
                             <TouchableHighlight
-                                style={{ flex: 1, justifyContent: 'center', alignItems: 'center'}}
-                                onPress={() => this.goBackADay()}
+                                style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+                                onPress={() => goForwardADay()}
                             >
                                 <Image
-                                    source={require('../../assets/icon-back.png')}
+                                    source={require('../../assets/icon-forward.png')}
                                     style={{ width: 40, height: 40 }}
                                 />
                             </TouchableHighlight>
-                        </View>
-
-                        <TouchableHighlight
-                            onPress={() => {
-                                if (!isAdmin || this.hasUnsentRecords()) return
-                                this.setState({ showDateTimeModal: true })
-                            }}
-                        >
-                            <Text style={{ fontSize: 50 }}>{beautifyDate(date)}</Text>
-                        </TouchableHighlight>
-
-                        <View style={{ width: '15%'}}>
-                            {date.toDateString() !== (new Date).toDateString() &&
-                                <TouchableHighlight
-                                    style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
-                                    onPress={() => this.goForwardADay()}
-                                >
-                                    <Image
-                                        source={require('../../assets/icon-forward.png')}
-                                        style={{ width: 40, height: 40 }}
-                                    />
-                                </TouchableHighlight>
-                            }
-                        </View>
+                        }
                     </View>
+                </View>
 
-                    <InboxCard
-                        ref="messages"
-                        class_id={class_id}
-                        students={this.props.class.students}
-                        navigation={this.props.navigation}
-                        date={date}
-                    />
+                <InboxCard
+                    // ref={refs["messages"]}
+                    class_id={class_id}
+                    students={props.class.students}
+                    navigation={navigate}
+                    date={date}
+                />
 
-                    <MedicationReqeustCard //TODO: are we getting med requests real time? or was it slow internet?
-                        ref="med_request"
-                        class_id={class_id}
-                        students={this.props.class.students}
-                        medication_requests={this.props.medication_requests}
-                        navigation={this.props.navigation}
-                        date={date}
-                    />
+                <MedicationReqeustCard //TODO: are we getting med requests real time? or was it slow internet?
+                    // ref={refs["med_request"]}
+                    class_id={class_id}
+                    students={props.class.students}
+                    medication_requests={props.medication_requests}
+                    navigation={navigate}
+                    date={date}
+                />
 
-                    <View style={styles.button_row}>
-                        <TouchableHighlight
-                            style={styles.record_button}
-                            onPress={() => this.pageClicked('WellnessLog')}
-                        >
-                            <View style={{ flex: 1, justifyContent: 'center' }}>
-                                <View style={{ zIndex: 2, position: 'absolute', width: '100%', height: '100%' }}>
-                                    {!wellness_dispatched ? 
-                                        <Image
-                                            source={require('../../assets/icon-bookmark.png')}
-                                            style={{
-                                                width: 25,
-                                                height: 25,
-                                                marginTop: 3,
-                                                alignSelf: 'flex-end'
-                                            }}
-                                        /> 
-                                    : null}
-                                </View>
-                                <Text style={styles.button_text}>健康</Text>
-                            </View>
-                        </TouchableHighlight>
-
-                        <TouchableHighlight
-                            style={styles.record_button}
-                            onPress={() => this.pageClicked('MessageForParents')}
-                        >
-                            <View style={{ flex: 1, justifyContent: 'center' }}>
-                                <View style={{ zIndex: 2, position: 'absolute', width: '100%', height: '100%' }}>
-                                    {!message_dispatched ? 
-                                        <Image
-                                            source={require('../../assets/icon-bookmark.png')}
-                                            style={{
-                                                width: 25,
-                                                height: 25,
-                                                marginTop: 3,
-                                                alignSelf: 'flex-end'
-                                            }}
-                                        /> 
-                                    : null}
-                                </View>
-                                <Text style={styles.button_text}>老師{"\n"}留⾔</Text>
-                            </View>
-                        </TouchableHighlight>
-
-                        <TouchableHighlight
-                            style={styles.record_button}
-                            onPress={() => this.pageClicked('TeacherAppetiteLog')}
-                        >
-                            <View style={{ flex: 1, justifyContent: 'center' }}>
-                                <View style={{ zIndex: 2, position: 'absolute', width: '100%', height: '100%' }}>
-                                    {!appetite_dispatched ? 
-                                        <Image
-                                            source={require('../../assets/icon-bookmark.png')}
-                                            style={{
-                                                width: 25,
-                                                height: 25,
-                                                marginTop: 3,
-                                                alignSelf: 'flex-end'
-                                            }}
-                                        /> 
-                                    : null}
-                                </View>
-                                <Text style={styles.button_text}>飲食</Text>
-                            </View>
-                        </TouchableHighlight>
-                    </View>
-                    <View style={styles.button_row}>
-                        <TouchableHighlight
-                            style={styles.record_button}
-                            onPress={() => this.pageClicked('TeacherSleepLog')}
-                        >
-                            <View style={{ flex: 1, justifyContent: 'center' }}>
-                                <View style={{ zIndex: 2, position: 'absolute', width: '100%', height: '100%' }}>
-                                    {!sleep_dispatched ? 
-                                        <Image
-                                            source={require('../../assets/icon-bookmark.png')}
-                                            style={{
-                                                width: 25,
-                                                height: 25,
-                                                marginTop: 3,
-                                                alignSelf: 'flex-end'
-                                            }}
-                                        /> 
-                                    : null}
-                                </View>
-                                <Text style={styles.button_text}>睡眠</Text>
-                            </View>
-                        </TouchableHighlight>
-
-                        <TouchableHighlight
-                            style={styles.record_button}
-                            onPress={() => this.pageClicked('TeacherMilkLog')}
-                        >
-                            <View style={{ flex: 1, justifyContent: 'center' }}>
-                                <View style={{ zIndex: 2, position: 'absolute', width: '100%', height: '100%' }}>
-                                    {!milk_dispatched ? 
-                                        <Image
-                                            source={require('../../assets/icon-bookmark.png')}
-                                            style={{
-                                                width: 25,
-                                                height: 25,
-                                                marginTop: 3,
-                                                alignSelf: 'flex-end'
-                                            }}
-                                        /> 
-                                    : null}
-                                </View>
-                                <Text style={styles.button_text}>餵奶</Text>
-                            </View>
-                        </TouchableHighlight>
-
-                        <TouchableHighlight
-                            style={styles.record_button}
-                            onPress={() => this.pageClicked('DiaperLog')}
-                        >
-                            <View style={{ flex: 1, justifyContent: 'center' }}>
-                                <View style={{ zIndex: 2, position: 'absolute', width: '100%', height: '100%' }}>
-                                    {!diaper_dispatched ? 
-                                        <Image
-                                            source={require('../../assets/icon-bookmark.png')}
-                                            style={{
-                                                width: 25,
-                                                height: 25,
-                                                marginTop: 3,
-                                                alignSelf: 'flex-end'
-                                            }}
-                                        /> 
-                                    : null}
-                                </View>
-                                <Text style={styles.button_text}>換尿布</Text>
-                            </View>
-                        </TouchableHighlight>
-                    </View>
-
-                    <AbsenceCard
-                        class_students={this.props.class.students}
-                        showLoginNumberPad={(student_id) => this.setState({
-                            showLoginNumberPad: true,
-                            modalStudentId: student_id,
-                            pageClicked: 'attendance_modal'
-                        })}
-                    />
+                <View style={styles.button_row}>
                     <TouchableHighlight
-                        style={styles.button}
-                        onPress={() => this.props.navigation.goBack()}>
-                        <Text style={styles.button_text}>返回</Text>
+                        style={styles.record_button}
+                        onPress={() => pageClicked('wellness')}
+                    >
+                        <View style={{ flex: 1, justifyContent: 'center' }}>
+                            <View style={{ zIndex: 2, position: 'absolute', width: '100%', height: '100%' }}>
+                                {!wellness_dispatched ? 
+                                    <Image
+                                        source={require('../../assets/icon-bookmark.png')}
+                                        style={{
+                                            width: 25,
+                                            height: 25,
+                                            marginTop: 3,
+                                            alignSelf: 'flex-end'
+                                        }}
+                                    /> 
+                                : null}
+                            </View>
+                            <Text style={styles.button_text}>健康</Text>
+                        </View>
                     </TouchableHighlight>
-                </Content>
-            </Container>
-        )
-    }
+
+                    <TouchableHighlight
+                        style={styles.record_button}
+                        onPress={() => pageClicked('message')}
+                    >
+                        <View style={{ flex: 1, justifyContent: 'center' }}>
+                            <View style={{ zIndex: 2, position: 'absolute', width: '100%', height: '100%' }}>
+                                {!message_dispatched ? 
+                                    <Image
+                                        source={require('../../assets/icon-bookmark.png')}
+                                        style={{
+                                            width: 25,
+                                            height: 25,
+                                            marginTop: 3,
+                                            alignSelf: 'flex-end'
+                                        }}
+                                    /> 
+                                : null}
+                            </View>
+                            <Text style={styles.button_text}>老師{"\n"}留⾔</Text>
+                        </View>
+                    </TouchableHighlight>
+
+                    <TouchableHighlight
+                        style={styles.record_button}
+                        onPress={() => pageClicked('appetite')}
+                    >
+                        <View style={{ flex: 1, justifyContent: 'center' }}>
+                            <View style={{ zIndex: 2, position: 'absolute', width: '100%', height: '100%' }}>
+                                {!appetite_dispatched ? 
+                                    <Image
+                                        source={require('../../assets/icon-bookmark.png')}
+                                        style={{
+                                            width: 25,
+                                            height: 25,
+                                            marginTop: 3,
+                                            alignSelf: 'flex-end'
+                                        }}
+                                    /> 
+                                : null}
+                            </View>
+                            <Text style={styles.button_text}>飲食</Text>
+                        </View>
+                    </TouchableHighlight>
+                </View>
+                <View style={styles.button_row}>
+                    <TouchableHighlight
+                        style={styles.record_button}
+                        onPress={() => pageClicked('sleep')}
+                    >
+                        <View style={{ flex: 1, justifyContent: 'center' }}>
+                            <View style={{ zIndex: 2, position: 'absolute', width: '100%', height: '100%' }}>
+                                {!sleep_dispatched ? 
+                                    <Image
+                                        source={require('../../assets/icon-bookmark.png')}
+                                        style={{
+                                            width: 25,
+                                            height: 25,
+                                            marginTop: 3,
+                                            alignSelf: 'flex-end'
+                                        }}
+                                    /> 
+                                : null}
+                            </View>
+                            <Text style={styles.button_text}>睡眠</Text>
+                        </View>
+                    </TouchableHighlight>
+
+                    <TouchableHighlight
+                        style={styles.record_button}
+                        onPress={() => pageClicked('TeacherMilkLog')}
+                    >
+                        <View style={{ flex: 1, justifyContent: 'center' }}>
+                            <View style={{ zIndex: 2, position: 'absolute', width: '100%', height: '100%' }}>
+                                {!milk_dispatched ? 
+                                    <Image
+                                        source={require('../../assets/icon-bookmark.png')}
+                                        style={{
+                                            width: 25,
+                                            height: 25,
+                                            marginTop: 3,
+                                            alignSelf: 'flex-end'
+                                        }}
+                                    /> 
+                                : null}
+                            </View>
+                            <Text style={styles.button_text}>餵奶</Text>
+                        </View>
+                    </TouchableHighlight>
+
+                    <TouchableHighlight
+                        style={styles.record_button}
+                        onPress={() => pageClicked('DiaperLog')}
+                    >
+                        <View style={{ flex: 1, justifyContent: 'center' }}>
+                            <View style={{ zIndex: 2, position: 'absolute', width: '100%', height: '100%' }}>
+                                {!diaper_dispatched ? 
+                                    <Image
+                                        source={require('../../assets/icon-bookmark.png')}
+                                        style={{
+                                            width: 25,
+                                            height: 25,
+                                            marginTop: 3,
+                                            alignSelf: 'flex-end'
+                                        }}
+                                    /> 
+                                : null}
+                            </View>
+                            <Text style={styles.button_text}>換尿布</Text>
+                        </View>
+                    </TouchableHighlight>
+                </View>
+
+                <AbsenceCard
+                    class_students={props.class.students}
+                    showLoginNumberPad={(student_id) => setState({
+                        ...state,
+                        showLoginNumberPad: true,
+                        modalStudentId: student_id,
+                        pageClicked: 'attendance_modal'
+                    })}
+                />
+                <TouchableHighlight
+                    style={styles.button}
+                    onPress={() => navigate(-1)}>
+                    <Text style={styles.button_text}>返回</Text>
+                </TouchableHighlight>
+            </Content>
+        </Container>
+    )
 }
 
 const styles = StyleSheet.create({

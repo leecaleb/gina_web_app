@@ -1,75 +1,71 @@
 import React from 'react'
-import { View, Text, TouchableHighlight, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
+import { View, Text, TouchableHighlight, StyleSheet, ScrollView } from 'react-native'
 import Header from '../../header'
-// import { TouchableOpacity } from 'react-native-gesture-handler'
+import { useNavigate, useLocation } from 'react-router-dom'
 
-export default class AdminHome extends React.Component {
-  constructor(props) {
-    super(props)
-  }
+const AdminHome = (props) => {
+  const navigate = useNavigate()
+  const location = useLocation()
+  // static navigationOptions = ({ navigation }) => {
+  //   return {
+  //     headerTitle: <Header title={'Admin Home'} />
+  //   }
+  // }
 
-  static navigationOptions = ({ navigation }) => {
-    return {
-      headerTitle: <Header title={'Admin Home'} />
-    }
-  }
-
-  componentDidMount() {
-
-  }
-
-  handleNavigate(pageName) {
+  const handleNavigate = (pageName) => {
     // console.log(pageName)
-    const { school_name, school_id } = this.props.route.params
-    this.props.navigation.navigate(pageName, { school_name, school_id })
-
-    // this.props.navigation.push(pageName)
-  }
-
-  render() {
-    return (
-      <ScrollView contentContainerStyle={{ alignItems: 'center', justifyContent: 'center'}}>
-        <TouchableOpacity
-          style={styles.button}
-          onClick={()=> this.handleNavigate('AnnouncementHome')}
-          underlayColor="#368cbf"
-        >
-          <Text style={{ fontSize: 70 }}>公告</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={styles.button}
-          onClick={()=> this.handleNavigate('Registration')}
-          // onPress={()=> this.handleNavigate('Registration')}
-          underlayColor="#368cbf"
-        >
-          <Text style={{ fontSize: 70 }}>新生註冊</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.button}
-          onClick={()=> this.handleNavigate('Students')}
-          underlayColor="#368cbf"
-        >
-          <Text style={{ fontSize: 70 }}>學生資料</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.button}
-          onClick={()=> this.handleNavigate('Teachers')}
-          underlayColor="#368cbf"
-        >
-          <Text style={{ fontSize: 70 }}>教師資料</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.button}
-          onClick={()=> this.handleNavigate('DownloadPage')}
-          underlayColor="#368cbf"
-        >
-          <Text style={{ fontSize: 70 }}>下載</Text>
-        </TouchableOpacity>
-      </ScrollView>
+    const { school_name, school_id, email } = location?.state
+    navigate(pageName, { state: { 
+        school_name,
+        school_id,
+        email
+      }}
     )
+
+    // props.navigation.push(pageName)
   }
+
+  return (
+    <ScrollView contentContainerStyle={{ alignItems: 'center', justifyContent: 'center'}}>
+      <TouchableHighlight
+        style={styles.button}
+        onPress={()=> handleNavigate('announcement')}
+        underlayColor="#368cbf"
+      >
+        <Text style={{ fontSize: 70 }}>公告</Text>
+      </TouchableHighlight>
+      
+      <TouchableHighlight
+        style={styles.button}
+        onPress={()=> handleNavigate('Registration')}
+        underlayColor="#368cbf"
+      >
+        <Text style={{ fontSize: 70 }}>新生註冊</Text>
+      </TouchableHighlight>
+      <TouchableHighlight
+        style={styles.button}
+        onPress={()=> handleNavigate('Students')}
+        underlayColor="#368cbf"
+      >
+        <Text style={{ fontSize: 70 }}>學生資料</Text>
+      </TouchableHighlight>
+      <TouchableHighlight
+        style={styles.button}
+        onPress={()=> handleNavigate('Teachers')}
+        underlayColor="#368cbf"
+      >
+        <Text style={{ fontSize: 70 }}>教師資料</Text>
+      </TouchableHighlight>
+
+      <TouchableHighlight
+        style={styles.button}
+        onPress={()=> handleNavigate('DownloadPage')}
+        underlayColor="#368cbf"
+      >
+        <Text style={{ fontSize: 70 }}>下載</Text>
+      </TouchableHighlight>
+    </ScrollView>
+  )
 }
 
 const styles = StyleSheet.create({
@@ -86,3 +82,5 @@ const styles = StyleSheet.create({
 
   }
 })
+
+export default AdminHome

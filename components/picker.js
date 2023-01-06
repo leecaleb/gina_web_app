@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, Platform, Picker, ActionSheetIOS, TouchableOpacity } from 'react-native'
+import { View, TouchableHighlight, Text, Platform, Picker, ActionSheetIOS } from 'react-native'
 import { ActionSheet } from 'native-base'
 
 export default class PickerComponent extends React.Component{
@@ -27,18 +27,18 @@ export default class PickerComponent extends React.Component{
 
   iosShowActionSheet() {
     const { options } = this.props
-    ActionSheetIOS.showActionSheetWithOptions(
-      {
-        options,
-        cancelButtonIndex: options.length-1
-      },
-      (buttonIndex) => {
-        this.setState({
-          selectedIndex: buttonIndex
-        })
-        this.props.handleSelectValue(options[buttonIndex])
-      }
-    )
+    // ActionSheetIOS.showActionSheetWithOptions(
+    //   {
+    //     options,
+    //     cancelButtonIndex: options.length-1
+    //   },
+    //   (buttonIndex) => {
+    //     this.setState({
+    //       selectedIndex: buttonIndex
+    //     })
+    //     this.props.handleSelectValue(options[buttonIndex])
+    //   }
+    // )
   }
 
   androidShowActionSheet() {
@@ -65,13 +65,13 @@ export default class PickerComponent extends React.Component{
   render() {
     const { selectedValue, style, textStyle, disabled } = this.props
     return (
-      <TouchableOpacity
+      <TouchableHighlight
         disabled={disabled}
         style={style}
-        onPress={() => this.props.showSelect()}
+        onPress={() => this.showActionSheet()}
       >
         <Text style={textStyle}>{selectedValue}</Text>
-      </TouchableOpacity>
+      </TouchableHighlight>
     )
   }
 }

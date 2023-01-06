@@ -1,6 +1,5 @@
 import React from 'react'
 import { View, Image, Text, TouchableHighlight, StyleSheet, KeyboardAvoidingView, Alert, Dimensions } from 'react-native'
-import { Toast } from 'native-base'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
 import WellnessForm from './wellnessform'
@@ -59,13 +58,7 @@ class StudentModal extends React.Component{
     }
 
     if (!isConnected) {
-        Toast.show({
-            text: '拍謝 網路連不到! 等一下再試試看',
-            buttonText: 'Okay',
-            position: "top",
-            type: "warning",
-            duration: 2000
-        })
+        alert('拍謝 網路連不到! 等一下再試試看')
     }
 
     const sendDataResult = await sendWellnessData(wellness, class_id, formatDate(new Date()))

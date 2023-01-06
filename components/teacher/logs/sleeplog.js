@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { StyleSheet, Image, TouchableHighlight, Alert } from 'react-native'
 import { Container, Content, Text, View, Card, Toast} from 'native-base'
 import { connect } from 'react-redux'
@@ -26,36 +27,31 @@ import Reloading from '../../reloading'
 import TimeModal from '../../parent/timemodal'
 
 
-class TeacherSleepLog extends React.Component {
-    constructor(props) {
-        super(props)
-        this.state = {
-            isLoading: true,
-            date: new Date(),
-            showIOSDatePicker: false,
-            student_id: '',
-            index: -1,
-            recordType: '',
-            teacher_id: '',
-            confirmDelete: false,
-            showDateTimeModal: false
-        }
-        this.handleOnClick = this.handleOnClick.bind(this)
-        this.handleSend = this.handleSend.bind(this)
-        this.updateReducerTime = this.updateReducerTime.bind(this)
-        this.setTime = this.setTime.bind(this)
-    }
+const TeacherSleepLog = (props) => {
+    const location = useLocation()
+    const [ state, setState ] = useState({
+        isLoading: true,
+        date: new Date(),
+        showIOSDatePicker: false,
+        student_id: '',
+        index: -1,
+        recordType: '',
+        teacher_id: '',
+        confirmDelete: false,
+        showDateTimeModal: false
+    })
 
-    componentDidMount() {
-        const { newDataForCreate, oldDataForEdit } = this.props.sleep
-        const { isConnected } = this.props.class
-        const { teacher_id, date, teacher_name } = this.props.route.params
-        this.setState({ teacher_id })
+    useEffect(() => {
+        const { newDataForCreate, oldDataForEdit } = props.sleep
+        const { isConnected } = props.class
+        const { teacher_id, date, teacher_name } = location?.state
+        setState({ ...state, teacher_id })
         if ((newDataForCreate.size + oldDataForEdit.size === 0) && isConnected) {
-            this.fetchClassData(date)
+            fetchClassSleepData(date)
         }
         else {
-            this.setState({
+            setState({
+                ...state,
                 isLoading: false
             })
         }
@@ -70,35 +66,36 @@ class TeacherSleepLog extends React.Component {
             })
         }
 
-        this.props.navigation.setOptions({ 
-            title: `睡眠 - ${teacher_name}`
-        })
-    }
+        // props.navigation.setOptions({ 
+        //     title: `睡眠 - ${teacher_name}`
+        // })
+    }, [])
 
-    async fetchClassData(propsDate) {
-        this.props.navigation.setOptions({ 
-            headerRight: () => (
-                <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#f4d41f', marginRight: 20 }} />
-            )
-        })
+    const fetchClassSleepData = async(propsDate) => {
+        // props.navigation.setOptions({ 
+        //     headerRight: () => (
+        //         <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#f4d41f', marginRight: 20 }} />
+        //     )
+        // })
         const date = new Date(propsDate)
         const start_date = formatDate(date)
         date.setDate(date.getDate() + 1)
         const end_date = formatDate(date)
-        const sleepData = await fetchClassData('sleep', this.props.class.class_id, start_date, end_date)
-        this.denormalize(sleepData)
-        this.props.fetchClassSleepData(sleepData.data)
-        this.setState({
+        const sleepData = await fetchClassData('sleep', props.class.class_id, start_date, end_date)
+        denormalize(sleepData)
+        props.fetchClassSleepData(sleepData.data)
+        setState({
+            ...state,
             isLoading: false
         })
-        this.props.navigation.setOptions({ 
-            headerRight: () => (
-                <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#00c07f', marginRight: 20 }} />
-            )
-        })
+        // props.navigation.setOptions({ 
+        //     headerRight: () => (
+        //         <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#00c07f', marginRight: 20 }} />
+        //     )
+        // })
     }
 
-    denormalize(sleepData) {
+    const denormalize = (sleepData) => {
         if (!sleepData.data.records.all_id.length) {
             return
         }
@@ -110,8 +107,8 @@ class TeacherSleepLog extends React.Component {
         sleepData.data.records.by_id = by_id
     }
 
-    hasUnsentRecord(student_id) {
-        const { newDataForCreate, oldDataForEdit, by_student_id } = this.props.sleep
+    const hasUnsentRecord = (student_id) => {
+        const { newDataForCreate, oldDataForEdit, by_student_id } = props.sleep
         let record_id_array = by_student_id[student_id]
         var hasUnsentRecord = false
         for (var i = 0; i < record_id_array.length; i++) {
@@ -123,39 +120,40 @@ class TeacherSleepLog extends React.Component {
         return hasUnsentRecord
     }
 
-    handleOnClick(student_id) {
-        const record_id_array = this.props.sleep.by_student_id[student_id]
-        const records = this.props.sleep.records.by_id
+    const handleOnClick = (student_id) => {
+        const record_id_array = props.sleep.by_student_id[student_id]
+        const records = props.sleep.records.by_id
         const last_record = record_id_array.length > 0 ? records[record_id_array[record_id_array.length - 1]] : null
         const current_wake_time = last_record ? last_record.wake_time : null
 
         if (!record_id_array.length || current_wake_time) {
-            this.props.setSleepTime(student_id, null, new Date(), this.state.teacher_id)
+            props.setSleepTime(student_id, null, new Date(), state.teacher_id)
         } else {
-            this.props.setWakeTime(student_id, record_id_array.length - 1, new Date(), this.state.teacher_id)
+            props.setWakeTime(student_id, record_id_array.length - 1, new Date(), state.teacher_id)
         }
-        this.checkLastRecord(student_id, records, record_id_array)
+        checkLastRecord(student_id, records, record_id_array)
     }
 
-    checkLastRecord(student_id, records, record_id_array) {
+    const checkLastRecord = (student_id, records, record_id_array) => {
         const n = record_id_array.length
         const last_record_id = record_id_array[record_id_array.length - 1]
         const last_record = records[last_record_id]
         if (last_record.wake_time !== null && last_record.sleep_time.getTime() >= last_record.wake_time.getTime()) {
-            this.props.markRecordError([last_record_id])
+            props.markRecordError([last_record_id])
         } 
         
         if (n > 1) {
             const last_second_record_id = record_id_array[record_id_array.length - 2]
             const last_second_record = records[last_second_record_id]
             if (last_record.sleep_time >= last_second_record.sleep_time && last_record.sleep_time <= last_second_record.wake_time) {
-                this.props.markRecordError([last_record_id])
+                props.markRecordError([last_record_id])
             }
         }
     }
 
-    setTime(recordType, student_id, index, start_time) {
-        this.setState({
+    const setTime = (recordType, student_id, index, start_time) => {
+        setState({
+            ...state,
             student_id,
             index,
             recordType,
@@ -164,22 +162,22 @@ class TeacherSleepLog extends React.Component {
         })
     }
 
-    updateReducerTime(index, time) {
-        this.setState({ showDateTimeModal: false })
-        if (this.state.recordType === 'sleep') {
-            this.props.setSleepTime(this.state.student_id, index, time, this.state.teacher_id)
+    const updateReducerTime = (index, time) => {
+        setState({ ...state, showDateTimeModal: false })
+        if (state.recordType === 'sleep') {
+            props.setSleepTime(state.student_id, index, time, state.teacher_id)
         } else {
-            this.props.setWakeTime(this.state.student_id, index, time, this.state.teacher_id)
+            props.setWakeTime(state.student_id, index, time, state.teacher_id)
         }
-        this.checkRecord(this.state.student_id, index)
+        checkRecord(state.student_id, index)
     }
 
-    checkRecord(student_id, index) {
-        const record_id_array = this.props.sleep.by_student_id[student_id]
-        const records = this.props.sleep.records.by_id
+    const checkRecord = (student_id, index) => {
+        const record_id_array = props.sleep.by_student_id[student_id]
+        const records = props.sleep.records.by_id
         const record_id = record_id_array[index]
         const record = records[record_id]
-        const { records_with_error } = this.props.sleep
+        const { records_with_error } = props.sleep
         let prev_record_id = null
         let next_record_id = null
 
@@ -189,7 +187,7 @@ class TeacherSleepLog extends React.Component {
 
         if (record.wake_time !== null) {
             if(record.sleep_time.getTime() >= record.wake_time.getTime()) {
-                this.props.markRecordError([record_id])
+                props.markRecordError([record_id])
                 return
             }
         }
@@ -200,7 +198,7 @@ class TeacherSleepLog extends React.Component {
             if (//record.sleep_time.getTime() >= prev_record.sleep_time.getTime() && 
                 prev_record.wake_time !== null &&
                 record.sleep_time.getTime() <= prev_record.wake_time.getTime()) {
-                this.props.markRecordError([record_id])
+                props.markRecordError([record_id])
                 return
             }
         }
@@ -209,42 +207,42 @@ class TeacherSleepLog extends React.Component {
             next_record_id = record_id_array[index+1]
             const next_record = records[next_record_id]
             if (record.wake_time >= next_record.sleep_time) {
-                this.props.markRecordError([record_id])
+                props.markRecordError([record_id])
                 return
             }
         }
 
-        this.props.markRecordCorrect(record_id)
+        props.markRecordCorrect(record_id)
 
         if (prev_record_id !== null && records_with_error.has(prev_record_id)) {
-            this.checkRecord(student_id, index-1)
+            checkRecord(student_id, index-1)
             // console.log('records_with_error.has(prev_record_id: ', records_with_error.has(prev_record_id))
         }
 
         if (next_record_id !== null && records_with_error.has(next_record_id)) {
             // console.log('records_with_error.has(next_record_id: ', records_with_error.has(next_record_id))
-            this.checkRecord(student_id, index+1)
+            checkRecord(student_id, index+1)
         }
     }
 
-    confirmToRemoveWakeTime(record_id, index, student_id) {
-        const record_id_array = this.props.sleep.by_student_id[student_id]
+    const confirmToRemoveWakeTime = (record_id, index, student_id) => {
+        const record_id_array = props.sleep.by_student_id[student_id]
         if (index !== record_id_array.length - 1) {
             // cannot remove wake time if it is not the most recent record
-            this.props.alertSleeplogErrorMessage('這個睡眠記錄並不能刪除，只能改選')
+            props.alertSleeplogErrorMessage('這個睡眠記錄並不能刪除，只能改選')
             return
         }
         Alert.alert(
             '確定要刪除?',
             '',
             [
-                { text: 'Yes', onPress: () => this.props.removeWakeTime(record_id, this.state.teacher_id) },
+                { text: 'Yes', onPress: () => props.removeWakeTime(record_id, state.teacher_id) },
                 { text: 'Cancel', style: 'cancel'}]
         )
     }
 
-    async handleSend() {
-        const { isConnected } = this.props.class
+    const handleSend = async() => {
+        const { isConnected } = props.class
         if (!isConnected) {
             Toast.show({
                 text: '拍謝 網路連不到! 等一下再試試看',
@@ -255,37 +253,38 @@ class TeacherSleepLog extends React.Component {
             })
             return
         }
-        this.setState({
+        setState({
+            ...state,
             isLoading: true
         })
-        const { newDataForCreate, oldDataForEdit } = this.props.sleep
+        const { newDataForCreate, oldDataForEdit } = props.sleep
         
         if (newDataForCreate.size) {
-            const createSleepRecordRes = await this.createRecord()
+            const createSleepRecordRes = await createRecord()
             if (createSleepRecordRes.success) {
                 // console.log('SUCCESS')
-                this.props.createSleepRecordSuccess()
+                props.createSleepRecordSuccess()
             } else {
-                this.props.createSleepRecordFail()
+                props.createSleepRecordFail()
                 return
             }
         }
 
         if (oldDataForEdit.size) {
-            const editSleepRecordRes = await this.editRecord()
+            const editSleepRecordRes = await editRecord()
             if (editSleepRecordRes.success) {
-                this.props.editSleepRecordSuccess()
+                props.editSleepRecordSuccess()
             } else {
-                this.props.editSleepRecordFail()
+                props.editSleepRecordFail()
                 return
             }
         }
 
-        this.props.navigation.goBack()
+        props.navigation.goBack()
     }
 
-    async createRecord() {
-        const { newDataForCreate, records } = this.props.sleep
+    const createRecord = async() => {
+        const { newDataForCreate, records } = props.sleep
         
         const data_objs = []
         newDataForCreate.forEach(record_id => {
@@ -294,10 +293,10 @@ class TeacherSleepLog extends React.Component {
             })
         })
 
-        this.normalize(data_objs)
+        normalize(data_objs)
 
         var request_body = {
-            date: formatDate(this.state.date),
+            date: formatDate(state.date),
             data_objs
         }
 
@@ -335,8 +334,8 @@ class TeacherSleepLog extends React.Component {
         return createSleepRecordRes
     }
 
-    async editRecord() {
-        const { oldDataForEdit, records } = this.props.sleep
+    const editRecord = async() => {
+        const { oldDataForEdit, records } = props.sleep
         const data_objs = []
         oldDataForEdit.forEach(record_id => {
             data_objs.push({
@@ -345,7 +344,7 @@ class TeacherSleepLog extends React.Component {
             })
         })
 
-        this.normalize(data_objs)
+        normalize(data_objs)
 
         const request_body = {
             date: formatDate(new Date()),
@@ -384,23 +383,23 @@ class TeacherSleepLog extends React.Component {
         return editRecordRes
     }
 
-    confirmToRemoveRecord(record_id, student_id) {
+    const confirmToRemoveRecord = (record_id, student_id) => {
         Alert.alert(
             '確定要刪除？',
             '',
             [
-                { text: 'Yes', onPress: () => this.removeRecord(record_id, student_id) },
+                { text: 'Yes', onPress: () => removeRecord(record_id, student_id) },
                 { text: 'Cancel', style: 'cancel' }
             ]
         )
     }
 
-    removeRecord(record_id, student_id) {
-        const { newDataForCreate } = this.props.sleep
-        const { isConnected } = this.props.class
+    const removeRecord = (record_id, student_id) => {
+        const { newDataForCreate } = props.sleep
+        const { isConnected } = props.class
 
         if (newDataForCreate.has(record_id)) {
-            this.props.removeSleepRecordSuccess(record_id, student_id)
+            props.removeSleepRecordSuccess(record_id, student_id)
             return
         }
 
@@ -430,14 +429,14 @@ class TeacherSleepLog extends React.Component {
             .then(resJson => {
                 const { statusCode, message } = resJson
                 if (statusCode > 200 || message === 'Internal Server Error') {
-                    this.props.removeSleepRecordFail(message)
+                    props.removeSleepRecordFail(message)
                     return {
                         success: false,
                         statusCode,
                         message
                     }
                 }
-                this.props.removeSleepRecordSuccess(record_id, student_id)
+                props.removeSleepRecordSuccess(record_id, student_id)
                 return {
                     success: true,
                     statusCode,
@@ -445,7 +444,7 @@ class TeacherSleepLog extends React.Component {
                 }
             })
             .catch(err => {
-                this.props.removeSleepRecordFail(err)
+                props.removeSleepRecordFail(err)
                 return {
                     success: false,
                     message: err
@@ -453,168 +452,170 @@ class TeacherSleepLog extends React.Component {
         })
     }
 
-    normalize(data_objs) {
+    const normalize = (data_objs) => {
         for (var i = 0; i < data_objs.length; i++) {
             data_objs[i].sleep_time = formatTime(data_objs[i].sleep_time)
             data_objs[i].wake_time = data_objs[i].wake_time === null ? null : formatTime(data_objs[i].wake_time)
         }
     }
 
-    render() {
-        if (this.props.sleep.errorMessage !== ''){
-            Alert.alert(
-                'Add new record fail',
-                this.props.sleep.errorMessage,
-                [{text: 'OK', onPress: () => this.props.clearSleeplogErrorMessage()}]
-            )
-        }
-        const { records_with_error } = this.props.sleep
-        const { showDateTimeModal, start_time, date } = this.state
-        // console.log('records_with_error: ', records_with_error)
-        // console.log('showDateTimeModal: ', showDateTimeModal)
-        if (this.state.isLoading) {
-            return <Reloading />
-        }
-        return (
-            <Container>
-                {showDateTimeModal ?
-                    <TimeModal
-                        start_date={start_time}
-                        datetime_type={'time'}
-                        hideModal={() => this.setState({ showDateTimeModal: false })}
-                        selectDatetimeConfirm={(time) => this.updateReducerTime(this.state.index, time)}
-                        minDatetime={null}
-                        maxDatetime={null}
-                    />
-                    : null
-                }
-                <View style={styles.subHeading}>
-                    <View style={{ flex: 1, alignItems: 'center' }}>
-                        <Text style={{ fontSize: 40 }}>{date.getFullYear() + '.' + (date.getMonth()+1) + '.' + date.getDate()}</Text>
-                    </View>
-                    
-                    <View style={{ flex: 1, justifyContent: 'center' }}>
-                        <TouchableHighlight
-                            style={{ alignSelf: 'flex-end', backgroundColor: '#dcf3d0', padding: 10, marginRight: 50 }}
-                            onPress={this.handleSend}
-                            underlayColor="#00c07f"
-                        >
-                            <Text style={{ fontSize: 40, color: 'grey' }}>送出</Text>
-                        </TouchableHighlight>
-                    </View>
-                </View>
-                <Content contentContainerStyle={{ alignItems: 'center' }}>
-                    {Object.keys(this.props.class.students).map((student_id) => {
-                        const record_id_array = this.props.sleep.by_student_id[student_id] // [record_id, ...]
-                        const records = this.props.sleep.records.by_id
-                        const last_record = record_id_array.length > 0 ? records[record_id_array[record_id_array.length - 1]] : null
-                        const current_sleep_time = last_record ? last_record.sleep_time : null
-                        const current_wake_time = last_record ? last_record.wake_time : null
-                        return(
-                            <View key={student_id} style={{ width: '98%' }}>
-                                <Card style={{ flex: 1, paddingVertical: 15 }}>
-                                    <View style={{ flex: 1, flexDirection: 'row' }}>
-                                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                                            <TouchableHighlight
-                                                key={student_id}
-                                                style={styles.thumbnail}
-                                                onPress={() => this.handleOnClick(student_id)}>
-                                                <Image
-                                                    source={
-                                                        this.props.class.students[student_id].profile_picture === '' ?
-                                                            require('../../../assets/icon-thumbnail.png')
-                                                            : {uri: this.props.class.students[student_id].profile_picture}
-                                                    }
-                                                    style={{
-                                                        width: 140,
-                                                        height: 140,
-                                                        borderRadius: 70,
-                                                        borderWidth: 8,
-                                                        borderColor: current_sleep_time !== null ? (current_wake_time === null ? '#ffe1d0' : '#dcf3d0') : '#dcf3d0'
-                                                    }} />
-                                            </TouchableHighlight>
-                                        </View>
-                                        <View style={{ flex: 3 }}>
-                                            <View style={{ flex: 1, flexDirection: 'row', padding: 10 }}>
-                                                <View style={{ flex: 1 }}>
-                                                    <Text style={{ fontSize: 30 }}>{this.props.class.students[student_id].name}</Text>
-                                                </View>
-                                                <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                                                    {this.hasUnsentRecord(student_id) ? 
-                                                        <Text style={{ color: 'red', fontSize: 15 }}>未送出</Text>
-                                                    : null}
-                                                </View>
-                                            </View>
-                                            <View style={styles.cardBody}>
-                                                <View style={{ width: '40%', height: '100%', paddingLeft: 5 }}>
-                                                    <Text style={{ fontSize: 20 }}>從</Text>
-                                                </View>
-                                                <View style={{ width: '40%', height: '100%', paddingLeft: 5 }}>
-                                                    <Text style={{ fontSize: 20 }}>到</Text>
-                                                </View>
-                                            </View>
-                                            {record_id_array.map((record_id, index) => {
-                                                let { sleep_time, wake_time } = records[record_id]
-                                                return (
-                                                    <View key={record_id} style={{
-                                                        ...styles.cardBody, 
-                                                        borderWidth: 2, 
-                                                        borderColor: records_with_error.has(record_id) ? 'red' : 'white'
-                                                    }}>
-                                                        <View style={{ width: '35%', marginRight: '3%', height: '100%' }}>
-                                                            <TouchableHighlight
-                                                                style={{ flex: 1, justifyContent: 'center', backgroundColor: '#fef6dd', borderRadius: 10}}
-                                                                onPress={() => this.setTime('sleep', student_id, index, sleep_time)}
-                                                            >
-                                                                {sleep_time === null ?
-                                                                    <Text style={{ fontSize: 30, textAlign: 'center' }}>選擇時間</Text> :
-                                                                    <Text style={{ fontSize: 35, textAlign: 'center' }}>
-                                                                        {sleep_time.getHours() + ':' + sleep_time.getMinutes()}
-                                                                    </Text>}
-                                                            </TouchableHighlight>
-                                                        </View>
-                                                        <View style={{ width: '35%', marginRight: '3%', height: '100%' }}>
-                                                            <TouchableHighlight
-                                                                style={{ flex: 1, justifyContent: 'center', backgroundColor: '#fef6dd', borderRadius: 10 }}
-                                                                onPress={() => this.setTime('wake', student_id, index, wake_time)}
-                                                                onLongPress={() => this.confirmToRemoveWakeTime(record_id, index, student_id)}
-                                                            >
-                                                                {wake_time === null ?
-                                                                    <Text style={{ fontSize: 30, textAlign: 'center' }}>選擇時間</Text> :
-                                                                    <Text style={{ fontSize: 35, textAlign: 'center' }}>
-                                                                        {wake_time.getHours() + ':' + wake_time.getMinutes()}
-                                                                    </Text>}
-                                                            </TouchableHighlight>
-                                                        </View>
-                                                        <View style={{ width: '20%', marginRight: '4%', height: '100%' }}>
-                                                            <TouchableHighlight
-                                                                style={{ flex: 1, justifyContent: 'center', backgroundColor: '#ffe1d0', borderRadius: 10 }}
-                                                                onPress={() => this.confirmToRemoveRecord(record_id, student_id)}
-                                                            >
-                                                                <Text style={{ fontSize: 30, textAlign: 'center' }}>移除</Text>
-                                                            </TouchableHighlight>
-                                                        </View>
-                                                    </View>
-                                                )
-                                            })}
-                                        </View>
-                                    </View>
-                                </Card>
-                            </View>
-                        )
-                    })}
-                </Content>
-                {/* {this.state.showIOSDatePicker ?
-                    <View style={{ height: 200, justifyContent: 'center'}}>
-                        <DatePickerIOS
-                            mode={'time'}
-                            date={new Date()}
-                            onDateChange={(time) => this.updateReducerTime(this.state.index, time)}
-                        />
-                    </View> : null} */}
-            </Container>
+
+    if (props.sleep.errorMessage !== ''){
+        Alert.alert(
+            'Add new record fail',
+            props.sleep.errorMessage,
+            [{text: 'OK', onPress: () => props.clearSleeplogErrorMessage()}]
         )
     }
+    const { records_with_error } = props.sleep
+    const { showDateTimeModal, start_time, date } = state
+    // console.log('records_with_error: ', records_with_error)
+    // console.log('showDateTimeModal: ', showDateTimeModal)
+    if (state.isLoading) {
+        return <Reloading />
+    }
+
+    return (
+        <Container>
+            {showDateTimeModal ?
+                <TimeModal
+                    start_date={start_time}
+                    datetime_type={'time'}
+                    hideModal={() => setState({ ...state, showDateTimeModal: false })}
+                    selectDatetimeConfirm={(time) => updateReducerTime(state.index, time)}
+                    minDatetime={null}
+                    maxDatetime={null}
+                />
+                : null
+            }
+            <View style={styles.subHeading}>
+                <View style={{ flex: 1, alignItems: 'center' }}>
+                    <Text style={{ fontSize: 40 }}>{date.getFullYear() + '.' + (date.getMonth()+1) + '.' + date.getDate()}</Text>
+                </View>
+                
+                <View style={{ flex: 1, justifyContent: 'center' }}>
+                    <TouchableHighlight
+                        style={{ alignSelf: 'flex-end', backgroundColor: '#dcf3d0', padding: 10, marginRight: 50 }}
+                        onPress={handleSend}
+                        underlayColor="#00c07f"
+                    >
+                        <Text style={{ fontSize: 40, color: 'grey' }}>送出</Text>
+                    </TouchableHighlight>
+                </View>
+            </View>
+            <Content contentContainerStyle={{ alignItems: 'center' }}>
+                {Object.keys(props.class.students).map((student_id) => {
+                    const record_id_array = props.sleep.by_student_id[student_id] // [record_id, ...]
+                    const records = props.sleep.records.by_id
+                    const last_record = record_id_array.length > 0 ? records[record_id_array[record_id_array.length - 1]] : null
+                    const current_sleep_time = last_record ? last_record.sleep_time : null
+                    const current_wake_time = last_record ? last_record.wake_time : null
+                    return(
+                        <View key={student_id} style={{ width: '98%' }}>
+                            <Card style={{ flex: 1, paddingVertical: 15 }}>
+                                <View style={{ flex: 1, flexDirection: 'row' }}>
+                                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                        <TouchableHighlight
+                                            key={student_id}
+                                            style={styles.thumbnail}
+                                            onPress={() => handleOnClick(student_id)}>
+                                            <Image
+                                                source={
+                                                    props.class.students[student_id].profile_picture === '' ?
+                                                        require('../../../assets/icon-thumbnail.png')
+                                                        : {uri: props.class.students[student_id].profile_picture}
+                                                }
+                                                style={{
+                                                    width: 140,
+                                                    height: 140,
+                                                    borderRadius: 70,
+                                                    borderWidth: 8,
+                                                    borderColor: current_sleep_time !== null ? (current_wake_time === null ? '#ffe1d0' : '#dcf3d0') : '#dcf3d0'
+                                                }} />
+                                        </TouchableHighlight>
+                                    </View>
+                                    <View style={{ flex: 3 }}>
+                                        <View style={{ flex: 1, flexDirection: 'row', padding: 10 }}>
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={{ fontSize: 30 }}>{props.class.students[student_id].name}</Text>
+                                            </View>
+                                            <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                                                {hasUnsentRecord(student_id) ? 
+                                                    <Text style={{ color: 'red', fontSize: 15 }}>未送出</Text>
+                                                : null}
+                                            </View>
+                                        </View>
+                                        <View style={styles.cardBody}>
+                                            <View style={{ width: '40%', height: '100%', paddingLeft: 5 }}>
+                                                <Text style={{ fontSize: 20 }}>從</Text>
+                                            </View>
+                                            <View style={{ width: '40%', height: '100%', paddingLeft: 5 }}>
+                                                <Text style={{ fontSize: 20 }}>到</Text>
+                                            </View>
+                                        </View>
+                                        {record_id_array.map((record_id, index) => {
+                                            let { sleep_time, wake_time } = records[record_id]
+                                            return (
+                                                <View key={record_id} style={{
+                                                    flex: 1,
+                                                    flexDirection: 'row',
+                                                    marginVertical: 6,
+                                                    borderWidth: 2, 
+                                                    borderColor: records_with_error.has(record_id) ? 'red' : 'white'
+                                                }}>
+                                                    <View style={{ width: '35%', marginRight: '3%', height: '100%' }}>
+                                                        <TouchableHighlight
+                                                            style={{ flex: 1, justifyContent: 'center', backgroundColor: '#fef6dd', borderRadius: 10}}
+                                                            onPress={() => setTime('sleep', student_id, index, sleep_time)}
+                                                        >
+                                                            {sleep_time === null ?
+                                                                <Text style={{ fontSize: 30, textAlign: 'center' }}>選擇時間</Text> :
+                                                                <Text style={{ fontSize: 35, textAlign: 'center' }}>
+                                                                    {sleep_time.getHours() + ':' + sleep_time.getMinutes()}
+                                                                </Text>}
+                                                        </TouchableHighlight>
+                                                    </View>
+                                                    <View style={{ width: '35%', marginRight: '3%', height: '100%' }}>
+                                                        <TouchableHighlight
+                                                            style={{ flex: 1, justifyContent: 'center', backgroundColor: '#fef6dd', borderRadius: 10 }}
+                                                            onPress={() => setTime('wake', student_id, index, wake_time)}
+                                                            onLongPress={() => confirmToRemoveWakeTime(record_id, index, student_id)}
+                                                        >
+                                                            {wake_time === null ?
+                                                                <Text style={{ fontSize: 30, textAlign: 'center' }}>選擇時間</Text> :
+                                                                <Text style={{ fontSize: 35, textAlign: 'center' }}>
+                                                                    {wake_time.getHours() + ':' + wake_time.getMinutes()}
+                                                                </Text>}
+                                                        </TouchableHighlight>
+                                                    </View>
+                                                    <View style={{ width: '20%', marginRight: '4%', height: '100%' }}>
+                                                        <TouchableHighlight
+                                                            style={{ flex: 1, justifyContent: 'center', backgroundColor: '#ffe1d0', borderRadius: 10 }}
+                                                            onPress={() => confirmToRemoveRecord(record_id, student_id)}
+                                                        >
+                                                            <Text style={{ fontSize: 30, textAlign: 'center' }}>移除</Text>
+                                                        </TouchableHighlight>
+                                                    </View>
+                                                </View>
+                                            )
+                                        })}
+                                    </View>
+                                </View>
+                            </Card>
+                        </View>
+                    )
+                })}
+            </Content>
+            {/* {state.showIOSDatePicker ?
+                <View style={{ height: 200, justifyContent: 'center'}}>
+                    <DatePickerIOS
+                        mode={'time'}
+                        date={new Date()}
+                        onDateChange={(time) => updateReducerTime(state.index, time)}
+                    />
+                </View> : null} */}
+        </Container>
+    )
 }
 
 const styles = StyleSheet.create({

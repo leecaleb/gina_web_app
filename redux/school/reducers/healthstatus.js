@@ -22,6 +22,7 @@ var initial_state = {
 }
 
 export default function healthstatus(state = initial_state, action) {
+    // console.log('state: ', state)
     switch (action.type) {
         case 'INITIALIZE_STUDENT_WELLNESS': {
             var by_student_id = {}
@@ -47,6 +48,8 @@ export default function healthstatus(state = initial_state, action) {
 
                 len+=2
             })
+
+            // console.log('initial_state: ', initial_state)
 
             return {
                 ...state,
