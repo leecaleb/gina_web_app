@@ -16,6 +16,11 @@ const AttendanceCard = (props) => {
         'evening': '下午',
         'all_day': '全天'
     }
+
+    // useEffect(() => {
+    //     const { date } = props
+    //     fetchAttendanceByStudentId(date)
+    // }, [])
     
     useEffect(() => {
         const { date } = props
@@ -23,10 +28,11 @@ const AttendanceCard = (props) => {
     }, [props.date, props.student_id])
 
     const fetchAttendanceByStudentId = async(date) => {
+        console.log('fetchAttendanceByStudentId')
         const response = await get(`/attendance/${student_id}?date=${formatDate((date))}`)
         const { success, statusCode, message, data } = response
         if (success) {
-            // console.log('response: ', response)
+            console.log('fetchAttendanceByStudentId / response: ', response)
             let { in_time, out_time, excuse_type, absence_time } = data
             if (excuse_type === 'none-medical') {
                 excuse_type = '事假'

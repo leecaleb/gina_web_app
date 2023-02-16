@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { forwardRef, useState, useImperativeHandle, useEffect } from 'react'
 import { 
     View, 
     Text,
@@ -9,9 +9,11 @@ import {
     Dimensions } from 'react-native'
 import { formatDate, beautifyMonthDate } from '../util'
 import PickerComponent from '../picker'
+import Modal from '../modal'
 import TimeModal from './timemodal'
 import ENV from '../../variables'
 import { connect } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
 
 const { width, height } = Dimensions.get('window')
 
@@ -25,247 +27,251 @@ const options = [
     { value: 'Cancel', label: '返回' }
 ]
 
-class AbsenceExcuse extends React.Component {
-    constructor(props) {
-        super(props)
-        this.state = {
-            max_date: (new Date()).setDate((new Date()).getDate() + 30),
-            cached_date: null,
-            startDate: new Date(),
-            endDate: new Date(),
-            show_start_date_picker: false,
-            show_end_date_picker: false,
-            showSelect: false,
-            childIsSick: 0,
-            excuse_type: 'none-medical',
-            editing_other_option: false,
-            days: ['天', '一', '二', '三', '四', '五', '六'],
-            months: ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'],
-            access_mode: 'create',
-            note: '',
-            absence_time: 'all_day',
-            scrollHeight: '100%',
-            request_id: ''
-        }
-        this.setStartDate = this.setStartDate.bind(this)
-        this.setEndDate = this.setEndDate.bind(this)
-        this.setChildNotSick = this.setChildNotSick.bind(this)
-        this.setChildSick = this.setChildSick.bind(this)
-        this.onValueChange = this.onValueChange.bind(this)
-        this.sendAbsenceNote = this.sendAbsenceNote.bind(this)
-    }
+const AbsenceExcuse = forwardRef((props, ref) => {
+    const navigate = useNavigate()
 
-    componentDidUpdate(prevProps) {
-        if (prevProps.request !== this.props.request) {
-            const { request } = this.props
-            if (!request) {
-                this.setState({
-                    startDate: new Date(),
-                    endDate: new Date(),
-                    childIsSick: 0,
-                    excuse_type: 'none-medical',
-                    note: '',
-                    absence_time: 'all_day',
-                    access_mode: 'create',
-                    cached_date: null,
-                    scrollHeight: '100%',
-                    request_id: ''
-                })
-                return
-            }
-            const { id, date, excuse_type, note, absence_time } = request
-            this.setState({
-                startDate: date,
-                endDate: null,
-                childIsSick: excuse_type === 'none-medical' ? 0 : 1,
-                excuse_type,
-                note,
-                absence_time,
-                access_mode: 'read',
-                cached_date: null,
-                request_id: id
+    const [state, setState] = useState({
+        max_date: (new Date()).setDate((new Date()).getDate() + 30),
+        cached_date: null,
+        startDate: new Date(),
+        endDate: new Date(),
+        childIsSick: 0,
+        excuse_type: 'none-medical',
+        editing_other_option: false,
+        days: ['天', '一', '二', '三', '四', '五', '六'],
+        months: ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'],
+        access_mode: 'create',
+        note: '',
+        absence_time: 'all_day',
+        scrollHeight: '100%',
+        request_id: ''
+            
+    })
+
+    const [showStartDatePicker, setShowStartDatePicker] = useState(false)
+    const [showEndDatePicker, setShowEndDatePicker] = useState(false)
+    const [showSelect, setShowSelect] = useState(false)
+
+    useImperativeHandle(ref, () => ({
+        fetchAccessMode() {
+            return state.access_mode
+        },
+        duplicateDateFound() {
+            const { cached_date } = state
+            setState({
+                ...state,
+                startDate: cached_date,
+                cached_date: null
             })
         }
-    }
+    }))
 
-    isIOS() {
+    useEffect(() => {
+        const { request } = props
+        if (!request) {
+            setState({
+                ...state,
+                startDate: new Date(),
+                endDate: new Date(),
+                childIsSick: 0,
+                excuse_type: 'none-medical',
+                note: '',
+                absence_time: 'all_day',
+                access_mode: 'create',
+                cached_date: null,
+                scrollHeight: '100%',
+                request_id: ''
+            })
+            return
+        }
+        const { id, date, excuse_type, note, absence_time } = request
+        setState({
+            ...state,
+            startDate: date,
+            endDate: null,
+            childIsSick: excuse_type === 'none-medical' ? 0 : 1,
+            excuse_type,
+            note,
+            absence_time,
+            access_mode: 'read',
+            cached_date: null,
+            request_id: id
+        })
+    }, [props.request])
+
+    const isIOS = () => {
         return Platform.OS === 'ios'
     }
 
-    fetchAccessMode() {
-        return this.state.access_mode
+    const showSelectOption = () => {
+        setState({ ...state, childIsSick: 1 })
+        setShowSelect(true)
     }
 
-    showSelect() {
-        this.setState({ childIsSick: 1, showSelect: true })
-    }
-
-    setChildSick () {
-        this.setState({ childIsSick: 1 })
+    const setChildSick = () => {
+        setState({ ...state, childIsSick: 1 })
     }
     
-    setChildNotSick () {
-        const { access_mode } = this.state
+    const setChildNotSick = () => {
+        const { access_mode } = state
         if (access_mode === 'read') return
-        this.setState({ childIsSick: 0, excuse_type: 'none-medical' })
+        setState({ ...state, childIsSick: 0, excuse_type: 'none-medical' })
     }
 
-    handleSelectStatus = (excuse_type) => {
+    const handleSelectStatus = (excuse_type) => {
         if (excuse_type === 'Cancel') {
-            this.setState({
-                showSelect: false
-            })
+            setShowSelect(false)
         } else if (excuse_type === '其他') {
-            this.setState({
+            setState({
+                ...state,
                 editing_other_option: true,
-                excuse_type: '其他',
-                showSelect: false
+                excuse_type: '其他'
             })
+            setShowSelect(false)
         } else {
-            this.setState({
-                excuse_type,
-                showSelect: false
+            setState({
+                ...state,
+                excuse_type
             })
+            setShowSelect(false)
         }
     }
 
-    editorOnBlur() {
-        const { excuse_type } = this.state
-        this.setState({
+    const editorOnBlur = () => {
+        const { excuse_type } = state
+        setState({
+            ...state,
             editing_other_option: false,
             childIsSick: excuse_type === '' ? 0 : 1,
             excuse_type: excuse_type === '' ? 'none-medical' : excuse_type
         })
     }
 
-    setStartDate(date) {
+    const setStartDate = (date) => {
         if (Platform.OS === 'ios') {
-            this.iosSetStartDate(date)
+            iosSetStartDate(date)
         } else { //android
-            this.androidSetStartDate(date)
+            androidSetStartDate(date)
         }
     }
 
-    iosSetStartDate(date) {
-        const { endDate } = this.state
-        if (this.state.access_mode === 'edit') {
-            const { cached_date, startDate } = this.state
-            this.setState({
+    const iosSetStartDate = (date) => {
+        const { endDate } = state
+        if (state.access_mode === 'edit') {
+            const { cached_date, startDate } = state
+            setState({
+                ...state,
                 cached_date: cached_date === null ? startDate : cached_date,
                 startDate: date
             })
         } else {
-            this.setState({
+            setState({
+                ...state,
                 startDate: date,
                 endDate: date < endDate ? endDate : date
             })
         }
     }
 
-    androidSetStartDate(date) {
+    const androidSetStartDate = (date) => {
         if (date !== undefined) {
-            const { endDate } = this.state
-            if (this.state.access_mode === 'edit') {
-                const { cached_date, startDate } = this.state
-                const { id } = this.props.request
-                this.setState({
+            const { endDate } = state
+            if (state.access_mode === 'edit') {
+                const { cached_date, startDate } = state
+                const { id } = props.request
+                setState({
+                    ...state,
                     cached_date: cached_date === null ? startDate : cached_date,
-                    startDate: date,
-                    show_start_date_picker: false
+                    startDate: date
                 })
-                this.props.checkUniqueStudentDate(id, date)
+                setShowStartDatePicker(false)
+                props.checkUniqueStudentDate(id, date)
             } else { // create
-                this.setState({
+                setState({
+                    ...state,
                     startDate: date,
-                    endDate: date < endDate ? endDate : date,
-                    show_start_date_picker: false
+                    endDate: date < endDate ? endDate : date
                 })
+                setShowStartDatePicker(false)
             }
         } else {
-            this.setState({ show_start_date_picker: false })
+            setShowStartDatePicker(false)
         }
     }
 
-    onEndEditingStartDate() {
-        const {startDate } = this.state
-        if (this.state.access_mode === 'edit') {
-            const { id } = this.props.request
-            this.props.checkUniqueStudentDate(id, startDate)
+    const onEndEditingStartDate = () => {
+        const {startDate } = state
+        if (state.access_mode === 'edit') {
+            const { id } = props.request
+            props.checkUniqueStudentDate(id, startDate)
         }
-
-        this.setState({ show_start_date_picker: false })
+        setShowStartDatePicker
     }
 
-    duplicateDateFound() {
-        const { cached_date } = this.state
-        this.setState({
-            startDate: cached_date,
-            cached_date: null
-        })
-    }
-
-    setEndDate(date) {
+    const setEndDate = (date) => {
         if (Platform.OS === 'ios') {
-            this.iosSetEndDate(date)
+            iosSetEndDate(date)
         } else { //android
-            this.androidSetEndDate(date)
+            androidSetEndDate(date)
         }
     }
 
-    iosSetEndDate (date) {
-        const { startDate } = this.state
-        this.setState({
+    const iosSetEndDate = (date) => {
+        const { startDate } = state
+        setState({
+            ...state,
             startDate: date < startDate ? date : startDate,
             endDate: date
         })
     }
 
-    androidSetEndDate(date) {
+    const androidSetEndDate = (date) => {
         if (date !== undefined) {
-            const { startDate } = this.state
-            this.setState({
+            const { startDate } = state
+            setState({
+                ...state,
                 startDate: date < startDate ? date : startDate,
-                endDate: date,
-                show_end_date_picker: false
+                endDate: date
             })
         } else {
-            this.setState({ show_end_date_picker: false })
+            setShowEndDatePicker(false)
         }
     }
 
-    getDayDifference() {
-        const { startDate, endDate } = this.state
+    const getDayDifference = () => {
+        const { startDate, endDate } = state
         const oneDay = 24 * 60 * 60 * 1000;
         return Math.round(Math.abs((endDate - startDate) / (oneDay))) + 1
     }
 
-    onValueChange (value) {
-        this.setState({ excuse_type: value })
+    const onValueChange = (value) => {
+        setState({ ...state, excuse_type: value })
     }
 
-    setScrollHeight(scrollHeight) {
-        this.setState({ scrollHeight })
+    const setScrollHeight = (scrollHeight) => {
+        setState({ ...state, scrollHeight })
     }
 
-    handleClickConfirmButton() {
-        const { access_mode } = this.state
+    const handleClickConfirmButton = () => {
+        const { access_mode } = state
         if (access_mode === 'read') {
-            this.setState({
+            setState({
+                ...state,
                 access_mode: 'edit'
             })
         } else if (access_mode === 'create') {
-            this.sendAbsenceNote()
+            sendAbsenceNote()
         } else if (access_mode === 'edit') {
-            const { id } = this.props.request
-            this.editAbsenceNote(id)
+            const { id } = props.request
+            editAbsenceNote(id)
         }
     }
 
-    sendAbsenceNote() {
-        const { excuse_type, note, absence_time } = this.state
-        const { student_id, class_id, school_id, isConnected } = this.props
-        const startDate = formatDate(this.state.startDate)
-        const endDate = formatDate(this.state.endDate)
+    const sendAbsenceNote = () => {
+        const { excuse_type, note, absence_time } = state
+        const { student_id, class_id, school_id, isConnected } = props
+        const startDate = formatDate(state.startDate)
+        const endDate = formatDate(state.endDate)
         const request_body = {
             student_id,
             class_id,
@@ -277,10 +283,10 @@ class AbsenceExcuse extends React.Component {
             absence_time
         }
 
-        if (!isConnected) {
-            alert('網路連不到! 請稍後再試試看')
-            return
-        }
+        // if (!isConnected) {
+        //     alert('網路連不到! 請稍後再試試看')
+        //     return
+        // }
 
         fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/absence-excuse`, {
             method: 'POST',
@@ -297,17 +303,18 @@ class AbsenceExcuse extends React.Component {
                     alert('Sorry 電腦出狀況了！ 請截圖和與工程師聯繫' + message)
                     return
                 }
-                this.props.onCreateRequestSuccess(data.id)
+                props.onCreateRequestSuccess(data.id)
+                navigate(-1)
             })
             .catch(err => {
                 alert('Sorry 電腦出狀況了！ 請截圖和與工程師聯繫: error occurred when sending absence request')
             })
     }
 
-    editAbsenceNote(request_id) {
-        const { excuse_type, note, absence_time } = this.state
-        const { class_id } = this.props
-        const date = formatDate(this.state.startDate)
+    const editAbsenceNote = (request_id) => {
+        const { excuse_type, note, absence_time } = state
+        const { class_id } = props
+        const date = formatDate(state.startDate)
         fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/absence-excuse`, {
             method: 'PUT',
             headers: {
@@ -330,22 +337,23 @@ class AbsenceExcuse extends React.Component {
                     alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫' + message)
                     return
                 }
-                this.props.onCreateRequestSuccess(request_id)
+                props.onCreateRequestSuccess(request_id)
+                navigate(-1)
             })
             .catch(err => {
                 alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫: error occurred when editing absence request')
             })
     }
 
-    deleteRequestConfirm() {
+    const deleteRequestConfirm = () => {
         const confirmed = confirm('確定要刪除？')
         if (confirmed) {
-            this.deleteRequest()
+            deleteRequest()
         }
     }
 
-    deleteRequest() {
-        const { id } = this.props.request
+    const deleteRequest = () => {
+        const { id } = props.request
         fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/absence-excuse`, {
             method: 'DELETE',
             headers: {
@@ -363,14 +371,14 @@ class AbsenceExcuse extends React.Component {
                     alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫' + message)
                     return
                 }
-                this.props.onDeleteRequestSuccess(id)
+                props.onDeleteRequestSuccess(id)
+                navigate(-1)
             })
             .catch(err => {
                 alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫: error occurred when deleting absence request')
             })
     }
 
-    render() {
         const {
             max_date,
             access_mode,
@@ -379,20 +387,17 @@ class AbsenceExcuse extends React.Component {
             excuse_type,
             editing_other_option,
             note,
-            show_start_date_picker,
-            show_end_date_picker,
-            showSelect,
             absence_time,
             scrollHeight,
-            request_id } = this.state
-        if (show_start_date_picker) {
+            request_id } = state
+        if (showStartDatePicker) {
             return (
                 <View style={{ height, marginTop: -120 }}>
                     <TimeModal
                         start_date={startDate}
                         datetime_type={'date'}
-                        hideModal={() => this.setState({ show_start_date_picker: false })}
-                        selectDatetimeConfirm={(date) => this.setStartDate(date)}
+                        hideModal={() => setShowStartDatePicker(false)}
+                        selectDatetimeConfirm={(date) => setStartDate(date)}
                         minDatetime={new Date()}
                         maxDatetime={max_date}
                         paddingVertical={100}
@@ -400,14 +405,14 @@ class AbsenceExcuse extends React.Component {
                 </View>
             )
         }
-        if (show_end_date_picker) {
+        if (showEndDatePicker) {
             return (
                 <View style={{ height, marginTop: -120 }}>
                     <TimeModal
                         start_date={endDate}
                         datetime_type={'date'}
-                        hideModal={() => this.setState({ show_end_date_picker: false })}
-                        selectDatetimeConfirm={(date) => this.setEndDate(date)}
+                        hideModal={() => setShowEndDatePicker(false)}
+                        selectDatetimeConfirm={(date) => setEndDate(date)}
                         minDatetime={new Date()}
                         maxDatetime={max_date}
                         paddingVertical={100}
@@ -424,7 +429,7 @@ class AbsenceExcuse extends React.Component {
                             <TouchableOpacity
                                 key={index}
                                 style={{ width: '50%', padding: 15, backgroundColor: 'white', borderWidth: 1, borderColor: 'lightgrey' }}
-                                onClick={() => this.handleSelectStatus(value)}
+                                onPress={() => handleSelectStatus(value)}
                             >
                                 <Text style={{ fontSize: 25 }}>{label}</Text>
                             </TouchableOpacity>
@@ -451,13 +456,13 @@ class AbsenceExcuse extends React.Component {
                                     padding: 15,
                                     // height: '90%',
                                     justifyContent: 'center',
-                                    backgroundColor: this.state.childIsSick === 0 ? '#368cbf' : 'rgba(0,0,0,0.1)',
+                                    backgroundColor: state.childIsSick === 0 ? '#368cbf' : 'rgba(0,0,0,0.1)',
                                     borderTopLeftRadius: 30,
                                     borderBottomLeftRadius: 30
                                 }}
                                 underlayColor='#368cbf'
-                                onClick={this.setChildNotSick}>
-                                <Text style={{ fontSize: 25, color: this.state.childIsSick === 0 ? 'white' : 'black', textAlign: 'center' }}>事假</Text>
+                                onPress={() => setChildNotSick()}>
+                                <Text style={{ fontSize: 25, color: state.childIsSick === 0 ? 'white' : 'black', textAlign: 'center' }}>事假</Text>
                             </TouchableOpacity>
 
                             {editing_other_option ? 
@@ -469,16 +474,16 @@ class AbsenceExcuse extends React.Component {
                                         borderTopRightRadius: 30,
                                         borderBottomRightRadius: 30,
                                         justifyContent: 'center',
-                                        backgroundColor: this.state.childIsSick ? '#368cbf' : 'rgba(0,0,0,0.1)'
+                                        backgroundColor: state.childIsSick ? '#368cbf' : 'rgba(0,0,0,0.1)'
                                     }}
                                 >
                                     <TextInput 
                                         autoFocus={true}
                                         selectTextOnFocus={true}
-                                        style={{ fontSize: 25, color: this.state.childIsSick ? 'white' : 'black', textAlign: 'center', paddingVertical: -1 }}
+                                        style={{ fontSize: 25, color: state.childIsSick ? 'white' : 'black', textAlign: 'center', paddingVertical: -1 }}
                                         value={excuse_type}
-                                        onChangeText={excuse_type => this.setState({ excuse_type })}
-                                        onBlur={() => this.editorOnBlur()}
+                                        onChangeText={excuse_type => setState({ ...state, excuse_type })}
+                                        onBlur={() => editorOnBlur()}
                                     />
                                 </View>
                                 :
@@ -490,12 +495,12 @@ class AbsenceExcuse extends React.Component {
                                         borderTopRightRadius: 30,
                                         borderBottomRightRadius: 30,
                                         justifyContent: 'center',
-                                        backgroundColor: this.state.childIsSick === 0 ? 'rgba(0,0,0,0.1)' : '#368cbf'
+                                        backgroundColor: state.childIsSick === 0 ? 'rgba(0,0,0,0.1)' : '#368cbf'
                                     }}
                                     disabled={access_mode === 'read'}
-                                    textStyle={{ fontSize: 25, color: this.state.childIsSick ? 'white' : 'black', textAlign: 'center' }}
+                                    textStyle={{ fontSize: 25, color: state.childIsSick ? 'white' : 'black', textAlign: 'center' }}
                                     selectedValue={excuse_type === 'none-medical' ? '病假' : excuse_type}
-                                    showSelect={() => this.showSelect()}
+                                    showSelect={() => showSelectOption()}
                                     // options={[
                                     //     "感冒",
                                     //     "流感",
@@ -505,8 +510,8 @@ class AbsenceExcuse extends React.Component {
                                     //     "其他",
                                     //     "Cancel"
                                     // ]}
-                                    handleOnClick={this.setChildSick}
-                                    handleSelectValue={(excuse_type) => this.handleSelectStatus(excuse_type)}
+                                    handleOnClick={() => setChildSick()}
+                                    handleSelectValue={(excuse_type) => handleSelectStatus(excuse_type)}
                                 />
                             }
                         </View>
@@ -522,9 +527,9 @@ class AbsenceExcuse extends React.Component {
                                     <TouchableOpacity
                                         disabled={access_mode === 'read'}
                                         style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
-                                        onClick={() => {
+                                        onPress={() => {
                                             if (access_mode === 'read') return
-                                            this.setState({ show_start_date_picker: true })
+                                            setShowStartDatePicker(true)
                                         }}
                                     >
                                         <View style={{ padding: 15, justifyContent: 'center' }}>
@@ -540,7 +545,7 @@ class AbsenceExcuse extends React.Component {
                                             </View>
                                             <View style={{}}>
                                                 <Text style={{ fontSize: width*0.12, color: 'white', fontWeight: 'bold' }}>
-                                                    星期{this.state.days[startDate.getDay()]}
+                                                    星期{state.days[startDate.getDay()]}
                                                 </Text>
                                             </View>
                                         </View>
@@ -558,14 +563,14 @@ class AbsenceExcuse extends React.Component {
                                         <Text style={{ color: 'rgba(0,0,0,0.4)', fontSize: width*0.1 }}>開始</Text>
                                         <TouchableOpacity
                                             style={{ backgroundColor: 'rgba(0,0,0,0.4)', padding: 15 }}
-                                            onClick={() => this.setState({ show_start_date_picker: true })}
+                                            onPress={() => setShowStartDatePicker(true)}
                                         >
                                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Text style={{ color: 'white', fontSize: width*0.09, fontWeight: 'bold' }}>
                                                     {beautifyMonthDate(startDate)}
                                                 </Text>
                                                 <Text style={{ fontSize: width*0.09, color: 'white', fontWeight: 'bold' }}>
-                                                    星期{this.state.days[startDate.getDay()]}
+                                                    星期{state.days[startDate.getDay()]}
                                                 </Text>
                                             </View>
                                         </TouchableOpacity>
@@ -573,21 +578,21 @@ class AbsenceExcuse extends React.Component {
 
                                     <View style={{ width: '100%', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
                                         <Text style={{ fontSize: 25 }}>
-                                            總計 {this.getDayDifference()} 天
+                                            總計 {getDayDifference()} 天
                                         </Text>
                                     </View>
 
                                     <View style={{width: '100%' }}>
                                         <TouchableOpacity
                                             style={{ backgroundColor: 'rgba(0,0,0,0.4)', padding: 15 }}
-                                            onClick={() => this.setState({ show_end_date_picker: true })}
+                                            onPress={() => setShowEndDatePicker(true)}
                                         >
                                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Text style={{ color: 'white', fontSize: width*0.09, fontWeight: 'bold' }}>
                                                     {beautifyMonthDate(endDate)}
                                                 </Text>
                                                 <Text style={{ fontSize: width*0.09, color: 'white', fontWeight: 'bold' }}>
-                                                    星期{this.state.days[endDate.getDay()]}
+                                                    星期{state.days[endDate.getDay()]}
                                                 </Text>
                                             </View>
                                         </TouchableOpacity>
@@ -621,11 +626,12 @@ class AbsenceExcuse extends React.Component {
                                         paddingHorizontal: 20,
                                         textAlignVertical: 'center'
                                     }}
-                                    onChangeText={note => this.setState({ note })}
-                                    onChange={(e) => this.setScrollHeight(e.target.scrollHeight)}
+                                    onChangeText={note => setState({ ...state, note })}
+                                    onChange={(e) => setScrollHeight(e.target.scrollHeight)}
                                     onLayout={(event) => {
                                         const { scrollHeight } = event.nativeEvent.target
-                                        this.setState({
+                                        setState({
+                                            ...state,
                                             scrollHeight
                                         })
                                     }}
@@ -649,9 +655,9 @@ class AbsenceExcuse extends React.Component {
                                         justifyContent: 'center'
                                     }}
                                     underlayColor='transparent'
-                                    onClick={() => {
+                                    onPress={() => {
                                         if (access_mode === 'read') return
-                                        this.setState({ absence_time: 'all_day' })
+                                        setState({ ...state, absence_time: 'all_day' })
                                     }}
                                 >
                                     <Text 
@@ -677,9 +683,9 @@ class AbsenceExcuse extends React.Component {
                                         alignItems: 'center'
                                     }}
                                     underlayColor='transparent'
-                                    onClick={() => {
+                                    onPress={() => {
                                         if (access_mode === 'read') return
-                                        this.setState({ absence_time: 'morning' })
+                                        setState({ ...state, absence_time: 'morning' })
                                     }}
                                 >
                                     <Text 
@@ -705,9 +711,9 @@ class AbsenceExcuse extends React.Component {
                                         alignItems: 'flex-end'
                                     }}
                                     underlayColor='transparent'
-                                    onClick={() => {
+                                    onPress={() => {
                                         if (access_mode === 'read') return
-                                        this.setState({ absence_time: 'evening' })
+                                        setState({ ...state, absence_time: 'evening' })
                                     }}
                                 >
                                     <Text 
@@ -744,7 +750,7 @@ class AbsenceExcuse extends React.Component {
                                             justifyContent: 'center',
                                             backgroundColor: 'rgba(0,0,0,0.1)'
                                         }}
-                                        onClick={() => this.handleClickConfirmButton()}
+                                        onPress={() => handleClickConfirmButton()}
                                     >
                                         <Text style={{ fontSize: 25, textAlign: 'center' }}>
                                             {access_mode === 'read' ?
@@ -766,7 +772,7 @@ class AbsenceExcuse extends React.Component {
                                                     justifyContent: 'center',
                                                     backgroundColor: '#fa625f'
                                                 }}
-                                                onClick={() => this.deleteRequestConfirm()}
+                                                onPress={() => deleteRequestConfirm()}
                                             >
                                                 <Text style={{ fontSize: 25, textAlign: 'center' }}>刪除</Text>
                                             </TouchableOpacity>
@@ -780,7 +786,7 @@ class AbsenceExcuse extends React.Component {
                                                     justifyContent: 'center',
                                                     backgroundColor: 'rgba(0,0,0,0.1)'
                                                 }}
-                                                onClick={() => this.setState({ access_mode: 'read'})}
+                                                onPress={() => setState({ ...state, access_mode: 'read'})}
                                             >
                                                 <Text style={{ fontSize: 20, textAlign: 'center' }}>取消編輯</Text>
                                             </TouchableOpacity>
@@ -794,7 +800,7 @@ class AbsenceExcuse extends React.Component {
                                                     justifyContent: 'center',
                                                     backgroundColor: '#00c07f'
                                                 }}
-                                                onClick={() => this.handleClickConfirmButton()}
+                                                onPress={() => handleClickConfirmButton()}
                                             >
                                                 <Text style={{ fontSize: 25, textAlign: 'center' }}>送出</Text>
                                             </TouchableOpacity>
@@ -805,8 +811,7 @@ class AbsenceExcuse extends React.Component {
                         </View>
                     </View>
         )
-    }
-}
+})
 
 const styles = StyleSheet.create({
     dateContainer: {
@@ -822,4 +827,5 @@ const mapStateToProps = (state) => {
     }
 }
 
-export default connect(mapStateToProps, null, null, { forwardRef: true }) (AbsenceExcuse)
+// export default connect(mapStateToProps, null) (AbsenceExcuse)
+export default AbsenceExcuse

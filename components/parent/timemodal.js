@@ -106,7 +106,7 @@ export default class TimeModal extends React.Component {
                             minDate={new Date(minDatetime)}
                             maxDate={new Date(maxDatetime)}
                             onClickOutside={() => this.props.hideModal()}
-                            filterDate={this.isWeekday}
+                            // filterDate={this.isWeekday}
                         />
                     }
 

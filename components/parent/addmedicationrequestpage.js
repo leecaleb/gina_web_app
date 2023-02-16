@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {useEffect, useState} from 'react'
 import { View, Text, TouchableOpacity, TextInput, ScrollView, Image,
   KeyboardAvoidingView, Platform, Alert, Dimensions } from 'react-native'
 import { formatDate, beautifyTime, beautifyMonthDate, post, formatTime } from '../util';
@@ -6,66 +6,71 @@ import TimeModal from './timemodal'
 import Reloading from '../reloading'
 import ENV from '../../variables'
 import { connect } from 'react-redux'
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const { width } = Dimensions.get('window')
 
-class AddMedicationRequestPage extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state={
-      isLoading: true,
-      request_id: null,
-      today: new Date(),
-      showDateTimeModal: false,
-      datetime_type: '',
-      // date: null,
-      time_array: [],
-      time_selected_index: null,
-      before_meal: null,
-      powder: false,
-      powder_refrigerated: false,
-      syrup: [],
-      gel: null,
-      other_type: null,
-      note: '',
-      administered: false,
-      teacher_name: '',
-      medicated_timestamp: null,
-      fever_entry: {
-        temperature: '',
+const AddMedicationRequestPage = (props) => {
+
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  const [state, setState] = useState({
+        isLoading: true,
+        request_id: null,
+        today: new Date(),
+        datetime_type: '',
+        // date: null,
+        time_array: [],
+        time_selected_index: null,
+        before_meal: null,
         powder: false,
         powder_refrigerated: false,
         syrup: [],
-        other_type: null
-      },
-      data: null,
-      index: -1,
-      access_mode: 'create',
-      scrollHeight: '100%',
-      date_array: [],
-      date_selected_index: null
-    }
-  }
+        gel: null,
+        other_type: null,
+        note: '',
+        administered: false,
+        teacher_name: '',
+        medicated_timestamp: null,
+        fever_entry: {
+          temperature: '',
+          powder: false,
+          powder_refrigerated: false,
+          syrup: [],
+          other_type: null
+        },
+        data: null,
+        index: -1,
+        access_mode: 'create',
+        scrollHeight: '100%',
+        date_array: [],
+        date_selected_index: null
+    })
 
-  componentDidMount() {
-    const { index, data } = this.props.route.params
+    const [showDateTimeModal, setShowDateTimeModal] = useState(false)
+
+  useEffect(() => {
+    const { index, data } = location.state
 
     if (data === null) {
-      this.setState({
+      setState({
+        ...state,
         date_array: [new Date()],
         isLoading: false
       })
       return
     }
 
-    this.switchRequest(index)
-  }
+    switchRequest(index)
+  }, [])
 
-  switchRequest(index) {
-    const { data } = this.props.route.params
+  const switchRequest = (index) => {
+    const { data } = location.state
     const { id, timestamp, administered, fever_entry, medication, note, teacher_name, medicated_timestamp } = data[index]
     // const { before_meal, powder, powder_refrigerated, syrup, gel, other_type } = medication
-    this.setState({
+    setState({
+      ...state,
       index,
       data,
       request_id: id,
@@ -82,22 +87,22 @@ class AddMedicationRequestPage extends React.Component {
     })
   }
 
-  isIOS() {
+  const isIOS = () => {
     if (Platform.OS === 'ios') {
       return true
     } else return false
   }
 
-  selectDatetimeConfirm(datetime) {
-    const { datetime_type } = this.state
+  const selectDatetimeConfirm = (datetime) => {
+    const { datetime_type } = state
     if (datetime_type === 'date') {
-      this.handleDateSelected(datetime)
+      handleDateSelected(datetime)
     } else {
-      this.handleTimeSelected(datetime)
+      handleTimeSelected(datetime)
     }
     // const { datetime_type, time_array, time_selected_index } = this.state
     // if (datetime_type === 'date') {
-    //   this.setState({
+    //   setState({
     //     date: datetime,
     //     showDateTimeModal: false
     //   })
@@ -110,21 +115,21 @@ class AddMedicationRequestPage extends React.Component {
     //       updated_time_array.push(datetime)
     //     }
     //   }
-    //   this.setState({
+    //   setState({
     //     time_array: updated_time_array,
     //     time_selected_index: null,
     //     showDateTimeModal: false
     //   })
     // } else {
-    //   this.setState({
+    //   setState({
     //     time_array: [...this.state.time_array, datetime],
     //     showDateTimeModal: false
     //   })
     // }
   }
 
-  handleDateSelected(date) {
-    const { date_array, date_selected_index } = this.state
+  const handleDateSelected = (date) => {
+    const { date_array, date_selected_index } = state
     if (date_selected_index !== null) {
       let updated_date_array = []
       for(var i = 0; i < date_array.length; i++) {
@@ -134,21 +139,23 @@ class AddMedicationRequestPage extends React.Component {
           updated_date_array.push(date)
         }
       }
-      this.setState({
+      setState({
+        ...state,
         date_array: updated_date_array,
-        date_selected_index: null,
-        showDateTimeModal: false
+        date_selected_index: null
       })
+      setShowDateTimeModal(false)
     } else {
-      this.setState({
-        date_array: [...date_array, date],
-        showDateTimeModal: false
+      setState({
+        ...state,
+        date_array: [...date_array, date]
       })
+      setShowDateTimeModal(false)
     }
   }
 
-  handleTimeSelected(time) {
-    const { time_array, time_selected_index } = this.state
+  const handleTimeSelected = (time) => {
+    const { time_array, time_selected_index } = state
     if (time_selected_index !== null){
       let updated_time_array = []
       for(var i = 0; i < time_array.length; i++) {
@@ -158,38 +165,43 @@ class AddMedicationRequestPage extends React.Component {
           updated_time_array.push(time)
         }
       }
-      this.setState({
+      setState({
+        ...state,
         time_array: updated_time_array,
-        time_selected_index: null,
-        showDateTimeModal: false
+        time_selected_index: null
       })
+      setShowDateTimeModal(false)
     } else {
-      this.setState({
-        time_array: [...time_array, time],
-        showDateTimeModal: false
+      setState({
+        ...state,
+        time_array: [...time_array, time]
       })
+      setShowDateTimeModal(false)
     }
   }
 
-  removeDate(index) {
-    const { date_array } = this.state
+  const removeDate = (index) => {
+    const { date_array } = state
     date_array.splice(index, 1)
-    this.setState({
+    setState({
+      ...state,
       date_array
     })
   }
 
-  removeTime(index) {
-    const { time_array } = this.state
+  const removeTime = (index) => {
+    const { time_array } = state
     time_array.splice(index, 1)
-    this.setState({
+    setState({
+      ...state,
       time_array
     })
   }
 
-  onSelectSyrup() {
-    const { syrup } = this.state
-    this.setState({ 
+  const onSelectSyrup = () => {
+    const { syrup } = state
+    setState({ 
+      ...state,
       syrup: syrup.length ? []
         : [{
           amount: '',
@@ -199,42 +211,47 @@ class AddMedicationRequestPage extends React.Component {
     })
   }
 
-  editSyrupAmountEntry(amount, index) {
-    const { syrup } = this.state
+  const editSyrupAmountEntry = (amount, index) => {
+    const { syrup } = state
     syrup[index].amount = amount
-    this.setState({
+    setState({
+      ...state,
       syrup
     })
   }
 
-  editSyrupNoteEntry(note, index) {
-    const { syrup } = this.state
+  const editSyrupNoteEntry = (note, index) => {
+    const { syrup } = state
     syrup[index].note = note
-    this.setState({
+    setState({
+      ...state,
       syrup
     })
   }
 
-  editSyrupRefrigerationEntry(need_refrigerated, index) {
-    const { syrup } = this.state
+  const editSyrupRefrigerationEntry = (need_refrigerated, index) => {
+    const { syrup } = state
     syrup[index].need_refrigerated = need_refrigerated
-    this.setState({
+    setState({
+      ...state,
       syrup
     })
   }
 
-  removeSyrupEntry(index) {
-    const { syrup } = this.state
+  const removeSyrupEntry = (index) => {
+    const { syrup } = state
     syrup.splice(index, 1)
-    this.setState({
+    setState({
+      ...state,
       syrup
     })
 
   }
 
-  onSelectFeverSyrup() {
-    const { fever_entry } = this.state
-    this.setState({
+  const onSelectFeverSyrup = () => {
+    const { fever_entry } = state
+    setState({
+      ...state,
       fever_entry: {
         ...fever_entry,
         syrup: fever_entry.syrup.length ? []
@@ -246,33 +263,36 @@ class AddMedicationRequestPage extends React.Component {
     })
   }
 
-  editFeverSyrupAmountEntry(amount, index) {
-    const { fever_entry } = this.state
+  const editFeverSyrupAmountEntry = (amount, index) => {
+    const { fever_entry } = state
     fever_entry.syrup[index].amount = amount
-    this.setState({
+    setState({
+      ...state,
       fever_entry
     })
   }
 
-  editFeverSyrupRefrigerationEntry(need_refrigerated, index) {
-    const { fever_entry } = this.state
+  const editFeverSyrupRefrigerationEntry = (need_refrigerated, index) => {
+    const { fever_entry } = state
     fever_entry.syrup[index].need_refrigerated = need_refrigerated
-    this.setState({
+    setState({
+      ...state,
       fever_entry
     })
   }
 
-  removeFeverSyrupEntry(index) {
-    const { fever_entry } = this.state
+  const removeFeverSyrupEntry = (index) => {
+    const { fever_entry } = state
     fever_entry.syrup.splice(index, 1)
-    this.setState({
+    setState({
+      ...state,
       fever_entry
     })
 
   }
 
-  timeIsEmpty() {
-    const { time_array } = this.state
+  const timeIsEmpty = () => {
+    const { time_array } = state
     if (time_array.length === 0) {
       alert('至少要選擇一個時間！')
       return true
@@ -280,29 +300,30 @@ class AddMedicationRequestPage extends React.Component {
     return false
   }
 
-  async sendRequest() {
-    const { isConnected } = this.props
+  const sendRequest = async() => {
+    const { isConnected } = props
     if (!isConnected) {
       alert('網路連不到! 請稍後再試試看')
       return
     }
-    const { student_id, onGoBack } = this.props.route.params
-    const body = this.normalizedData()
+    const { student_id } = location.state
+    const body = normalizedData()
     const response = await post(`/medicationrequest/student/${student_id}`, body)
     const { success, statusCode, message, data } = response
     if (!success) {
       alert('Sorry 送出托藥單時電腦出狀況了！請截圖和與工程師聯繫\n\n' + message)
       return 
     }
-    this.setState({
+    setState({
+      ...state,
       access_mode: 'read'
     })
-    onGoBack()
-    this.props.navigation.goBack()
+    // onGoBack()
+    navigate(-1)
   }
 
-  normalizedData() {
-    const { class_id } = this.props.route.params
+  const normalizedData = () => {
+    const { class_id } = location.state
     const {
       request_id, 
       date_array,
@@ -315,7 +336,7 @@ class AddMedicationRequestPage extends React.Component {
       other_type,
       note,
       fever_entry
-    } = this.state
+    } = state
 
     return{
       request_id,
@@ -340,8 +361,8 @@ class AddMedicationRequestPage extends React.Component {
     }
   }
 
-  editable(){
-    const { date_array } = this.state
+  const editable = () => {
+    const { date_array } = state
     let date = date_array[0]
     const threshold = new Date()
     threshold.setHours(10,0,0,0)
@@ -351,33 +372,34 @@ class AddMedicationRequestPage extends React.Component {
     return (date.toDateString() === (new Date).toDateString() && new Date() < threshold) || date.getTime() > tomorrow.getTime()
   }
 
-  onClickConfirm() {
-    const { access_mode } = this.state
+  const onClickConfirm = () => {
+    const { access_mode } = state
     if (access_mode === 'create' || access_mode === 'edit') {
-      if (this.timeIsEmpty()) return
-      this.sendRequest()
+      if (timeIsEmpty()) return
+      sendRequest()
     } else {
-      this.setState({
+      setState({
+        ...state,
         access_mode: 'edit'
       })
     }
   }
 
-  deleteRequestConfirm() {
-    const { request_id } = this.state
+  const deleteRequestConfirm = () => {
+    const { request_id } = state
     const confirmed = confirm('確定要刪除？')
     if (confirmed) {
-      this.deleteRequest(request_id)  
+      deleteRequest(request_id)  
     }
   }
 
-  deleteRequest(request_id) {
-    const { isConnected } = this.props
+  const deleteRequest = (request_id) => {
+    const { isConnected } = props
     if (!isConnected) {
       alert('網路連不到! 請稍後再試試看')
       return
     }
-    const { class_id, onGoBack } = this.props.route.params
+    const { class_id } = location.state
     fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/medicationrequest/${request_id}`, {
       method: 'DELETE',
       headers: {
@@ -395,25 +417,25 @@ class AddMedicationRequestPage extends React.Component {
           alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫' + message)
           return
         }
-        onGoBack()
-        this.props.navigation.goBack()
+        // onGoBack()
+        navigate(-1)
+        
       })
       .catch(err => {
         alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫: error occurred when deleting medication request')
       })
   }
 
-  cancelEdit() {
-    const { index } = this.state
-    this.switchRequest(index)
+  const cancelEdit = () => {
+    const { index } = state
+    switchRequest(index)
   }
 
-  render() {
+
     const { 
       isLoading,
       // date, 
-      time_array, 
-      showDateTimeModal, 
+      time_array,
       datetime_type, 
       time_selected_index, 
       before_meal ,
@@ -432,7 +454,7 @@ class AddMedicationRequestPage extends React.Component {
       scrollHeight,
       date_array,
       date_selected_index
-    } = this.state
+    } = state
     
     if(isLoading) {
       return <Reloading />
@@ -448,8 +470,8 @@ class AddMedicationRequestPage extends React.Component {
           <TimeModal
             start_date={time_selected_index === null ? new Date() : time_array[time_selected_index]}
             datetime_type={datetime_type}
-            hideModal={() => this.setState({ showDateTimeModal: false })}
-            selectDatetimeConfirm={(datetime) => this.selectDatetimeConfirm(datetime)}
+            hideModal={() => setShowDateTimeModal(false)}
+            selectDatetimeConfirm={(datetime) => selectDatetimeConfirm(datetime)}
             minDatetime={new Date()}
             maxDatetime={(new Date()).setDate((new Date()).getDate() + 7)}
             minTime={new Date().setHours(7, 0, 0)}
@@ -471,15 +493,15 @@ class AddMedicationRequestPage extends React.Component {
                           key={request.id}
                           style={{
                             padding: 10,
-                            backgroundColor: this.state.index === index ? '#ffddb7' : 'rgba(0,0,0,0.5)',
+                            backgroundColor: state.index === index ? '#ffddb7' : 'rgba(0,0,0,0.5)',
                             justifyContent: 'center',
                             borderRadius: 30
                           }}
                           underlayColor='#ffddb7'
-                          onClick={() => this.switchRequest(index)}
+                          onPress={() => switchRequest(index)}
                         >
                           <Text
-                            style={{ fontSize: 25, color: this.state.index === index ? 'grey' : 'white' }}
+                            style={{ fontSize: 25, color: state.index === index ? 'grey' : 'white' }}
                           >
                             {beautifyTime(request.timestamp)}
                           </Text>
@@ -528,9 +550,9 @@ class AddMedicationRequestPage extends React.Component {
                 borderTopRightRadius: 30
               }}
               underlayColor='transparent'
-              onClick={() => {
+              onPress={() => {
                 if (access_mode === 'read') return
-                this.setState({ showDateTimeModal: true, datetime_type: 'date' })
+                setState({ showDateTimeModal: true, datetime_type: 'date' })
               }}
             >
               <Text style={{ fontSize: 30, alignSelf: 'center' }}>日期 {beautifyMonthDate(date)}</Text>
@@ -556,9 +578,10 @@ class AddMedicationRequestPage extends React.Component {
                     paddingBottom: 15
                   }}
                   underlayColor='transparent'
-                  onClick={() => {
+                  onPress={() => {
                     if (access_mode === 'read' || access_mode === 'edit') return
-                    this.setState({ showDateTimeModal: true, datetime_type: 'date' })
+                    setState({ ...state, datetime_type: 'date' })
+                    setShowDateTimeModal(true)
                   }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -593,9 +616,10 @@ class AddMedicationRequestPage extends React.Component {
                           justifyContent: 'center'
                         }}
                         underlayColor='transparent'
-                        onClick={() => {
+                        onPress={() => {
                           if (access_mode === 'read') return
-                          this.setState({ showDateTimeModal: true, datetime_type: 'date', date_selected_index: index })
+                          setState({ ...state, datetime_type: 'date', date_selected_index: index })
+                          setShowDateTimeModal(true)
                         }}
                       >
                         <Text style={{ fontSize: 25, alignSelf: 'center' }}>{beautifyMonthDate(date)}</Text>
@@ -611,9 +635,9 @@ class AddMedicationRequestPage extends React.Component {
                           borderTopRightRadius: 15
                         }}
                         underlayColor='transparent'
-                        onClick={() => {
+                        onPress={() => {
                           if (access_mode === 'read') return
-                          this.removeDate(index)
+                          removeDate(index)
                         }}
                       >
                         <Image
@@ -634,9 +658,10 @@ class AddMedicationRequestPage extends React.Component {
                     paddingBottom: 15
                   }}
                   underlayColor='transparent'
-                  onClick={() => {
+                  onPress={() => {
                     if (access_mode === 'read' || access_mode === 'edit') return
-                    this.setState({ showDateTimeModal: true, datetime_type: 'time' })
+                    setState({ ...state, datetime_type: 'time' })
+                    setShowDateTimeModal(true)
                   }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -672,9 +697,10 @@ class AddMedicationRequestPage extends React.Component {
                           justifyContent: 'center'
                         }}
                         underlayColor='transparent'
-                        onClick={() => {
+                        onPress={() => {
                           if (access_mode === 'read') return
-                          this.setState({ showDateTimeModal: true, datetime_type: 'time', time_selected_index: index })
+                          setState({ ...state, datetime_type: 'time', time_selected_index: index })
+                          setShowDateTimeModal(true)
                         }}
                       >
                         <Text style={{ fontSize: 25, alignSelf: 'center' }}>{beautifyTime(time)}</Text>
@@ -690,9 +716,9 @@ class AddMedicationRequestPage extends React.Component {
                           borderTopRightRadius: 15
                         }}
                         underlayColor='transparent'
-                        onClick={() => {
+                        onPress={() => {
                           if (access_mode === 'read') return
-                          this.removeTime(index)
+                          removeTime(index)
                         }}
                       >
                         <Image
@@ -715,9 +741,9 @@ class AddMedicationRequestPage extends React.Component {
                   backgroundColor: (before_meal !== null && before_meal) ? '#ffddb7' : 'white'
                 }}
                 underlayColor='#ff8944'
-                onClick={() => {
+                onPress={() => {
                   if (access_mode === 'read') return
-                  this.setState({ before_meal: before_meal ? null : true })
+                  setState({ ...state, before_meal: before_meal ? null : true })
                 }}
               >
                 <Text style={{ fontSize: 25 }}>餐前</Text>
@@ -732,9 +758,9 @@ class AddMedicationRequestPage extends React.Component {
                   backgroundColor: (before_meal !== null && !before_meal) ? '#ffddb7' : 'white'
                 }}
                 underlayColor='#ff8944'
-                onClick={() => {
+                onPress={() => {
                   if (access_mode === 'read') return
-                  this.setState({ before_meal: before_meal === false ? null : false })
+                  setState({ ...state, before_meal: before_meal === false ? null : false })
                 }}
               >
                 <Text style={{ fontSize: 25 }}>餐後</Text>
@@ -754,7 +780,7 @@ class AddMedicationRequestPage extends React.Component {
                 borderTopLeftRadius: 30,
                 borderTopRightRadius: 30
               }}
-              // onClick={() => }
+              // onPress={() => }
             >
               <Text style={{ fontSize: 25, alignSelf: 'center' }}>藥物</Text>
             </TouchableOpacity>
@@ -768,9 +794,9 @@ class AddMedicationRequestPage extends React.Component {
                   <TouchableOpacity
                     disabled={access_mode === 'read'}
                     style={{ paddingTop: 20, paddingBottom: 10 }}
-                    onClick={() => {
+                    onPress={() => {
                       if (access_mode === 'read') return
-                      this.setState({ powder: !powder })
+                      setState({ ...state, powder: !powder })
                     }}
                     underlayColor='transparent'
                   >
@@ -796,9 +822,9 @@ class AddMedicationRequestPage extends React.Component {
                   <TouchableOpacity
                     disabled={access_mode === 'read'}
                     style={{ paddingTop: 20, paddingBottom: 10 }}
-                    onClick={() => {
+                    onPress={() => {
                       if (access_mode === 'read') return
-                      this.setState({ powder_refrigerated: !powder_refrigerated})
+                      setState({ ...state, powder_refrigerated: !powder_refrigerated})
                     }}
                     underlayColor='transparent'
                   >
@@ -834,9 +860,9 @@ class AddMedicationRequestPage extends React.Component {
                   <TouchableOpacity
                     disabled={access_mode === 'read'}
                     style={{ paddingVertical: 10 }}
-                    onClick={() => {
+                    onPress={() => {
                       if (access_mode === 'read') return
-                      this.onSelectSyrup()
+                      onSelectSyrup()
                     }}
                     underlayColor='transparent'
                   >
@@ -860,8 +886,8 @@ class AddMedicationRequestPage extends React.Component {
                   {syrup.length && access_mode !== 'read'? 
                     <TouchableOpacity
                       style={{ padding: 10 }}
-                      onClick={() => this.setState({
-                        syrup: [...syrup, { amount: '', need_refrigerated: false, note: '' }]
+                      onPress={() => setState({
+                        ...state, syrup: [...syrup, { amount: '', need_refrigerated: false, note: '' }]
                       })}
                       underlayColor='transparent'
                     >
@@ -884,7 +910,7 @@ class AddMedicationRequestPage extends React.Component {
                         autoFocus={true}
                         placeholder={'____'}
                         value={entry.amount}
-                        onChangeText={(amount) => this.editSyrupAmountEntry(amount, index)}
+                        onChangeText={(amount) => editSyrupAmountEntry(amount, index)}
                       />
 
                       <Text style={{ fontSize: 20, marginRight: 5 }}>c.c.</Text>
@@ -892,9 +918,9 @@ class AddMedicationRequestPage extends React.Component {
                       <TouchableOpacity
                         disabled={access_mode === 'read'}
                         style={{ padding: 5 }}
-                        onClick={() => {
+                        onPress={() => {
                           if (access_mode === 'read') return
-                          this.editSyrupRefrigerationEntry(!entry.need_refrigerated, index)
+                          editSyrupRefrigerationEntry(!entry.need_refrigerated, index)
                         }}
                         underlayColor='transparent'
                       >
@@ -924,12 +950,12 @@ class AddMedicationRequestPage extends React.Component {
                         // autoFocus={true}
                         placeholder={'備註'}
                         value={entry.note}
-                        onChangeText={(note) => this.editSyrupNoteEntry(note, index)}
+                        onChangeText={(note) => editSyrupNoteEntry(note, index)}
                       />
 
                       {access_mode !== 'read' && <TouchableOpacity
                         style={{ paddingHorizontal: 10 }}
-                        onClick={() => this.removeSyrupEntry(index)}
+                        onPress={() => removeSyrupEntry(index)}
                         underlayColor='transparent'
                       >
                         <Image
@@ -950,10 +976,10 @@ class AddMedicationRequestPage extends React.Component {
                   <TouchableOpacity
                     disabled={access_mode === 'read'}
                     style={{ paddingVertical: 10 }}
-                    onClick={() => {
+                    onPress={() => {
                       if (access_mode === 'read') return
-                      this.setState({ 
-                        gel: gel === null ? '' : null
+                      setState({ 
+                        ...state, gel: gel === null ? '' : null
                       })
                     }}
                     underlayColor='transparent'
@@ -984,7 +1010,7 @@ class AddMedicationRequestPage extends React.Component {
                       autoFocus={true}
                       placeholder={'部位'}
                       value={gel}
-                      onChangeText={(gel) => this.setState({ gel })}
+                      onChangeText={(gel) => setState({ ...state, gel })}
                     />
                   }
                 </View>
@@ -997,10 +1023,10 @@ class AddMedicationRequestPage extends React.Component {
                   <TouchableOpacity
                     disabled={access_mode === 'read'}
                     style={{ paddingVertical: 10 }}
-                    onClick={() => {
+                    onPress={() => {
                       if (access_mode === 'read') return
-                      this.setState({ 
-                        other_type: other_type === null ? '' : null
+                      setState({ 
+                        ...state, other_type: other_type === null ? '' : null
                       })
                     }}
                     underlayColor='transparent'
@@ -1035,7 +1061,7 @@ class AddMedicationRequestPage extends React.Component {
                       blurOnSubmit={true}
                       scrollEnabled={false}
                       value={other_type}
-                      onChangeText={(other_type) => this.setState({ other_type })} 
+                      onChangeText={(other_type) => setState({ ...state, other_type })} 
                     />
                   }
                 </View>
@@ -1057,7 +1083,7 @@ class AddMedicationRequestPage extends React.Component {
                 borderTopLeftRadius: 30,
                 borderTopRightRadius: 30
               }}
-              // onClick={() => }
+              // onPress={() => }
             >
               <Text style={{ fontSize: 25, alignSelf: 'center' }}>備註</Text>
             </TouchableOpacity>
@@ -1072,14 +1098,16 @@ class AddMedicationRequestPage extends React.Component {
                 blurOnSubmit={true}
                 scrollEnabled={false}
                 value={note}
-                onChangeText={(note) => this.setState({ note})}
-                onChange={(e) => this.setState({
+                onChangeText={(note) => setState({ ...state, note })}
+                onChange={(e) => setState({
+                  ...state, 
                   scrollHeight: e.target.scrollHeight
                 })}
                 onLayout={(event) => {
                   const { scrollHeight } = event.nativeEvent.target
-                  this.setState({
-                      scrollHeight
+                  setState({
+                    ...state, 
+                    scrollHeight
                   })
                 }}
               />
@@ -1098,7 +1126,7 @@ class AddMedicationRequestPage extends React.Component {
                 borderTopLeftRadius: 30,
                 borderTopRightRadius: 30
               }}
-              // onClick={() => }
+              // onPress={() => }
             >
               <Text style={{ fontSize: 25, alignSelf: 'center' }}>發燒餵藥</Text>
             </TouchableOpacity>
@@ -1115,7 +1143,8 @@ class AddMedicationRequestPage extends React.Component {
                     style={{ width: 55, fontSize: 25 }}
                     keyboardType='number-pad'
                     value={fever_entry.temperature}
-                    onChangeText={(temperature) => this.setState({
+                    onChangeText={(temperature) => setState({
+                      ...state,
                       fever_entry: {
                         ...fever_entry,
                         temperature
@@ -1132,9 +1161,10 @@ class AddMedicationRequestPage extends React.Component {
                     <TouchableOpacity
                       disabled={access_mode === 'read'}
                       style={{ paddingTop: 20, paddingBottom: 10 }}
-                      onClick={() => {
+                      onPress={() => {
                         if (access_mode === 'read') return
-                        this.setState({ 
+                        setState({
+                          ...state,
                           fever_entry: {
                             ...fever_entry,
                             powder: !fever_entry.powder 
@@ -1165,9 +1195,10 @@ class AddMedicationRequestPage extends React.Component {
                     <TouchableOpacity
                       disabled={access_mode === 'read'}
                       style={{ paddingTop: 20, paddingBottom: 10 }}
-                      onClick={() => {
+                      onPress={() => {
                         if (access_mode === 'read') return
-                        this.setState({
+                        setState({
+                          ...state, 
                           fever_entry: {
                             ...fever_entry,
                             powder_refrigerated: !fever_entry.powder_refrigerated
@@ -1208,9 +1239,9 @@ class AddMedicationRequestPage extends React.Component {
                   <TouchableOpacity
                     disabled={access_mode === 'read'}
                     style={{ paddingVertical: 10 }}
-                    onClick={() => {
+                    onPress={() => {
                       if (access_mode === 'read') return
-                      this.onSelectFeverSyrup()
+                      onSelectFeverSyrup()
                     }}
                     underlayColor='transparent'
                   >
@@ -1234,7 +1265,8 @@ class AddMedicationRequestPage extends React.Component {
                   {fever_entry.syrup.length && access_mode !== 'read'? 
                     <TouchableOpacity
                       style={{ padding: 10 }}
-                      onClick={() => this.setState({
+                      onPress={() => setState({
+                        ...state, 
                         fever_entry: {
                           ...fever_entry,
                           syrup: [...fever_entry.syrup, { amount: '', need_refrigerated: false }]
@@ -1261,7 +1293,7 @@ class AddMedicationRequestPage extends React.Component {
                         autoFocus={true}
                         placeholder={'____'}
                         value={entry.amount}
-                        onChangeText={(amount) => this.editFeverSyrupAmountEntry(amount, index)}
+                        onChangeText={(amount) => editFeverSyrupAmountEntry(amount, index)}
                       />
 
                       <Text style={{ fontSize: 25, marginRight: 5 }}>c.c.</Text>
@@ -1269,9 +1301,9 @@ class AddMedicationRequestPage extends React.Component {
                       <TouchableOpacity
                         disabled={access_mode === 'read'}
                         style={{ padding: 5 }}
-                        onClick={() => {
+                        onPress={() => {
                           if (access_mode === 'read') return
-                          this.editFeverSyrupRefrigerationEntry(!entry.need_refrigerated, index)
+                          editFeverSyrupRefrigerationEntry(!entry.need_refrigerated, index)
                         }}
                         underlayColor='transparent'
                       >
@@ -1298,9 +1330,9 @@ class AddMedicationRequestPage extends React.Component {
                         <TouchableOpacity
                           disabled={access_mode === 'read'}
                           style={{ paddingHorizontal: 10 }}
-                          onClick={() => {
+                          onPress={() => {
                             if (access_mode === 'read') return
-                            this.removeFeverSyrupEntry(index)
+                            removeFeverSyrupEntry(index)
                           }}
                           underlayColor='transparent'
                         >
@@ -1322,9 +1354,10 @@ class AddMedicationRequestPage extends React.Component {
                   <TouchableOpacity
                     disabled={access_mode === 'read'}
                     style={{ paddingVertical: 10 }}
-                    onClick={() => {
+                    onPress={() => {
                       if (access_mode === 'read') return
-                      this.setState({
+                      setState({
+                        ...state, 
                         fever_entry: {
                           ...fever_entry,
                           other_type: fever_entry.other_type === null ? '' : null
@@ -1363,7 +1396,8 @@ class AddMedicationRequestPage extends React.Component {
                       blurOnSubmit={true}
                       scrollEnabled={false}
                       value={fever_entry.other_type}
-                      onChangeText={(other_type) => this.setState({ 
+                      onChangeText={(other_type) => setState({
+                        ...state,
                         fever_entry: {
                           ...fever_entry,
                           other_type
@@ -1386,11 +1420,11 @@ class AddMedicationRequestPage extends React.Component {
         >
           {access_mode === 'read' ?
             <TouchableOpacity 
-              disabled={!this.editable()}
+              disabled={!editable()}
               style={{ width: '100%', height: '70%', backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center' }}
-              onClick={() => {
-                if (!this.editable()) return
-                this.onClickConfirm()
+              onPress={() => {
+                if (!editable()) return
+                onClickConfirm()
               }}
               underlayColor='transparent'
             >
@@ -1402,7 +1436,7 @@ class AddMedicationRequestPage extends React.Component {
               <View style={{ width: '100%', height: '70%', flexDirection: 'row' }}>
                 <TouchableOpacity 
                   style={{  flex:1, backgroundColor: '#fa625f', justifyContent: 'center' }}
-                  onClick={() => this.deleteRequestConfirm()}
+                  onPress={() => deleteRequestConfirm()}
                   underlayColor='transparent'
                 >
                   <Text style={{ fontSize: 30, textAlign: 'center' }}>
@@ -1412,7 +1446,7 @@ class AddMedicationRequestPage extends React.Component {
 
                 <TouchableOpacity 
                   style={{  flex:1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center' }}
-                  onClick={() => this.cancelEdit()}
+                  onPress={() => cancelEdit()}
                   underlayColor='transparent'
                 >
                   <Text style={{ fontSize: width * 0.06, textAlign: 'center', color: 'white' }}>
@@ -1422,7 +1456,7 @@ class AddMedicationRequestPage extends React.Component {
 
                 <TouchableOpacity 
                   style={{ flex:1, backgroundColor: '#00c07f', justifyContent: 'center' }}
-                  onClick={() => this.onClickConfirm()}
+                  onPress={() => onClickConfirm()}
                   underlayColor='transparent'
                   >
                   <Text style={{ fontSize: 30, textAlign: 'center' }}>
@@ -1433,7 +1467,7 @@ class AddMedicationRequestPage extends React.Component {
             : // access_mode === 'create
               <TouchableOpacity
                 style={{ width: '100%', height: '70%', backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center' }}
-                onClick={() => this.onClickConfirm()}
+                onPress={() => onClickConfirm()}
                 underlayColor='transparent'
               >
                 <Text style={{ fontSize: 30, textAlign: 'center', color: 'white' }}>
@@ -1445,7 +1479,6 @@ class AddMedicationRequestPage extends React.Component {
         
       </KeyboardAvoidingView>
     );
-  }
 }
 
 const mapStateToProps = (state) => {

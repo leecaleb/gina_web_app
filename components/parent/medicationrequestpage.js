@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {useEffect, useState} from 'react'
 import {
     View, TouchableOpacity, Text, Animated, ScrollView, Alert, SectionList, Dimensions, Platform
 } from 'react-native'
@@ -8,70 +8,73 @@ import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { getMedRequestSuccess } from '../../redux/parent/actions/index'
 import ENV from '../../variables'
-
+import { useLocation, useNavigate } from 'react-router-dom'
 
 const { width } = Dimensions.get('window')
 
-class MedicationRequestPage extends React.Component {
-    constructor(props) {
-        super(props)
-        this.state = {
-            today: new Date(),
-            tomorrow: new Date(),
-            SlideInRight: new Animated.Value(0),
-            SlideInLeft: new Animated.Value(0),
-            total_height: 1,
-            total_width: 1,
-            height: 0,
-            width: 0,
-            left: 0,
-            top: 0,
-            requests: [],
-            day_of_week: ['天', '一', '二', '三', '四', '五', '六'],
-            selected_request_index: -1
-        }
-    }
+const MedicationRequestPage = (props) => {
+    const location = useLocation();
+    let navigate = useNavigate();
 
-    componentDidMount() {
-        const { selected_request_index } = this.props.route.params
-        const { tomorrow } = this.state
+    const [state, setState] = useState({
+        today: new Date(),
+        tomorrow: new Date(),
+        SlideInRight: new Animated.Value(0),
+        SlideInLeft: new Animated.Value(0),
+        total_height: 1,
+        total_width: 1,
+        height: 0,
+        width: 0,
+        left: 0,
+        top: 0,
+        requests: [],
+        day_of_week: ['天', '一', '二', '三', '四', '五', '六'],
+        selected_request_index: -1
+    })
+
+    useEffect(() => {
+        console.log('init')
+        // const { selected_request_index } = this.props.route.params
+        const { tomorrow } = state
         tomorrow.setDate(tomorrow.getDate() + 1)
-        this.setState({
+        setState({
+            ...state,
             tomorrow
         })
-        this.fetchMedicationRequest()
-        this.initializePage()
-        if (selected_request_index !== undefined) {
-            // console.log(selected_request_index)
-            this.selectRequest(selected_request_index)
-        }
-    }
+        fetchMedicationRequest()
+        // initializePage()
+        // if (selected_request_index !== undefined) {
+        //     // console.log(selected_request_index)
+        //     this.selectRequest(selected_request_index)
+        // }
+        // console.log('location.state, ', location.state)
+    }, [])
 
-    isIOS() {
+    const isIOS = () => {
         return Platform.OS === 'ios'
     }
 
-    async fetchMedicationRequest() {
-        const { isConnected } = this.props
-        if (!isConnected) {
-            alert('網路連不到! 請稍後再試試看')
-            return
-        }
-        const {student_id, onGoBack} = this.props.route.params
+    const fetchMedicationRequest = async() => {
+        // const { isConnected } = props
+        // if (!isConnected) {
+        //     alert('網路連不到! 請稍後再試試看')
+        //     return
+        // }
+        const {student_id} = location.state
         const date = formatDate(new Date())
         const response = await get(`/medicationrequest/student/${student_id}?date=${date}`)
         const { success, statusCode, message, data } = response
-        // console.log('fetchMedicationRequest: ', response)
+        console.log('fetchMedicationRequest: ', response)
         if (!success) {
             alert('Sorry 取得托藥單時電腦出狀況了！請稍後再試試或請截圖和與工程師聯繫\n\n' + message)
             return
         }
-        this.denormalize(data)
-        this.setState({ requests: data })
-        onGoBack()
+        denormalize(data)
+        setState({ ...state, requests: data })
+        // onGoBack()
     }
 
-    denormalize(object_array) {
+    const denormalize = (object_array) => {
         for (var i = 0; i < object_array.length; i++) {
             object_array[i].title = new Date(object_array[i].title)
             for (var j = 0; j < object_array[i].data.length; j++) {
@@ -80,7 +83,7 @@ class MedicationRequestPage extends React.Component {
         }
     }
 
-    initializePage() {
+    const initializePage = () => {
         Animated.sequence([
             Animated.timing(
                 this.state.SlideInRight, 
@@ -102,7 +105,7 @@ class MedicationRequestPage extends React.Component {
         
     }
 
-    viewRequest() {
+    const viewRequest = () => {
         this.setState({
             SlideInLeft: new Animated.Value(0)
         }, () => {
@@ -117,19 +120,19 @@ class MedicationRequestPage extends React.Component {
         })
     }
 
-    selectRequest(index) {
+    const selectRequest = (index) => {
         const access_mode = this.refs['main'].fetchAccessMode()
         if (access_mode === 'edit') {
             alert('還在編輯中喔請完成再離開 多謝')
             return
         }
-        this.setState({ selected_request_index: index })
+        setState({ ...state, selected_request_index: index })
     }
 
-    async onCreateRequestSuccess(request_id) {
-        await this.fetchMedicationRequest()
-        const { requests } = this.state
-        this.get_todays_requests(requests)
+    const onCreateRequestSuccess = async(request_id) => {
+        await fetchMedicationRequest()
+        const { requests } = state
+        get_todays_requests(requests)
         let new_request_index = -1
         for (var i = 0; i < requests.length; i++) {
             if (requests[i].id === request_id) {
@@ -137,12 +140,13 @@ class MedicationRequestPage extends React.Component {
                 break
             }
         }
-        this.setState({
+        setState({
+            ...state,
             selected_request_index: new_request_index
         })
     }
 
-    get_todays_requests(object_array) {
+    const get_todays_requests = (object_array) => {
         let med_requests = []
         for (var i = 0; i < object_array.length; i++) {
             const timestamp = new Date(object_array[i].timestamp)
@@ -151,38 +155,39 @@ class MedicationRequestPage extends React.Component {
                 med_requests.push(object_array[i])
             } else break
         }
-        this.props.getMedRequestSuccess(med_requests)
+        props.getMedRequestSuccess(med_requests)
     }
 
-    onDeleteRequestSuccess(deleted_request_id) {
-        const { requests } = this.state
+    const onDeleteRequestSuccess = (deleted_request_id) => {
+        const { requests } = state
         const updated_requests = []
         for (var i = 0; i < requests.length; i++) {
             if (requests[i].id !== deleted_request_id) {
                 updated_requests.push(requests[i])
             }
         }
-        this.setState({
+        setState({
+            ...state,
             requests: updated_requests,
             selected_request_index: 0
         })
-        this.get_todays_requests(updated_requests)
+        get_todays_requests(updated_requests)
     }
 
-    deleteRequestConfirm(request_id) {
+    const deleteRequestConfirm = (request_id) => {
         const confirmed = confirm('確定要刪除？')
         if (confirmed) {
-            this.deleteRequest(request_id)
+            deleteRequest(request_id)
         }
     }
 
-    deleteRequest(request_id) {
-        const { isConnected } = this.props
-        if (!isConnected) {
-            alert('網路連不到! 請稍後再試試看')
-            return
-        }
-        const { class_id } = this.props.route.params
+    const deleteRequest = (request_id) => {
+        // const { isConnected } = props
+        // if (!isConnected) {
+        //     alert('網路連不到! 請稍後再試試看')
+        //     return
+        // }
+        const { class_id } = location.state
         fetch(`https://iejnoswtqj.execute-api.us-east-1.amazonaws.com/${ENV}/medicationrequest/${request_id}`, {
           method: 'DELETE',
           headers: {
@@ -200,17 +205,17 @@ class MedicationRequestPage extends React.Component {
               alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫' + message)
               return
             }
-            this.fetchMedicationRequest()
+            fetchMedicationRequest()
           })
           .catch(err => {
             alert('Sorry 電腦出狀況了！請截圖和與工程師聯繫: error occurred when deleting medication request')
           })
       }
 
-    render () {
-        const { SlideInRight, SlideInLeft, total_width, requests, today, tomorrow, day_of_week, selected_request_index } = this.state
-        const { student_id, class_id } = this.props.route.params
-        // const selected_request = requests[selected_request_index]
+
+        const { SlideInRight, SlideInLeft, total_width, requests, today, tomorrow, day_of_week, selected_request_index } = state
+        const { student_id, class_id } = location.state
+        const selected_request = requests[selected_request_index]
         return (
             <View
                 style={{
@@ -247,12 +252,14 @@ class MedicationRequestPage extends React.Component {
                                     justifyContent: 'center',
                                     alignItems: 'center'
                                 }}
-                                onClick={() => this.props.navigation.push('AddMedicationRequestPage', {
-                                    onGoBack: () => this.fetchMedicationRequest(),
-                                    student_id,
-                                    class_id,
-                                    index,
-                                    data: section.data
+                                onPress={() => navigate('/add-med-request', {
+                                    state: {
+                                        // onGoBack: () => fetchMedicationRequest(),
+                                        student_id,
+                                        class_id,
+                                        index,
+                                        data: section.data
+                                    }
                                 })}
                             >
                                 <Text style={{ fontSize: 30 }}>{beautifyTime(item.timestamp)}</Text>
@@ -266,7 +273,7 @@ class MedicationRequestPage extends React.Component {
                                     justifyContent: 'center',
                                     borderRadius: 40
                                 }}
-                                onClick={() => this.deleteRequestConfirm(item.id)}
+                                onPress={() => deleteRequestConfirm(item.id)}
                             >
                                 <Text style={{ fontSize: width * 0.07, textAlign: 'center' }}>
                                     刪除
@@ -282,7 +289,7 @@ class MedicationRequestPage extends React.Component {
                                 flexDirection: 'row', 
                                 alignItems: 'center', 
                                 justifyContent: 'space-between',
-                                padding: this.isIOS() ? 20 : 12,
+                                padding: isIOS() ? 20 : 12,
                                 marginTop: 15,
                                 marginBottom: 7,
                                 borderRadius: 40
@@ -296,13 +303,15 @@ class MedicationRequestPage extends React.Component {
 
                 <View style={{ width: '100%', paddingVertical: 10, justifyContent: 'center', backgroundColor: 'transparent' }}>
                     <TouchableOpacity
-                        style={{ backgroundColor: '#f4d41f', padding: this.isIOS() ? 20 : 12, justifyContent: 'center', borderRadius: 40 }}
-                        onClick={() => this.props.navigation.push('AddMedicationRequestPage', {
-                            onGoBack: () => this.fetchMedicationRequest(),
-                            student_id, 
-                            class_id,
-                            index: -1,
-                            data: null
+                        style={{ backgroundColor: '#f4d41f', padding: isIOS() ? 20 : 12, justifyContent: 'center', borderRadius: 40 }}
+                        onPress={() => navigate('/add-med-request', {
+                            state: {
+                                // onGoBack: () => fetchMedicationRequest(),
+                                student_id, 
+                                class_id,
+                                index: -1,
+                                data: null
+                            }
                         })}
                     >
                         <Text style={{ fontSize: 30, alignSelf: 'center' }}>
@@ -314,7 +323,6 @@ class MedicationRequestPage extends React.Component {
                 
             </View>
         )
-    }
 }
 
 const mapStateToProps = (state) => {

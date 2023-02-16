@@ -36,6 +36,7 @@ class AuthLoading extends React.Component {
 
     getCurrentUser() {
         this.setState({ status: 'loading' })
+        // console.log('loadAuth')
         Auth.currentAuthenticatedUser()
             .then(user => {
                 //user is authenticated

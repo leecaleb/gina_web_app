@@ -50,8 +50,8 @@ const persistedReducer = persistReducer(persistConfig, reducer)
 const store = createStore(persistedReducer)
 // const store = createStore(reducer)
 let persistor = persistStore(store)
-console.log('persistedReducer: ', persistedReducer)
-console.log('store.getState(): ', store.getState())
+// console.log('persistedReducer: ', persistedReducer)
+// console.log('store.getState(): ', store.getState())
 const SchoolApp = (props) => {
     return (
         <Provider store={store}>

@@ -291,6 +291,9 @@ const SchoolHome = (props) => {
                     )
                 })}
             </View>
+            <TouchableHighlight onPress={() => handleSignOut()}>
+                <Text>sign out</Text>
+            </TouchableHighlight>
         </View>
     )
 }

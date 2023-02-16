@@ -30,6 +30,7 @@ export default class WellnessCard extends React.Component {
   }
 
   async fetchData(child_id, date) {
+    console.log('WellnessCard / fetchData / date: ', date)
     // const date = new Date(datetime.getTime())
     const start_date = formatDate(date)
     date.setDate(date.getDate() + 1)

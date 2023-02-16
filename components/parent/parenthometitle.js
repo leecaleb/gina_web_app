@@ -116,7 +116,7 @@ class ParentHomeTitle extends React.Component {
                 </View>
                 <TouchableOpacity
                   style={{ backgroundColor: '#F5F5F5', alignItems: 'center', justifyContent: 'center' }}
-                  onClick={() => this.props.viewQRCode()}
+                  onPress={() => this.props.viewQRCode()}
                 >
                   <Image
                     source={require('../../assets/icon-qr.png')}
@@ -134,7 +134,7 @@ class ParentHomeTitle extends React.Component {
           <TouchableOpacity
             style={{ flex: 1, justifyContent: 'center', paddingLeft: 5 }}
             underlayColor='#F5F5F5'
-            onClick={() => this.props.selectOtherChildProfile()}
+            onPress={() => this.props.selectOtherChildProfile()}
           >
             <Image
               source={require('../../assets/icon-babies.png')}

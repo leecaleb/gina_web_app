@@ -119,7 +119,7 @@ class MedicationRequestCard extends React.Component {
                           justifyContent: 'center'
                         }}
                         underlayColor='#ff8944'
-                        onClick={() => this.props.viewMedRequest(index, med_requests)}
+                        onPress={() => this.props.viewMedRequest(index, med_requests)}
                       >
                         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
                           {this.afterFive() && request.administered ? 

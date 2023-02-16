@@ -68,7 +68,7 @@ export default class PickerComponent extends React.Component{
       <TouchableHighlight
         disabled={disabled}
         style={style}
-        onPress={() => this.showActionSheet()}
+        onPress={() => this.props.showSelect()}
       >
         <Text style={textStyle}>{selectedValue}</Text>
       </TouchableHighlight>

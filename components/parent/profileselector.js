@@ -1,49 +1,72 @@
-import React from 'react'
+import React, {useState, forwardRef, useImperativeHandle} from 'react'
 import { Animated, Dimensions, Image, TouchableHighlight } from 'react-native'
 
-export default class ProfileSelector extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      showSelector: false,
-      SlideInRight: new Animated.Value(0)
-    }
-  }
+const ProfileSelector = forwardRef((props, ref) => {
+  // constructor(props) {
+  //   super(props)
+  //   this.state = {
+  //     showSelector: false,
+  //     SlideInRight: new Animated.Value(0)
+  //   }
+  // }
 
-  slideIn() {
-    this.setState({
-      showSelector: true
-    } , () => {
+  const [state, setState] = useState({
+    showSelector: false,
+    SlideInRight: new Animated.Value(0)
+  })
+
+  useImperativeHandle(ref, () => ({    
+    slideIn() {
+      setState({
+        ...state,
+        showSelector: true
+      })
+
       Animated.timing(
-        this.state.SlideInRight,
+        state.SlideInRight,
         {
             toValue: 1,
             duration: 200,
             useNativeDriver: true
         }
       ).start()
-    })
-  }
+    }
+  }));
 
-  onSelectStudent(student_id) {
-    this.props.onSelectStudent(student_id)
+  // slideIn() {
+  //   this.setState({
+  //     showSelector: true
+  //   } , () => {
+  //     Animated.timing(
+  //       this.state.SlideInRight,
+  //       {
+  //           toValue: 1,
+  //           duration: 200,
+  //           useNativeDriver: true
+  //       }
+  //     ).start()
+  //   })
+  // }
+
+  const onSelectStudent = (student_id) => {
+    props.onSelectStudent(student_id)
     Animated.timing(
-      this.state.SlideInRight,
+      state.SlideInRight,
       {
           toValue: 0,
           duration: 500,
           useNativeDriver: true
       }
     ).start()
-    this.setState({
+    setState({
+      ...state,
       showSelector: false
     })
   }
 
-  render() {
     const windowWidth = Dimensions.get('window').width
-    const { showSelector, SlideInRight } = this.state
-    const { student_of_id } = this.props
+    const { showSelector, SlideInRight } = state
+    const { student_of_id } = props
     if (!showSelector) {
       return null
     }
@@ -72,7 +95,7 @@ export default class ProfileSelector extends React.Component {
             <TouchableHighlight 
               key={student_id}
               style={{ marginTop: windowWidth/4 }}
-              onPress={() => this.onSelectStudent(student_id)}
+              onPress={() => onSelectStudent(student_id)}
               underlayColor='transparent'
             >
               <Image
@@ -93,5 +116,6 @@ export default class ProfileSelector extends React.Component {
         })}
       </Animated.View>
     )
-  }
-}
+})
+
+export default ProfileSelector

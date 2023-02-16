@@ -29,6 +29,7 @@ class Signin extends React.Component {
         const { username, password } = this.state
         Auth.signIn(username, password)
             .then((user) => {
+                console.log('user: ', user)
                 if (user.challengeName === 'NEW_PASSWORD_REQUIRED') {
                     // const {requiredAttributes} = user.challengeParam
                     this.completeNewPassword(user)
@@ -40,6 +41,7 @@ class Signin extends React.Component {
                 this.props.loadAuth()
             })
             .catch((err) => {
+                console.log('err.code: ', err.code)
                 if (err.code === 'UserNotConfirmedException') {
                     this.props.changeAuthState('ConfirmSignUpPage', username)
                 } else {

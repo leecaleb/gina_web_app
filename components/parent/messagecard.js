@@ -1,57 +1,66 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { View, Text, Image, TextInput, TouchableOpacity, Alert } from 'react-native'
 import { Card, Body } from 'native-base'
 import { formatDate, fetchData, post, beautifyTime, formatTime, get } from '../util'
 import Reloading from '../reloading'
 
-export default class MessageCard extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      child_id: this.props.child_id,
-      isLoading: true,
-      data_available: false,
-      items_to_bring: [],
-      activities: [],
-      text: '',
-      teacher_id: '',
-      message_id: null,
-      message_for_teacher: '',
-      isConnected: true,
-      scrollHeight: '100%',
-      message_read: false
-    }
-    this.fetchData = this.fetchData.bind(this)
+const MessageCard = (props) => {
+  const [state, setState] = useState({
+    child_id: props.child_id,
+    isLoading: true,
+    data_available: false,
+    items_to_bring: [],
+    activities: [],
+    text: '',
+    teacher_id: '',
+    message_id: null,
+    message_for_teacher: '',
+    isConnected: true,
+    scrollHeight: '100%',
+    message_read: false
+  })
+
+  useEffect(() => {
+    const { date } = props
+    fetchMessageData(state.child_id, new Date(date.getTime()))
+  }, [])
+
+  // componentDidUpdate(prevProps) {
+  //   if (props.date !== prevProps.date) {
+  //     setState({ isLoading: true, message_for_teacher: '', scrollHeight: '100%' })
+  //     fetchMessageData(props.child_id, new Date(props.date.getTime()));
+  //   } else if (props.child_id !== prevProps.child_id) {
+  //     setState({ isLoading: true, message_for_teacher: '', scrollHeight: '100%' })
+  //     fetchMessageData(props.child_id, new Date());
+  //   } else if (props.isConnected != prevProps.isConnected) {
+  //     setState({
+  //       isConnected: props.isConnected
+  //     })
+  //   }
+  // }
+
+
+  useEffect(() => {
+    setState({ ...state, isLoading: true, message_for_teacher: '', scrollHeight: '100%' })
+    fetchMessageData(props.child_id, new Date(props.date.getTime()));
+  }, [props.date])
+
+  useEffect(() => {
+    setState({ isLoading: true, message_for_teacher: '', scrollHeight: '100%' })
+    fetchMessageData(props.child_id, new Date());
+  }, [props.child_id])
+
+
+  const setScrollHeight = (scrollHeight) => {
+    setState({ ...state, scrollHeight })
   }
 
-  componentDidMount() {
-    const { date } = this.props
-    this.fetchData(this.state.child_id, new Date(date.getTime()))
-    // this.fetchDiaperAmount(child_id)
-  }
-
-  componentDidUpdate(prevProps) {
-    if (this.props.date !== prevProps.date) {
-      this.setState({ isLoading: true, message_for_teacher: '', scrollHeight: '100%' })
-      this.fetchData(this.props.child_id, new Date(this.props.date.getTime()));
-    } else if (this.props.child_id !== prevProps.child_id) {
-      this.setState({ isLoading: true, message_for_teacher: '', scrollHeight: '100%' })
-      this.fetchData(this.props.child_id, new Date());
-    } else if (this.props.isConnected != prevProps.isConnected) {
-      this.setState({
-        isConnected: this.props.isConnected
-      })
-    }
-  }
-
-  setScrollHeight(scrollHeight) {
-    this.setState({ scrollHeight })
-  }
-
-  async fetchData(child_id, propDate) {
+  const fetchMessageData = async(child_id, propDate) => {
+    console.log(`fetchMessageData / propDate: ${propDate}`)
     let date = new Date(propDate.getTime())
     if (date.getHours() < 17) {
-      this.setState({
+      setState({
+        ...state,
         isLoading: false,
         message_for_teacher: '',
         data_available: false
@@ -63,17 +72,18 @@ export default class MessageCard extends React.Component {
     const end_date = formatDate(date)
     const messageData = await fetchData('message', child_id, start_date, end_date)
     if (messageData.data === undefined || messageData.data[start_date] === undefined) {
-      this.setState({
+      setState({
+        ...state,
         isLoading: false,
         message_for_teacher: '',
         data_available: false
       })
       return
     }
-    this.denormalize(messageData.data[start_date])
+    denormalize(messageData.data[start_date])
   }
 
-  denormalize(message_data) {
+  const denormalize = (message_data) => {
     const items_list = ['母奶粉', '尿布', '水壺', '衣物']
     const activities_list = ['嬰兒按摩', '音樂律動', '教具操作', '繪本欣賞', '認知圖片', '體能活動', '藝術創作', '多元語言']
     const items_to_bring = []
@@ -98,7 +108,8 @@ export default class MessageCard extends React.Component {
       activities.push(message_data.other_activity)
     }
 
-    this.setState({
+    setState({
+      ...state,
       isLoading: false,
       data_available: true,
       message_id: message_data.message_id,
@@ -111,18 +122,18 @@ export default class MessageCard extends React.Component {
     })
   }
 
-  async sendMessage() {
-    const { class_id, parent_id, date } = this.props
-    const { message_for_teacher, message_id, isConnected } = this.state
-    if (!this.editable() || message_for_teacher === '') return
-    if (!isConnected) {
-      alert('網路連不到! 請稍後再試試看')
-      return
-    }
+  const sendMessage = async() => {
+    const { class_id, parent_id, date } = props
+    const { message_for_teacher, message_id, isConnected } = state
+    if (!editable() || message_for_teacher === '') return
+    // if (!isConnected) {
+    //   alert('網路連不到! 請稍後再試試看')
+    //   return
+    // }
 
     // const now = new Date()
     const body = {
-      student_id: this.props.child_id,
+      student_id: props.child_id,
       parent_id,
       message_id,
       message_for_teacher,
@@ -135,12 +146,11 @@ export default class MessageCard extends React.Component {
       return 
     }
     alert(`訊息傳達成功！`)
-    // const { date } = this.props
-    this.fetchData(this.state.child_id, new Date(date.getTime()))
+    fetchMessageData(state.child_id, new Date(date.getTime()))
   }
 
-  editable() {
-    const { date } = this.props
+  const editable = () => {
+    const { date } = props
     // console.log('date: ', date)
     let threshold = new Date()
     if (threshold.getDay() === 6) { // if today is saturday
@@ -149,11 +159,11 @@ export default class MessageCard extends React.Component {
       threshold.setDate(threshold.getDate() - 2)
     }
     threshold.setHours(17, 0, 0, 0)
-    return date.getTime() >= threshold.getTime() || this.before4am()
+    return date.getTime() >= threshold.getTime() || before4am()
   }
 
-  before4am() {
-    const { date } = this.props
+  const before4am = () => {
+    const { date } = props
     let today = new Date()
     let prev_day = new Date() 
     if (today.getDay() === 1) { // if today is monday, prev_day is last friday
@@ -166,12 +176,12 @@ export default class MessageCard extends React.Component {
     return false
   }
 
-  showMessageForTeacher(){
-    const { date } = this.props
+  const showMessageForTeacher = () => {
+    const { date } = props
     let today = new Date()
     today.setHours(0,0,0,1)
 
-    if (date.toDateString() === today.toDateString() && this.editable()) {
+    if (date.toDateString() === today.toDateString() && editable()) {
       return true
     } else if (date < today) {
       return true
@@ -179,9 +189,8 @@ export default class MessageCard extends React.Component {
     return false
   }
 
-  render() {
-    const { items_to_bring, activities, text, teacher_id, isLoading, data_available, message_for_teacher, scrollHeight, message_read } = this.state
-    const { date } = this.props
+    const { items_to_bring, activities, text, teacher_id, isLoading, data_available, message_for_teacher, scrollHeight, message_read } = state
+    const { date } = props
     // console.log(date.toDateString())
     return (
       <Card style={{ width: '93%' }}>
@@ -266,7 +275,7 @@ export default class MessageCard extends React.Component {
                     </View>
                     
                     <TextInput
-                      editable={this.editable()}
+                      editable={editable()}
                       style={{
                         // marginHorizontal: 15,
                         height: scrollHeight,
@@ -277,7 +286,7 @@ export default class MessageCard extends React.Component {
                         fontSize: 25
                       }}
                       // textAlignVertical={"top"}
-                      placeholder={this.editable() ? 
+                      placeholder={editable() ? 
                         '點擊我開始填寫...' 
                         : isLoading ?
                           '下載中...'
@@ -287,19 +296,20 @@ export default class MessageCard extends React.Component {
                       // blurOnSubmit={true}
                       // maxLength={200}
                       value={message_for_teacher}
-                      onChangeText={(message_for_teacher) => this.setState({ message_for_teacher })}
-                      onChange={(e) => this.setScrollHeight(e.target.scrollHeight)}
+                      onChangeText={(message_for_teacher) => setState({ ...state, message_for_teacher })}
+                      onChange={(e) => setScrollHeight(e.target.scrollHeight)}
                       onLayout={(event) => {
                         const { scrollHeight } = event.nativeEvent.target
-                        this.setState({
-                            scrollHeight
+                        setState({
+                          ...state,
+                          scrollHeight
                         })
                       }}
                     />
                     <TouchableOpacity
-                      disabled={!this.editable()}
+                      disabled={!editable()}
                       style={{ padding: 10, justifyContent: 'center' }}
-                      onClick={() => this.sendMessage()}
+                      onPress={() => sendMessage()}
                     >
                       <Text style={{ fontSize: 25, alignSelf: 'center' }}>送出</Text>
                     </TouchableOpacity>
@@ -308,7 +318,7 @@ export default class MessageCard extends React.Component {
                 : <View style={{ flex: 1, paddingVertical: 8, paddingRight: 8 }}>
                     <Text style={{ fontSize: 17 }}>沒有新紀錄</Text>
                   {/* message for teacher */}
-                  {this.showMessageForTeacher() && 
+                  {showMessageForTeacher() && 
                   <View style={{ backgroundColor: '#ffddb7', marginTop: 5}}>
                     <View style={{ padding: 5, flexDirection: 'row', justifyContent: 'space-between' }}>
                       <Text style={{ fontSize: 15 }}>給老師的話</Text>
@@ -316,7 +326,7 @@ export default class MessageCard extends React.Component {
                     </View>
                     
                     <TextInput
-                      editable={this.editable()}
+                      editable={editable()}
                       style={{
                         // marginHorizontal: 15,
                         height: scrollHeight,
@@ -327,7 +337,7 @@ export default class MessageCard extends React.Component {
                         fontSize: 25
                       }}
                       // textAlignVertical={"top"}
-                      placeholder={this.editable() ? 
+                      placeholder={editable() ? 
                         '點擊我開始填寫...' 
                         : isLoading ?
                           '下載中...'
@@ -337,13 +347,13 @@ export default class MessageCard extends React.Component {
                       // blurOnSubmit={true}
                       // maxLength={200}
                       value={message_for_teacher}
-                      onChangeText={(message_for_teacher) => this.setState({ message_for_teacher })}
-                      onChange={(e) => this.setScrollHeight(e.target.scrollHeight)}
+                      onChangeText={(message_for_teacher) => setState({ ...state, message_for_teacher })}
+                      onChange={(e) => setScrollHeight(e.target.scrollHeight)}
                     />
                     <TouchableOpacity
-                      disabled={!this.editable()}
+                      disabled={!editable()}
                       style={{ padding: 10, justifyContent: 'center' }}
-                      onClick={() => this.sendMessage()}
+                      onPress={() => sendMessage()}
                     >
                       <Text style={{ fontSize: 25, alignSelf: 'center' }}>送出</Text>
                     </TouchableOpacity>
@@ -355,5 +365,6 @@ export default class MessageCard extends React.Component {
         </View>
       </Card>
     );
-  }
 }
+
+export default MessageCard
