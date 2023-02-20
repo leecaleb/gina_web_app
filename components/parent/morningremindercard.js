@@ -13,7 +13,7 @@ const MorningReminderCard = forwardRef((props, ref) => {
         text: '',
         reminder_read: false,
         isConnected: true,
-        scrollHeight: '100%',
+        // scrollHeight: '100%',
         milk_timestamp: new Date(),
         diaper_timestamp: new Date(),
         milk_amount: '',
@@ -25,6 +25,7 @@ const MorningReminderCard = forwardRef((props, ref) => {
   })
 
   const [isLoading, setIsLoading] = useState(true)
+  const [scrollHeight, setScrollHeight] = useState('100%')
 
   // const onSendMessageDelay = useCallback(debounce(sendMessage, 2000), [])
 
@@ -77,13 +78,47 @@ const MorningReminderCard = forwardRef((props, ref) => {
   //   }
   // }
 
-  const setScrollHeight = (scrollHeight) => {
-    // console.log('scrollHeight: ', scrollHeight)
+  useEffect(() => {
     setState({
       ...state,
-      scrollHeight
+      text: '',
+      includeMilkIntake: false, 
+      milk_timestamp: new Date(), 
+      milk_amount: '', 
+      includeDiaper: false, 
+      diaper_timestamp: new Date(), 
+      diaper_type: '小便'
     })
-  }
+    setIsLoading(true)
+    setScrollHeight('100%')
+    fetchMorningRecordData(props.student_id, new Date(props.date.getTime()));
+  }, [props.date])
+
+  useEffect(() => {
+    setState({ 
+      ...state,
+      text: '',
+      includeMilkIntake: false, 
+      milk_timestamp: new Date(), 
+      milk_amount: '', 
+      includeDiaper: false, 
+      diaper_timestamp: new Date(), 
+      diaper_type: '小便' 
+    })
+    setIsLoading(true)
+    setScrollHeight('100%')
+    fetchMorningRecordData(props.student_id, new Date());
+  }, [props.student_id])
+
+
+
+  // const setScrollHeight = (scrollHeight) => {
+  //   // console.log('scrollHeight: ', scrollHeight)
+  //   setState({
+  //     ...state,
+  //     scrollHeight
+  //   })
+  // }
 
   const fetchMorningRecordData = async(child_id, date) => {
     // console.log(`fetchMorningRecordData / child_id: ${child_id} / date: ${date}`)
@@ -184,7 +219,7 @@ const MorningReminderCard = forwardRef((props, ref) => {
   //   }
   // }
 
-  const { text, scrollHeight, morning_reminder_id, reminder_read, 
+  const { text, morning_reminder_id, reminder_read, 
     milk_timestamp, milk_amount, diaper_timestamp, diaper_type, showDateTimeModal, includeMilkIntake, includeDiaper } = state
   // console.log('this.state: ', this.state)
   return (
@@ -265,7 +300,7 @@ const MorningReminderCard = forwardRef((props, ref) => {
                 <TextInput
                   editable={editable()}
                   style={{ marginLeft: 15, width: 55, fontSize: 25 }}
-                  keyboardType="number-pad"
+                  keyboardType="decimal-pad"
                   placeholder={'_____'}
                   value={''+milk_amount}
                   onChangeText={(milk_amount) => setState({ ...state, milk_amount })}
@@ -367,10 +402,7 @@ const MorningReminderCard = forwardRef((props, ref) => {
                   onChange={(e) => setScrollHeight(e.target.scrollHeight)}
                   onLayout={(event) => {
                     const { scrollHeight } = event.nativeEvent.target
-                    setState({
-                      ...state,
-                      scrollHeight
-                    })
+                    setScrollHeight(scrollHeight)
                   }}
               />
               <TouchableOpacity

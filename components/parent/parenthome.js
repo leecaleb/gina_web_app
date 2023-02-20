@@ -193,6 +193,7 @@ const ParentHome = (props) => {
     // SPECIAL DAY QUICK TEMP FIX
     const setDatetime = () => {
         let date = new Date()
+        date.setMonth(1,21)
         if (date.getDay() === 0) {
             date.setDate(date.getDate() - 1)
         }
