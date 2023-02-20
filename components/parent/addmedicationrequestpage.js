@@ -906,7 +906,7 @@ const AddMedicationRequestPage = (props) => {
                       <TextInput
                         editable={access_mode !== 'read'}
                         style={{ width: 35, fontSize: 25, textAlign: 'center', marginHorizontal: 10 }}
-                        keyboardType="number-pad"
+                        keyboardType="decimal-pad"
                         autoFocus={true}
                         placeholder={'____'}
                         value={entry.amount}
@@ -1141,7 +1141,7 @@ const AddMedicationRequestPage = (props) => {
                   <TextInput
                     editable={access_mode !== 'read'}
                     style={{ width: 55, fontSize: 25 }}
-                    keyboardType='number-pad'
+                    keyboardType='decimal-pad'
                     value={fever_entry.temperature}
                     onChangeText={(temperature) => setState({
                       ...state,
@@ -1289,7 +1289,7 @@ const AddMedicationRequestPage = (props) => {
                       <TextInput
                         editable={access_mode !== 'read'}
                         style={{ width: 62, fontSize: 25 }}
-                        keyboardType="number-pad"
+                        keyboardType="decimal-pad"
                         autoFocus={true}
                         placeholder={'____'}
                         value={entry.amount}
