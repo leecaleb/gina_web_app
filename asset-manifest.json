@@ -1,11 +1,11 @@
 {
   "files": {
-    "app.js": "/gina_web_app/static/js/app.52bdcfa3.chunk.js",
-    "app.js.map": "/gina_web_app/static/js/app.52bdcfa3.chunk.js.map",
+    "app.js": "/gina_web_app/static/js/app.a8d60136.chunk.js",
+    "app.js.map": "/gina_web_app/static/js/app.a8d60136.chunk.js.map",
     "runtime~app.js": "/gina_web_app/static/js/runtime~app.69e40248.js",
     "runtime~app.js.map": "/gina_web_app/static/js/runtime~app.69e40248.js.map",
-    "static/js/2.94fa4cd8.chunk.js": "/gina_web_app/static/js/2.94fa4cd8.chunk.js",
-    "static/js/2.94fa4cd8.chunk.js.map": "/gina_web_app/static/js/2.94fa4cd8.chunk.js.map",
+    "static/js/2.3b3e269a.chunk.js": "/gina_web_app/static/js/2.3b3e269a.chunk.js",
+    "static/js/2.3b3e269a.chunk.js.map": "/gina_web_app/static/js/2.3b3e269a.chunk.js.map",
     "fonts/AntDesign.ttf": "/gina_web_app/./fonts/AntDesign.ttf",
     "fonts/Entypo.ttf": "/gina_web_app/./fonts/Entypo.ttf",
     "fonts/Feather.ttf": "/gina_web_app/./fonts/Feather.ttf",
@@ -25,9 +25,9 @@
     "favicon-32.png": "/gina_web_app/favicon-32.png",
     "favicon.ico": "/gina_web_app/favicon.ico",
     "index.html": "/gina_web_app/index.html",
-    "manifest.json": "/gina_web_app/manifest_v2.json",
+    "manifest.json": "/gina_web_app/manifest_v3.json",
     "serve.json": "/gina_web_app/serve.json",
-    "static/js/2.94fa4cd8.chunk.js.LICENSE.txt": "/gina_web_app/static/js/2.94fa4cd8.chunk.js.LICENSE.txt",
+    "static/js/2.3b3e269a.chunk.js.LICENSE.txt": "/gina_web_app/static/js/2.3b3e269a.chunk.js.LICENSE.txt",
     "static/media/app-splash.gif": "/gina_web_app/static/media/app-splash.ed2a7dfb.gif",
     "static/media/app_logo.png": "/gina_web_app/static/media/app_logo.64014c13.png",
     "static/media/icon-announcement.png": "/gina_web_app/static/media/icon-announcement.cf2640d0.png",
@@ -52,7 +52,7 @@
   },
   "entrypoints": [
     "static/js/runtime~app.69e40248.js",
-    "static/js/2.94fa4cd8.chunk.js",
-    "static/js/app.52bdcfa3.chunk.js"
+    "static/js/2.3b3e269a.chunk.js",
+    "static/js/app.a8d60136.chunk.js"
   ]
 }
