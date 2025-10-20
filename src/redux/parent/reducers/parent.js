@@ -35,9 +35,10 @@ export default function parent(state = {
         }
         case 'INITIALIZE_CHILDREN':
             const { data } = action
+            const newChildOfId = { ...state.child_of_id }
             data.forEach((child) => {
                 const { id, name, class_id, profile_picture, school_id, school_name } = child
-                state.child_of_id[id] = {
+                newChildOfId[id] = {
                     name,
                     class_id,
                     profile_picture,
@@ -46,14 +47,21 @@ export default function parent(state = {
                 }
             })
             return {
-                ...state
+                ...state,
+                child_of_id: newChildOfId
             }
 
         case 'MARK_PRESENT':
             const { student_id } = action
-            state.child_of_id[student_id].present = true
             return {
-                ...state
+                ...state,
+                child_of_id: {
+                    ...state.child_of_id,
+                    [student_id]: {
+                        ...state.child_of_id[student_id],
+                        present: true
+                    }
+                }
             }
 
         case 'GET_MED_REQUEST_SUCCESS': 
